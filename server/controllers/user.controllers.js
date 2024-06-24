@@ -5,7 +5,7 @@ const updateUserProfile = async (req, res) => {};
 const updateUser = async (req, res) => {};
 const deleteUser = async (req, res) => {};
 
-export default {
+export {
   getUsers,
   getUserProfile,
   getUser,

@@ -4,7 +4,7 @@ const createAppointment = async (req, res) => {};
 const updateAppointment = async (req, res) => {};
 const deleteAppointment = async (req, res) => {};
 
-export default {
+export {
   getAppointments,
   getAppointment,
   createAppointment,

@@ -4,7 +4,7 @@ const createMedicine = async (req, res) => {};
 const updateMedicine = async (req, res) => {};
 const deleteMedicine = async (req, res) => {};
 
-export default {
+export {
   getMedicines,
   getMedicine,
   createMedicine,

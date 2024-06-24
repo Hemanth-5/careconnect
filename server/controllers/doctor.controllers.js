@@ -5,7 +5,7 @@ const updateDoctorProfile = async (req, res) => {};
 const updateDoctor = async (req, res) => {};
 const deleteDoctor = async (req, res) => {};
 
-export default {
+export {
   getDoctors,
   getDoctorProfile,
   getDoctor,

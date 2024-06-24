@@ -4,7 +4,7 @@ const createPrescription = async (req, res) => {};
 const updatePrescription = async (req, res) => {};
 const deletePrescription = async (req, res) => {};
 
-export default {
+export {
   getPrescriptions,
   getPrescription,
   createPrescription,

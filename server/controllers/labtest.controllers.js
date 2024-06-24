@@ -4,7 +4,7 @@ const createTest = async (req, res) => {};
 const updateTest = async (req, res) => {};
 const deleteTest = async (req, res) => {};
 
-export default {
+export  {
   getTests,
   getTest,
   createTest,
