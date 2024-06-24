@@ -1,12 +1,16 @@
 import mongoose from "mongoose";
 
+// Model for a doctor
 const DoctorSchema = new mongoose.Schema(
   {
     userId: {
       type: mongoose.Types.ObjectId,
       ref: "Users",
     },
-    specialization: [String],
+    specialization: {
+      type: [String],
+      required: true,
+    },
     education: [
       {
         degree: String,
@@ -14,7 +18,10 @@ const DoctorSchema = new mongoose.Schema(
         year: Number,
       },
     ],
-    status: String,
+    status: {
+      type: String,
+      enum: ["active", "inactive"],
+    },
     experience: {
       totalYears: Number,
       inSpeciality: Number,
@@ -27,19 +34,31 @@ const DoctorSchema = new mongoose.Schema(
       friday: { start: String, end: String },
       saturday: { start: String, end: String },
     },
-    languages: [String],
-    certifications: [String],
-    memberships: [String],
-    awards: [String],
-    researchInterests: [String],
+    languages: {
+      type: [String],
+      default: [],
+    },
+    certifications: {
+      type: [String],
+      default: [],
+    },
+    memberships: {
+      type: [String],
+      default: [],
+    },
+    awards: {
+      type: [String],
+      default: [],
+    },
+    researchInterests: {
+      type: [String],
+      default: [],
+    },
     reviews: [
       {
-        patientId: {
-          type: mongoose.Types.ObjectId,
-          ref: "Patients",
-        },
-        rating: Number,
-        comments: String,
+        // Reviews can be accessed from Reviews model
+        type: mongoose.Types.ObjectId,
+        ref: "Reviews",
       },
     ],
   },
@@ -47,4 +66,5 @@ const DoctorSchema = new mongoose.Schema(
 );
 
 const Doctors = mongoose.model("Doctors", DoctorSchema);
+
 export default Doctors;
