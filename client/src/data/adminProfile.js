@@ -1,0 +1,25 @@
+const adminData = {
+  _id: { $oid: "6630d0f266c1df8754d20b97" },
+  username: "mkuvxpokjjvyxbrqqbnvdrsmgdipbbjsbfviowbtgybibuwrlx",
+  password: "lemoiiukskmlwssxlsktxdroqbbktsrjjldkhxu",
+  type: "admin",
+  firstName: "Cynthia",
+  lastName: "Hernandez",
+  dateOfBirth: { $date: { $numberLong: "955843200000" } },
+  gender: "Female",
+  contact: {
+    email: "b.lboxslj@wdtstu.es",
+    phone: { primary: "2971406094", secondary: "7870534852" },
+    address: {
+      street: "福建省 南平市 政和县",
+      city: "朝阳市",
+      state: "@state",
+      zipcode: "447303",
+      country: "@country",
+    },
+  },
+  profilePicture: "http://dummyimage.com/200x200",
+  __v: { $numberInt: "0" },
+  createdAt: { $date: { $numberLong: "1714475250655" } },
+  updatedAt: { $date: { $numberLong: "1714475250655" } },
+};

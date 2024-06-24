@@ -1,0 +1,19 @@
+.financial-distribution-chart {
+  margin-top: 5rem;
+  width: 100%;
+  height: 400px;
+  background-color: var(--white-primary);
+  border: var(--border);
+  border-radius: var(--b-radius);
+  & h1 {
+    font-size: larger;
+    color: var(--black-primary);
+    font-weight: 700;
+  }
+}
+
+.financial-distribution-chart .chart-content {
+  width: 100%;
+  height: 350px;
+  padding: 1rem;
+}

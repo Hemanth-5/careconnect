@@ -1,0 +1,76 @@
+.login .row{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 2rem;
+}
+.login {
+    display: flex;
+    align-items: center; /* Center items vertically */
+    justify-content: center; /* Center items horizontally */
+    height: 100vh; /* Make the section take the full height of the viewport */
+    overflow: hidden;
+}
+
+.container {
+    max-width: 600px; /* Adjust as needed */
+    width: 100%;
+    padding: 20px; /* Adjust as needed */
+}
+
+.image-container {
+    margin-bottom: 20px; /* Adjust as needed */
+    text-align: center; /* Center the image */
+}
+
+.login img {
+    width: 250px;
+    height: auto; /* To maintain aspect ratio */
+}
+.login .row form{
+    max-width: 500px;
+    flex: 1 1 45rem;
+    background: #fff;
+    border: var(--border);
+    box-shadow: var(--box-shadow);
+    text-align: center;
+    padding: 2rem;
+    border-radius: .5rem;
+}
+.login .row form h3{
+    color: var(--black);
+    padding-bottom: 1rem;
+    font-size: 3rem;
+}
+.login .row form .box{
+    width: 100%;
+    margin: .7rem 0;
+    border: var(--border);
+    border-radius: .5rem;
+    font-size: 1.6rem;
+    color: var(--black);
+    text-transform: none;
+    padding: 1rem;
+}
+.login .row form .btn{
+    padding: 1rem 4rem;
+}
+
+.password-container {
+    position: relative;
+}
+
+.password-container .box {
+    width: calc(100% - 30px); /* Adjust as needed */
+}
+
+.password-toggle {
+    position: absolute;
+    margin-right: 10px;
+    top: 50%;
+    right: 10px;
+    transform: translateY(-50%);
+    cursor: pointer;
+    font-size: 15px;
+}

@@ -1,0 +1,12 @@
+.dashboard .interface .doctors-list-plus-edit {
+    display: flex;
+    /* justify-content: space-between; */
+    gap: 1.5rem;
+    margin: 1.5rem;
+}
+
+.dashboard .interface {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+}

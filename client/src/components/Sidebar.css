@@ -1,0 +1,91 @@
+/* Sidebar.css */
+
+.sidebar {
+  background-color: var(--white-primary);
+  width: 250px;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: var(--box-shadow);
+  gap: 5rem;
+  align-items: flex-start;
+  padding: 1rem;
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 1000;
+  transition: transform 0.3s ease;
+  transform: translateX(-100%);
+  visibility: hidden;
+  backdrop-filter: blur(5px); /* Apply blur effect to the background */
+  overflow-y: auto;
+}
+
+.sidebar.open {
+  transform: translateX(0);
+  visibility: visible;
+}
+
+.sidebar .sidebar-logo img {
+  margin-top: 1rem;
+  width: 90%;
+  object-fit: contain;
+  display: flex;
+  justify-content: center;
+}
+
+.navlinks {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.navlinks li {
+  width: 100%;
+  padding: 0 0.5rem;
+  list-style: none;
+  display: flex;
+  align-items: flex-start;
+  border-radius: var(--b-radius);
+  background-color: transparent;
+}
+
+.navlinks li a {
+  color: var(--grey-primary);
+  display: flex;
+  gap: 1.2rem;
+  text-decoration: none;
+  padding: 0.8rem;
+}
+
+.navlinks li a i {
+  color: var(--green-primary);
+}
+
+.navlinks li:hover {
+  cursor: pointer;
+  background-color: var(--green-secondary);
+}
+
+.navlinks li a:hover {
+  color: var(--green-primary);
+}
+
+.navlinks li#sidebar\ sign-out {
+  margin-top: 6rem;
+  & a i {
+    color: var(--red-primary);
+  }
+}
+
+.navlinks li#sidebar\ sign-out a {
+  color: var(--grey-primary);
+  &:hover {
+    color: var(--red-primary);
+  }
+}
+
+.navlinks li#sidebar\ sign-out:hover {
+  background-color: var(--red-secondary);
+}

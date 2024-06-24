@@ -1,0 +1,106 @@
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent black background */
+  z-index: 999; /* Ensure it's above other content */
+}
+
+.dashboard {
+  position: relative; /* Ensure the overlay covers the entire content area */
+}
+
+.interface {
+  width: 100%;
+  padding: 1.5rem;
+}
+
+.cards-container {
+  width: 100%;
+  display: grid;
+  gap: 1rem;
+  padding: 2rem;
+  margin-bottom: -2rem;
+}
+
+.cards-container .card-additional {
+  display: flex;
+  gap: 0.5rem;
+  color: var(--grey-primary);
+  & .card-additional-item {
+    display: flex;
+    gap: 0.4rem;
+    & i {
+      color: var(--green-primary);
+    }
+    & h2 {
+      color: var(--black-primary);
+    }
+  }
+}
+
+.meetings-appointments {
+  padding: 2rem;
+  display: flex;
+  margin-bottom: -2rem;
+}
+
+.charts {
+  padding: 2rem;
+}
+
+.charts .charts-contents {
+  display: grid;
+  grid-template-rows: 500px auto; /* Set max height for row 1 */
+  /* grid-template-columns: repeat(2, 1fr);
+  gap: 2rem; */
+}
+
+.charts .charts-contents .line-chart,
+.charts .charts-contents .pie-chart {
+  max-height: 500px; /* Set max height for line chart and pie chart */
+}
+
+.charts .charts-contents .bar-chart,
+.charts .charts-contents .financial-distribution-chart {
+  height: 100%; /* Set full height for these charts */
+}
+
+@media (min-width: 640px) {
+  .cards-container {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .charts .charts-contents {
+    display: flex;
+    flex-direction: column;
+  }
+}
+
+@media (min-width: 1024px) {
+  .cards-container {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .charts .charts-contents {
+    display: grid;
+    gap: 2rem;
+    grid-template-rows: 400px 350px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1280px) {
+  .cards-container {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .charts .charts-contents {
+    display: grid;
+    gap: 2rem;
+    grid-template-rows: 400px 350px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

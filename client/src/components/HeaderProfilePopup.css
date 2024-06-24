@@ -1,0 +1,49 @@
+/* HeaderPopup.css */
+
+.header-profile-popup {
+  position: fixed;
+  top: 2rem;
+  z-index: 1000;
+  transition: transform 0.3s ease;
+  transform: translateX(100%); /* Initially off-screen */
+  backdrop-filter: blur(5px);
+  width: max-content;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--white-primary);
+}
+
+.header-profile-popup .header-profile-popup-item {
+  padding: 10px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+/*
+.header-profile-popup.open {
+  display: block;
+}
+
+.header-profile-popup-item {
+  padding: 10px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.header-profile-popup-item:hover {
+  background-color: var(--gray-light);
+}
+
+.header-profile-popup-item i {
+  font-size: 1.2rem;
+}
+
+.header-profile-popup-item h2 {
+  font-size: 1rem;
+  margin: 0;
+} */

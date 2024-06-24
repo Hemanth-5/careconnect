@@ -1,0 +1,39 @@
+.cards {
+  background-color: var(--white-primary);
+  padding: 1.25rem;
+  display: flex;
+  gap: 1rem;
+  flex-direction: column;
+  justify-content: center;
+  padding: 1rem;
+  border: var(--border);
+  border-radius: var(--b-radius);
+}
+
+.cards .card-header {
+  display: flex;
+  gap: 1.5rem;
+  align-items: center;
+}
+
+.cards .card-header i {
+  color: var(--green-primary);
+  background-color: var(--green-secondary);
+  border-radius: var(--b-radius);
+  padding: 0.2rem 0.5rem;
+}
+
+.cards .card-header h1 {
+  color: var(--black-primary);
+  font-weight: 500;
+  font-size: 1.2rem;
+}
+
+.cards .card-content {
+  display: flex;
+  justify-content: space-between;
+}
+
+.cards .card-content h2 {
+  color: var(--black-primary);
+}

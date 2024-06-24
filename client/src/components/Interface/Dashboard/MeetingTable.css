@@ -1,0 +1,64 @@
+/* MeetingTable.css */
+
+.meeting-table {
+  width: 100%;
+  overflow-y: auto;
+  max-height: 500px;
+  background-color: var(--white-primary);
+  border-collapse: collapse;
+  border: var(--border);
+  border-radius: var(--b-radius);
+  padding: 1rem 1.5rem;
+  & h1 {
+    font-size: larger;
+    color: var(--black-primary);
+    font-weight: 700;
+  }
+}
+
+.meeting-table table {
+  width: 100%;
+  margin-top: 1rem;
+  border-collapse: collapse;
+}
+
+.meeting-table thead {
+  background-color: var(--white-secondary);
+}
+
+.meeting-table thead tr th {
+  color: var(--black-primary);
+  font-weight: 500;
+}
+
+.meeting-table tbody tr td {
+  color: var(--grey-primary);
+}
+
+.meeting-table th,
+.meeting-table td {
+  padding: 1.4rem;
+  text-align: left;
+}
+
+.meeting-table .participants {
+  border: none;
+  display: flex;
+}
+
+.meeting-table .participants i {
+  font-size: larger;
+  margin-right: 0.5rem;
+  &:hover {
+    cursor: pointer;
+    color: var(--green-primary);
+  }
+}
+
+.scroll-indicator {
+  text-decoration: none;
+  color: var(--grey-primary);
+  &:hover {
+    color: var(--green-primary);
+  }
+}

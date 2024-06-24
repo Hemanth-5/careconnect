@@ -1,0 +1,139 @@
+.doctors-view-panel {
+    /* margin-top: 2rem; */
+    background-color: #fff;
+    width: 50%;
+    height: 400px;
+    /* margin-left: 1.5rem; */
+    border-radius: .7rem;
+    border: .2rem solid rgba(0, 0, 0, .1);
+    padding: 1rem;
+}
+
+.doctors-view-panel span {
+    font-size: 2rem;
+    text-transform: capitalize;
+    color: var(--black);
+}
+
+.doctors-view-panel .doctors-view-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.doctors-view-panel .doctors-view-container{
+    width: 90%;
+    height: 70%;
+    margin-top: 2.5rem;
+    margin-left: 1.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.doctors-view-panel .doctors-view-container button {
+    /* font-size: 2rem; */
+    padding: 5rem .5rem;
+    border: var(--border);
+    border-radius: .5rem;
+    color: white;
+    cursor: pointer;
+    font-size: 1.7rem;
+    background: var(--green);
+    transition: all 0.3s ease;
+}
+
+.doctors-view-panel .doctors-view-container button:hover {
+    cursor: pointer;
+    color: var(--green);
+    background-color: #fff;
+}
+
+.doctors-view-panel .doctors-view-container button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+.doctors-view-panel .doctors-view-container .doctor-profile {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.5rem;
+}
+
+.doctors-view-panel .doctors-view-container .doctor-profile img {
+    width: 100px; /* Adjust size as needed */
+    height: auto;
+    margin-bottom: 10px;
+}
+
+.doctors-view-panel .doctors-view-container .doctor-profile .doctor-profile-pic {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.doctors-view-panel .doctors-view-container .doctor-profile .doctor-profile-pic p,
+.doctors-view-panel .doctors-view-container .doctor-profile .doctor-profile-pic h3 {
+    font-size: 1.3rem;
+}
+
+.doctors-view-panel .doctors-view-container .doctor-profile .doctor-profile-pic span {
+    margin-top: .5rem;
+    padding: 1px 7px;
+    border-radius: 4rem;
+    font-size: 1rem;  
+}
+.doctors-view-panel .doctors-view-container .doctor-profile .doctor-profile-pic span[data-status='active'] {
+    border: var(--border);
+    color: var(--green);
+}
+
+.doctors-view-panel .doctors-view-container .doctor-profile .doctor-profile-pic span[data-status='inactive'] {
+    border: .2rem solid red;
+    color: red;
+}
+
+.doctors-view-panel .doctors-view-container .doctor-profile .doctor-profile-details {
+    font-size: 1.2rem;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: .6rem;
+}
+
+.doctors-view-panel .doctors-view-container .doctor-profile .doctor-profile-details strong {
+    margin-right: 1rem;
+    width: 110px; /* Adjust the width to your preference */
+    display: inline-block;
+    text-align: left;
+}
+
+/* .doctors-view-panel .doctors-view-container form {
+    width: 70%;
+}
+
+.doctors-view-panel .doctors-view-container form .input-fields {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.doctors-view-panel .doctors-view-container form button {
+    width: 30%;
+    margin-top: 1.3rem;
+    padding: 1rem;
+    border-radius: 0.7rem;
+}
+
+.doctors-view-panel .doctors-view-container form input {
+    width: 70%;
+    border-bottom: 2px solid rgba(0, 0, 0, .1);
+}
+
+.doctors-view-panel .doctors-view-container form button:hover {
+    background: var(--light-color);
+    cursor: pointer;
+    color: #fff
+} */

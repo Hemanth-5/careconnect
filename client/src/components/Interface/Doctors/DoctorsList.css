@@ -1,0 +1,104 @@
+.doctors-list {
+    /* margin-top: 2rem; */
+    background-color: #fff;
+    width: 70%;
+    height: 400px;
+    /* margin-left: 1.5rem; */
+    border-radius: .7rem;
+    border: .2rem solid rgba(0, 0, 0, .1);
+    padding: 1rem;
+}
+
+.doctors-list .doctors-list-header {
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+}
+
+.doctors-list .doctors-list-header .search {
+    /* margin-left: 2.5rem; */
+    width: 250px;
+    height: 27px;
+    border: var(--border); /* Remove border */
+    border-width: 1px;
+    border-radius: 25px; /* Optional: Add border-radius for a rounded look */
+    /* box-shadow: 0 0 5px rgba(0, 0, 0, 0.1); Optional: Add box-shadow for a subtle effect */
+    background-color: #fff;
+    display: flex;
+    flex-direction: row-reverse;
+    align-items: center; /* Vertically center align items */
+}
+
+.doctors-list .doctors-list-header .search input {
+    padding-right: 40px;
+    border: none;
+    background-color: transparent;
+}
+
+.doctors-list .doctors-list-header .search input::-webkit-search-cancel-button {
+    display: none;
+}
+
+.doctors-list .doctors-list-header .search i {
+    color: var(--green);
+    font-size: 1.5rem; /* Adjust the icon size as needed */
+    margin-right: 15px; /* Add some space between the icon and the input field */
+}
+
+.doctors-list .doctors-list-header .search i.bi-x-lg:hover {
+    cursor: pointer;
+}
+
+.doctors-list .doctors-list-header span {
+    font-size: 2rem;
+    text-transform: capitalize;
+    color: var(--black);
+}
+
+.doctors-list .doctors-list-container {
+    max-height: 90%;
+    scroll-behavior: smooth;
+    overflow-y: scroll;
+}
+
+.doctors-list-container {
+    overflow-x: auto;
+}
+
+.doctors-list .doctors-list-container table {
+    color: var(--black);
+    font-size: 1.4rem;
+    margin-top: 2rem;
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.doctors-list .doctors-list-container th, .doctors-list .doctors-list-container td {
+    padding: 12px;
+    text-align: left;
+    /* border-bottom: 1px solid #ddd; */
+}
+
+.doctors-list .doctors-list-container thead {
+    background-color: rgba(0, 0, 0, .1);
+}
+
+.doctors-list .doctors-list-container tbody tr{
+    font-weight:500;
+    font-size:11px;
+
+}
+.doctors-list .doctors-list-container tbody tr:hover {
+    background-color: #f2f2f2;
+}
+
+
+.doctors-list .doctors-list-container td:last-child[data-status="active"] {
+    color: green; /* Set text color to green for active status */
+}
+
+
+.doctors-list .doctors-list-container td:last-child[data-status="inactive"] {
+    color: red; /* Set text color to red for inactive status */
+}
+
