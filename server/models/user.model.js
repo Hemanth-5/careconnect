@@ -3,7 +3,13 @@ import mongoose from "mongoose";
 // Model for a general user
 const userSchema = new mongoose.Schema(
   {
+    // Either username or email are required
     username: {
+      type: String,
+      required: true,
+      unique: true,
+    },
+    email: {
       type: String,
       required: true,
       unique: true,
@@ -18,9 +24,6 @@ const userSchema = new mongoose.Schema(
       enum: ["admin", "doctor", "patient"],
       default: "patient",
     },
-    name: {
-      type: String,
-    },
     dateOfBirth: {
       type: Date,
     },
@@ -29,11 +32,6 @@ const userSchema = new mongoose.Schema(
       enum: ["male", "female"],
     },
     contact: {
-      email: {
-        type: String,
-        required: true,
-        unique: true,
-      },
       phone: {
         primary: {
           type: String,

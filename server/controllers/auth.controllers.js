@@ -1,6 +1,9 @@
 import jwt from "jsonwebtoken";
-import bcryptjs from "bcryptjs";
+import bcrypt from "bcryptjs";
+import { generateAccessToken, generateRefreshToken } from "../utils/token.js";
+
 import User from "../models/user.model.js";
+import Token from "../models/token.model.js";
 
 const login = async (req, res) => {
   const { email, username, password } = req.body;
@@ -21,13 +24,16 @@ const login = async (req, res) => {
       return res.status(400).json({ message: "Invalid password" });
     }
 
-    const token = jwt.sign(
-      { id: user._id, type: user.type },
-      process.env.ACCESS_TOKEN_SECRET,
-      {
-        expiresIn: "15m",
-      }
-    );
+    const token = generateAccessToken(user);
+    const refreshToken = generateRefreshToken(user);
+
+    await Token.create({ userId: user._id, token: refreshToken });
+
+    res.cookie("refreshToken", refreshToken, {
+      httpOnly: true,
+      secure: true,
+      sameSite: "Strict",
+    });
 
     res.status(200).json({ token });
   } catch (error) {
@@ -36,21 +42,73 @@ const login = async (req, res) => {
 };
 
 const register = async (req, res) => {
-  const { username, password, email, type } = req.body;
-
-  // Check if user exists
+  const { username, email, password, type } = req.body;
   try {
-    const userExists = await User.findOne({
-      $or: [{ username }, { "contact.email": email }],
-    });
+    const userExists = await User.findOne({ email });
     if (userExists) {
-      return res.status(400).json({ message: "User already exists" });
+      res.status(401).json({ message: "User already exists" });
     }
 
-    // If new user
-    // Create hashed pwd
-    const hashedPassword = await bcryptjs.hash(password, 10);
-  } catch (error) {}
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    const user = new User({
+      username,
+      password: hashedPassword,
+      email,
+      type,
+    });
+
+    await user.save();
+
+    const token = generateAccessToken(user);
+    const refreshToken = generateRefreshToken(user);
+
+    await Token.create({ userId: user._id, token: refreshToken });
+
+    res.cookie("refreshToken", refreshToken, {
+      httpOnly: true,
+      secure: true,
+      sameSite: "Strict",
+    });
+
+    res.status(201).json({
+      token,
+      user: {
+        username: user.username,
+        email: user.contact.email,
+        type: user.type,
+      },
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
 };
 
-export { login, register };
+const refreshAccessToken = async (req, res) => {
+  const refreshToken = res.cookies.refreshToken;
+
+  if (!refreshToken) {
+    return res.status(403).json({ message: "User not authenticated" });
+  }
+
+  try {
+    const tokenDoc = await Token.findOne({ token: refreshToken });
+
+    if (!tokenDoc) {
+      return res.status(403).json({ message: "User not authenticated" });
+    }
+
+    jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET, (err, user) => {
+      if (err) {
+        return res.status(403).json({ message: "User not authenticated" });
+      }
+
+      const accessToken = generateAccessToken(user);
+      res.status(200).json({ token: accessToken });
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export { login, register, refreshAccessToken };
