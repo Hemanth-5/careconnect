@@ -3,6 +3,10 @@ import mongoose from "mongoose";
 // Model for a general user
 const userSchema = new mongoose.Schema(
   {
+    googleId: {
+      type: String,
+      unique: true,
+    },
     // Either username or email are required
     username: {
       type: String,
@@ -48,6 +52,10 @@ const userSchema = new mongoose.Schema(
           type: String,
         },
       },
+    },
+    profilePicture: {
+      type: String,
+      default: "",
     },
   },
   { timestamps: true }

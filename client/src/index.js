@@ -1,5 +1,5 @@
 import React from "react";
-import ReactDOM from "react-dom";
+import ReactDOM from "react-dom/client";
 import "./index.css";
 import App from "./App";
 
@@ -11,6 +11,7 @@ import {
   useLocation,
 } from "react-router-dom";
 import "bootstrap-icons/font/bootstrap-icons.css";
+import { GoogleOAuthProvider } from "@react-oauth/google";
 
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
@@ -51,15 +52,17 @@ const mainRoute = [
   },
 ];
 
-ReactDOM.render(
-  <BrowserRouter>
-    {/* <ScrollToTop /> */}
-    <Routes>
-      {mainRoute.map((route, index) => (
-        <Route key={index} path={route.path} element={<route.component />} />
-      ))}
-      <Route path="*" element={<Navigate to="/dashboard" />} />
-    </Routes>
-  </BrowserRouter>,
-  document.getElementById("root")
+const root = ReactDOM.createRoot(document.getElementById("root"));
+root.render(
+  <GoogleOAuthProvider clientId="1039688911220-si1pje9k56kaclmhh3bmd24g6mbs3jrq.apps.googleusercontent.com">
+    <BrowserRouter>
+      {/* <ScrollToTop /> */}
+      <Routes>
+        {mainRoute.map((route, index) => (
+          <Route key={index} path={route.path} element={<route.component />} />
+        ))}
+        <Route path="*" element={<Navigate to="/dashboard" />} />
+      </Routes>
+    </BrowserRouter>
+  </GoogleOAuthProvider>
 );

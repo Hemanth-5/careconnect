@@ -1,18 +1,25 @@
 import React from "react";
 import "./Login.css";
+import { GoogleLogin } from "@react-oauth/google";
 
 const Login = () => {
-  const handleGoogleSignIn = async () => {
+  const handleGoogleLogin = async (credentialResponse) => {
+    const { credential } = credentialResponse;
+    console.log({ credential: credential });
+
     try {
-      const response = await fetch(
-        "http://localhost:5001/api/auth/google/callback"
-      );
+      const response = await fetch("http://localhost:5001/auth/google", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ token: credential }),
+      });
+
       const data = await response.json();
-      // Redirect user to Google OAuth URL
-      window.location.href = data.url;
+      console.log({ data });
     } catch (error) {
-      console.error("Error signing in with Google:", error);
-      // Handle error
+      console.log(error);
     }
   };
 
@@ -27,10 +34,14 @@ const Login = () => {
           />
         </div>
         <div className="row">
-          <button onClick={handleGoogleSignIn} className="google-signin-btn">
-            Sign in with Google
-          </button>
+          <GoogleLogin
+            onSuccess={handleGoogleLogin}
+            onError={() => {
+              console.log("Login Failed");
+            }}
+          />
         </div>
+        ;
       </div>
     </section>
   );
