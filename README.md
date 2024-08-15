@@ -144,6 +144,3 @@ For any questions or feedback, please contact us at:
 - **Email:** support@careconnect.com
 - **GitHub Issues:** [Submit an issue](https://github.com/Hemanth-5/careconnect/issues)
 
----
-
-Feel free to adjust this template according to your project’s specific needs and details.
