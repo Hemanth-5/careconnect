@@ -1,12 +1,34 @@
-import cloudinary from "cloudinary";
+import passport from "passport";
+import { Strategy as GoogleStrategy } from "passport-google-oauth20";
+import User from "../models/user.model.js";
+
 import dotenv from "dotenv";
+import { handleGoogleLogin } from "../controllers/auth.controllers.js";
 
 dotenv.config();
 
-cloudinary.v2.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
+passport.use(
+  new GoogleStrategy(
+    {
+      clientID: process.env.GOOGLE_CLIENT_ID.toString(),
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET.toString(),
+      callbackURL: process.env.GOOGLE_CALLBACK_URL.toString(),
+    },
+    handleGoogleLogin
+  )
+);
+
+passport.serializeUser((user, done) => {
+  done(null, user.id);
 });
 
-export default cloudinary;
+passport.deserializeUser(async (id, done) => {
+  try {
+    const user = await User.findById(id);
+    done(null, user);
+  } catch (err) {
+    done(err, null);
+  }
+});
+
+export default passport;
