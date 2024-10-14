@@ -2,7 +2,7 @@
 import express from "express";
 import dotenv from "dotenv";
 import cors from "cors";
-import passport from "passport";
+import passport from "./config/auth.js";
 
 // Import configs
 import connectDB from "./config/db.js";
@@ -15,9 +15,16 @@ dotenv.config();
 // App config
 const app = express();
 
-// Middlewares
+// Inbuilt Middleware
 app.use(express.json());
-app.use(cors());
+app.use(
+  cors({
+    origin: "*",
+    methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
+    credentials: true,
+  })
+);
+
 app.use(express.urlencoded({ extended: false }));
 
 app.use(passport.initialize());

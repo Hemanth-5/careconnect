@@ -22,6 +22,7 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: true,
       enum: ["admin", "patient", "doctor"],
+      default: "patient",
     },
     firstName: {
       type: String,
