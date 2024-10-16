@@ -13,6 +13,7 @@ import userRoutes from "./routes/user.routes.js";
 import patientRoutes from "./routes/patient.routes.js";
 import doctorRoutes from "./routes/doctor.routes.js";
 // import Facility from "./models/facility.model.js";
+import specializationRoutes from "./routes/specialization.routes.js";
 
 dotenv.config();
 
@@ -39,6 +40,7 @@ app.use("/api/v2/users", userRoutes);
 app.use("/api/v2/patients", patientRoutes);
 app.use("/api/v2/doctors", doctorRoutes);
 // app.use("/api/v2/facilities", Facility);
+app.use("/api/v2/specializations", specializationRoutes);
 
 // Connect to MongoDB
 connectDB(process.env.MONGO_URI)
