@@ -14,7 +14,7 @@ const patientSchema = new mongoose.Schema(
       },
       weight: Number,
       height: Number,
-      allergies: [{ type: mongoose.Schema.Types.ObjectId, ref: "Allergy" }],
+      allergies: [{ type: String }],
       currentMedications: [
         { type: mongoose.Schema.Types.ObjectId, ref: "Medication" },
       ],

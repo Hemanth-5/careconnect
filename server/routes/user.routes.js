@@ -14,17 +14,17 @@ import upload from "../middlewares/multer.js";
 const router = express.Router();
 
 // All routes
+router.route("/profile").get(authenticateJWT, getProfile);
+router.route("/profile/update").put(authenticateJWT, updateProfile);
+router
+  .route("/profile/updatepic")
+  .put(authenticateJWT, upload.single("file"), updateUserProfilePic);
+
 router.route("/").get(authenticateJWT, verifyAdmin, getUsers);
 router
   .route("/:id")
   .get(authenticateJWT, verifyAdmin, getUser)
   .put(authenticateJWT, verifyAdmin, updateUser)
   .delete(authenticateJWT, verifyAdmin, deleteUser);
-
-router.route("/profile").get(authenticateJWT, getProfile);
-router.route("/profile/update").put(authenticateJWT, updateProfile);
-router
-  .route("/profile/updatepic")
-  .put(authenticateJWT, upload.single("file"), updateUserProfilePic);
 
 export default router;
