@@ -10,7 +10,7 @@ const doctorSchema = new mongoose.Schema(
     specialization: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Specialization",
-      required: true,
+      // required: true,
     },
     education: [
       {
@@ -48,7 +48,7 @@ const doctorSchema = new mongoose.Schema(
     facilityId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Facility",
-      required: true,
+      // required: true,
     },
   },
   {
