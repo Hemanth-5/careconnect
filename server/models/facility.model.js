@@ -14,26 +14,12 @@ const facilitySchema = new mongoose.Schema(
       zipcode: String,
       country: String,
     },
-    contactInfo: {
-      email: {
-        type: String,
-        validate: {
-          validator: function (v) {
-            return /^([\w-\.]+@([\w-]+\.)+[\w-]{2,4})?$/.test(v);
-          },
-          message: (props) => `${props.value} is not a valid email!`,
-        },
-        required: true,
-      },
-      phone: {
-        type: String,
-        validate: {
-          validator: function (v) {
-            return /^\d{10}$/.test(v);
-          },
-          message: (props) => `${props.value} is not a valid phone number!`,
-        },
-      },
+    email: {
+      type: String,
+      required: true,
+    },
+    phone: {
+      type: String,
     },
     departments: [
       {

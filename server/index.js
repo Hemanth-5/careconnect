@@ -12,7 +12,8 @@ import authRoutes from "./routes/auth.routes.js";
 import userRoutes from "./routes/user.routes.js";
 import patientRoutes from "./routes/patient.routes.js";
 import doctorRoutes from "./routes/doctor.routes.js";
-// import Facility from "./models/facility.model.js";
+import specializationRoutes from "./routes/specialization.routes.js";
+import facilityRoutes from "./routes/facility.routes.js";
 
 dotenv.config();
 
@@ -38,7 +39,8 @@ app.use("/api/auth", authRoutes);
 app.use("/api/v2/users", userRoutes);
 app.use("/api/v2/patients", patientRoutes);
 app.use("/api/v2/doctors", doctorRoutes);
-// app.use("/api/v2/facilities", Facility);
+app.use("/api/v2/specializations", specializationRoutes);
+app.use("/api/v2/facilities", facilityRoutes);
 
 // Connect to MongoDB
 connectDB(process.env.MONGO_URI)
