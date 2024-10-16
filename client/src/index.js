@@ -20,6 +20,7 @@ import Patients from "./pages/Patients";
 import Records from "./pages/Records";
 import Appointment from "./pages/Appointment";
 import Settings from "./pages/Settings";
+import PatientForm from "./components/Patientform";
 
 const mainRoute = [
   {
@@ -49,6 +50,10 @@ const mainRoute = [
   {
     path: "/settings",
     component: Settings,
+  },
+  {
+    path: "/patientRegisterForm",
+    component: PatientForm,
   },
 ];
 
