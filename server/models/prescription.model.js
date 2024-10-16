@@ -4,12 +4,12 @@ const prescriptionSchema = new mongoose.Schema(
   {
     doctorId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Doctor",
+      ref: "User", // assuming doctor is also a User
       required: true,
     },
     patientId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Patient",
+      ref: "User", // assuming patient is also a User
       required: true,
     },
     medications: [
@@ -21,7 +21,11 @@ const prescriptionSchema = new mongoose.Schema(
     ],
     dosage: String,
     instructions: String,
-    date: Date,
+    date: {
+      type: Date,
+      required: true,
+      default: Date.now,
+    },
   },
   { timestamps: true }
 );
@@ -29,13 +33,3 @@ const prescriptionSchema = new mongoose.Schema(
 const Prescription = mongoose.model("Prescription", prescriptionSchema);
 
 export default Prescription;
-
-// Description of the prescription model:
-// The prescription model consists of the following fields:
-// doctorId: The ID of the doctor who issued the prescription.
-// patientId: The ID of the patient for whom the prescription is issued.
-// medications: An array of medication IDs associated with the prescription.
-// dosage: The dosage information for the prescription.
-// instructions: The instructions for taking the medication.
-// date: The date the prescription was issued.
-// timestamps: The timestamps for the prescription model.

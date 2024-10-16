@@ -20,58 +20,37 @@ const userSchema = new mongoose.Schema(
     },
     role: {
       type: String,
-      required: true,
       enum: ["admin", "patient", "doctor"],
       default: "patient",
     },
-    firstName: {
+    firstName: String,
+    lastName: String,
+    email: {
+      type: String,
+      required: true,
+      unique: true,
+    },
+    phone: {
       type: String,
     },
-    lastName: {
+    address: {
+      street: String,
+      city: String,
+      state: String,
+      zipcode: String,
+      country: String,
+    },
+    gender: {
       type: String,
+      enum: ["male", "female", "other"],
     },
-    contactInfo: {
-      email: {
-        type: String,
-        validate: {
-          validator: function (v) {
-            return /^([\w-\.]+@([\w-]+\.)+[\w-]{2,4})?$/.test(v);
-          },
-          message: (props) => `${props.value} is not a valid email!`,
-        },
-        required: true,
-      },
-      phone: {
-        type: String,
-        validate: {
-          validator: function (v) {
-            return /^\d{10}$/.test(v);
-          },
-          message: (props) => `${props.value} is not a valid phone number!`,
-        },
-      },
-      address: {
-        street: String,
-        city: String,
-        state: String,
-        zipcode: String,
-        country: String,
-      },
-    },
-    profilePicture: {
-      type: String,
-      default: null,
-    },
-    profilePictureUploadId: {
-      type: String,
-      default: null,
-    },
+    profilePicture: String,
+    profilePictureUploadId: String,
     isProfileComplete: {
       type: Boolean,
       default: false,
     },
   },
-
   {
     timestamps: true,
   }
@@ -80,14 +59,3 @@ const userSchema = new mongoose.Schema(
 const User = mongoose.model("User", userSchema);
 
 export default User;
-
-// Description of the user model:
-
-// The user model consists of the following fields:
-// googleId: The Google ID of the user.
-// username: The username of the user.
-// password: The password of the user.
-// role: The role of the user, which can be "admin", "patient", or "doctor".
-// firstName: The first name of the user.
-// lastName: The last name of the user.
-// contactInfo: An object containing the contact information of the user, including email, phone number, and address.

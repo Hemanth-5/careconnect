@@ -1,10 +1,26 @@
 import mongoose from "mongoose";
 
+const timeSlotSchema = new mongoose.Schema({
+  time: {
+    type: String,
+    required: true,
+  },
+  status: {
+    type: String,
+    enum: ["available", "booked"],
+    default: "available",
+  },
+  patientId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User", // assuming patient is also a User
+  },
+});
+
 const scheduleSchema = new mongoose.Schema(
   {
     doctorId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Doctor",
+      ref: "User", // assuming doctor is also a User
       required: true,
     },
     slots: [
@@ -13,23 +29,7 @@ const scheduleSchema = new mongoose.Schema(
           type: Date,
           required: true,
         },
-        timeSlots: [
-          {
-            time: {
-              type: String,
-              required: true,
-            },
-            status: {
-              type: String,
-              enum: ["available", "booked"],
-              default: "available",
-            },
-            patientId: {
-              type: mongoose.Schema.Types.ObjectId,
-              ref: "Patient",
-            },
-          },
-        ],
+        timeSlots: [timeSlotSchema],
       },
     ],
   },
@@ -39,8 +39,3 @@ const scheduleSchema = new mongoose.Schema(
 const Schedule = mongoose.model("Schedule", scheduleSchema);
 
 export default Schedule;
-
-// Description of the schedule model:
-// The schedule model consists of the following fields:
-// doctorId: The ID of the doctor for whom the schedule is created.
-// slots: An array of date and time slots for the doctor's availability.

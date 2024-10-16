@@ -28,6 +28,8 @@ This document outlines the database schema for the CareConnect application. The 
     - **zipcode**: `String`
     - **country**: `String`
 - **profilePicture**: `String` (URL to profile picture)
+- **profilePictureUploadId**: `String` (Upload ID in Cloudinary)
+- **isProfileComplete**: `Boolean`
 
 ### Doctor
 
@@ -127,15 +129,6 @@ This document outlines the database schema for the CareConnect application. The 
   - **phone**: `String`
   - **email**: `String`
 
-### FacilityResource
-
-- **resourceId**: `String` (Unique identifier)
-- **facilityId**: `String` (Reference to Facility model)
-- **name**: `String`
-- **type**: `String` (e.g., Equipment, Service)
-- **quantity**: `Number`
-- **availability**: `String` (e.g., Available, Not Available)
-
 ### HealthRecord
 
 - **recordId**: `String` (Unique identifier)
@@ -185,14 +178,6 @@ This document outlines the database schema for the CareConnect application. The 
 ### Prescription
 
 - **prescriptionId**: `String` (Unique identifier)
-- **patientId**: `String` (Reference to Patient model)
-- **doctorId**: `String` (Reference to Doctor model)
-- **date**: `Date`
-- **details**: `String`
-
-### Referral
-
-- **referralId**: `String` (Unique identifier)
 - **patientId**: `String` (Reference to Patient model)
 - **doctorId**: `String` (Reference to Doctor model)
 - **date**: `Date`

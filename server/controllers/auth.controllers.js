@@ -3,97 +3,17 @@ import bcryptjs from "bcryptjs";
 import User from "../models/user.model.js";
 import cloudinary from "../config/cloudinary.js";
 
-// const login = async (req, res) => {
-//   const { email, password } = req.body;
-
-//   try {
-//     const user = await User.findOne({ email });
-//     if (!user) {
-//       return res.status(400).json({ message: "User not found" });
-//     }
-
-//     const validPassword = await bcryptjs.compare(password, user.password);
-//     if (!validPassword) {
-//       return res.status(400).json({ message: "Invalid password" });
-//     }
-
-//     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
-//       expiresIn: "1d",
-//     });
-
-//     res.status(200).json({ token });
-//   } catch (error) {
-//     res.status(500).json({ message: error.message });
-//   }
-// };
-
-// const initialRegister = async (req, res) => {
-//   const { email, password } = req.body;
-
-//   try {
-//     const userExists = await User.findOne({ email });
-//     if (userExists) {
-//       return res.status(400).json({ message: "User already exists" });
-//     }
-
-//     const hashedPassword = await bcryptjs.hash(password, 10);
-//     const user = new User({
-//       email,
-//       password: hashedPassword,
-//       username: `user${Math.floor(Math.random() * 1000000)}`,
-//     });
-
-//     await user.save();
-
-//     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
-//       expiresIn: "1d",
-//     });
-
-//     res.status(200).json({ token });
-//   } catch (error) {
-//     res.status(500).json({ message: error.message });
-//   }
-// };
-
-// const completeRegistration = async (req, res) => {
-//   const { name, role, department, bio, profilePicture, interests } = req.body;
-
-//   try {
-//     const user = await User.findById(req.user.id);
-
-//     if (!user) {
-//       return res.status(404).json({ message: "User not found" });
-//     }
-
-//     await User.findByIdAndUpdate(
-//       user._id,
-//       {
-//         name,
-//         role,
-//         department,
-//         bio,
-//         profilePicture,
-//         interests,
-//         isProfileComplete: true,
-//       },
-//       { new: true }
-//     );
-
-//     res.status(200).json({ message: "Profile updated successfully" });
-//   } catch (error) {
-//     res.status(500).json({ error });
-//   }
-// };
-
 const handleGoogleLogin = async (accessToken, refreshToken, profile, done) => {
   try {
-    // Restrict domain
-    const email = profile.emails[0].value;
-    // if (!email.endsWith("@psgtech.ac.in")) {
-    //   return done(null, false, {
-    //     message: "Only PSG Tech email addresses are allowed",
-    //   });
-    // }
+    // Ensure email is available in the profile
+    const email =
+      profile.emails && profile.emails[0] ? profile.emails[0].value : null;
+
+    if (!email) {
+      return done(null, false, {
+        message: "No email associated with the Google account",
+      });
+    }
 
     // Find or create user based on Google ID
     let user = await User.findOne({ googleId: profile.id });
@@ -103,14 +23,16 @@ const handleGoogleLogin = async (accessToken, refreshToken, profile, done) => {
       user = new User({
         googleId: profile.id,
         username: profile.displayName,
-        contactInfo: { email },
-        // Generate a strong password
+        email: email, // Insert the email after ensuring it's not null
+        // Generate a strong password (using googleId + secret as the password)
         password: await bcryptjs.hash(
           `${profile.id}${process.env.JWT_SECRET}`,
           10
         ),
         isProfileComplete: false,
       });
+
+      console.log({ user });
       await user.save();
     }
 
@@ -130,25 +52,6 @@ const handleGoogleLogin = async (accessToken, refreshToken, profile, done) => {
       await user.save();
     }
 
-    // console.log(user);
-
-    // Generate a new JWT token every time the user logs in using Google
-    // const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
-    //   expiresIn: "1d", // Token expires in 1 day
-    // });
-
-    // // console.log(token);
-
-    // // If token is expired, regenerate using refresh token
-    // const refreshJwtToken = jwt.sign(
-    //   { id: user._id },
-    //   process.env.JWT_REFRESH_SECRET,
-    //   {
-    //     expiresIn: "7d", // Optional: refresh token for longer expiration
-    //   }
-    // );
-
-    // Send both access token and refresh token to the client
     return done(null, user);
   } catch (err) {
     console.error("Google Login Error:", err);

@@ -2,23 +2,23 @@ import mongoose from "mongoose";
 
 const messageSchema = new mongoose.Schema(
   {
-    sender: {
+    senderId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true,
     },
-    receiver: {
+    recipientId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true,
     },
-    message: {
+    content: {
       type: String,
       required: true,
     },
     date: {
       type: Date,
-      required: true,
+      default: Date.now,
     },
   },
   { timestamps: true }
@@ -27,11 +27,3 @@ const messageSchema = new mongoose.Schema(
 const Message = mongoose.model("Message", messageSchema);
 
 export default Message;
-
-// Description of the message model:
-// The message model consists of the following fields:
-// sender: The ID of the user who sent the message.
-// receiver: The ID of the user who received the message.
-// message: The content of the message.
-// date: The date the message was sent.
-// timestamps: The timestamps for the

@@ -16,8 +16,3 @@ const specializationSchema = new mongoose.Schema({
 const Specialization = mongoose.model("Specialization", specializationSchema);
 
 export default Specialization;
-
-// Description of the specialization model:
-// The specialization model consists of the following fields:
-// name: The name of the specialization.
-// description: A description of the specialization.

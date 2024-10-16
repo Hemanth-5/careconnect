@@ -8,8 +8,6 @@ const authenticateJWT = (req, res, next) => {
     return res.status(401).json({ message: "Token not provided" });
   }
 
-  // console.log({ token });
-
   jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
     if (err) {
       // Check if the error is because of token expiration

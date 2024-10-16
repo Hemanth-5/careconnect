@@ -2,8 +2,6 @@ import express from "express";
 import passport from "passport";
 import jwt from "jsonwebtoken";
 import { refreshTokenHandler } from "../controllers/auth.controllers.js";
-import { authenticateJWT } from "../middlewares/auth.js";
-
 const router = express.Router();
 
 // Route for Google authentication
@@ -49,11 +47,6 @@ router.route("/google/callback").get(
     );
   }
 );
-
-// Route for completing user registration
-// router
-//   .route("/register/complete-profile")
-//   .put(authenticateJWT, completeRegistration);
 
 // Route for refreshing tokens
 router.post("/refresh-token", refreshTokenHandler);

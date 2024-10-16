@@ -4,7 +4,7 @@ const testResultSchema = new mongoose.Schema(
   {
     testId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Test",
+      ref: "Test", // Assuming you have a Test schema
       required: true,
     },
     result: {
@@ -19,6 +19,7 @@ const testResultSchema = new mongoose.Schema(
     date: {
       type: Date,
       required: true,
+      default: Date.now,
     },
   },
   { timestamps: true }
@@ -27,11 +28,3 @@ const testResultSchema = new mongoose.Schema(
 const TestResult = mongoose.model("TestResult", testResultSchema);
 
 export default TestResult;
-
-// Description of the test result model:
-// The test result model consists of the following fields:
-// testId: The ID of the lab test for which the result is generated.
-// result: The result of the lab test (positive, negative, inconclusive).
-// interpretation: The interpretation or analysis of the lab test result.
-// date: The date the test result was generated.
-// timestamps: The timestamps for the test result model.
