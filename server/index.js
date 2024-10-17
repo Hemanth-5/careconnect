@@ -14,6 +14,8 @@ import patientRoutes from "./routes/patient.routes.js";
 import doctorRoutes from "./routes/doctor.routes.js";
 import specializationRoutes from "./routes/specialization.routes.js";
 import facilityRoutes from "./routes/facility.routes.js";
+import appointmentRoutes from "./routes/appointment.routes.js";
+import diseaseRoutes from "./routes/disease.routes.js";
 
 dotenv.config();
 
@@ -41,6 +43,8 @@ app.use("/api/v2/patients", patientRoutes);
 app.use("/api/v2/doctors", doctorRoutes);
 app.use("/api/v2/specializations", specializationRoutes);
 app.use("/api/v2/facilities", facilityRoutes);
+app.use("/api/v2/appointments", appointmentRoutes);
+app.use("/api/v2/diseases", diseaseRoutes);
 
 // Connect to MongoDB
 connectDB(process.env.MONGO_URI)

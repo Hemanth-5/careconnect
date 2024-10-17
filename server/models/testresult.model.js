@@ -4,7 +4,7 @@ const testResultSchema = new mongoose.Schema(
   {
     testId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Test", // Assuming you have a Test schema
+      ref: "LabTest", // Assuming you have a Test schema
       required: true,
     },
     result: {
