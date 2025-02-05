@@ -1,4 +1,4 @@
-const mongoose = require("mongoose");
+import mongoose from "mongoose";
 
 const specializationSchema = new mongoose.Schema({
   name: { type: String, required: true, unique: true },
@@ -6,6 +6,5 @@ const specializationSchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now },
 });
 
-module.exports = mongoose.model("Specialization", specializationSchema);
-
-module.exports = mongoose.model("Specialization", specializationSchema);
+const Specialization = mongoose.model("Specialization", specializationSchema);
+export default Specialization;

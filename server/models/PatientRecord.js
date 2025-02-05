@@ -1,4 +1,4 @@
-const mongoose = require("mongoose");
+import mongoose from "mongoose";
 
 const patientRecordSchema = new mongoose.Schema({
   patientId: {
@@ -32,4 +32,5 @@ const patientRecordSchema = new mongoose.Schema({
   ],
 });
 
-module.exports = mongoose.model("PatientRecord", patientRecordSchema);
+const PatientRecord = mongoose.model("PatientRecord", patientRecordSchema);
+export default PatientRecord;

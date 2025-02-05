@@ -1,4 +1,4 @@
-const mongoose = require("mongoose");
+import mongoose from "mongoose";
 
 const notificationSchema = new mongoose.Schema({
   recipientId: {
@@ -17,4 +17,5 @@ const notificationSchema = new mongoose.Schema({
   scheduledFor: { type: Date }, // For future scheduled notifications
 });
 
-module.exports = mongoose.model("Notification", notificationSchema);
+const Notification = mongoose.model("Notification", notificationSchema);
+export default Notification;
