@@ -1,0 +1,66 @@
+import express from "express";
+import {
+  getAppointments,
+  createAppointment,
+  updateAppointment,
+  deleteAppointment,
+  createPrescription,
+  updatePrescription,
+  createPatientRecord,
+  updatePatientRecord,
+  createMedicalReport,
+  getNotifications,
+  markNotificationAsRead,
+} from "../controllers/doctor.controller.js";
+import { doctorMiddleware } from "../middlewares/auth.middleware.js";
+
+const router = express.Router();
+
+// Protected routes (authentication required)
+
+// Get all appointments for the doctor
+router.get("/appointments", doctorMiddleware, getAppointments);
+
+// Create a new appointment
+router.post("/appointments", doctorMiddleware, createAppointment);
+
+// Update an existing appointment
+router.put("/appointments/:appointmentId", doctorMiddleware, updateAppointment);
+
+// Delete an appointment
+router.delete(
+  "/appointments/:appointmentId",
+  doctorMiddleware,
+  deleteAppointment
+);
+
+// Create a new prescription
+router.post("/prescriptions", doctorMiddleware, createPrescription);
+
+// Update an existing prescription
+router.put(
+  "/prescriptions/:prescriptionId",
+  doctorMiddleware,
+  updatePrescription
+);
+
+// Create a new patient record
+router.post("/patient-records", doctorMiddleware, createPatientRecord);
+
+// Update an existing patient record
+router.put("/patient-records/:recordId", doctorMiddleware, updatePatientRecord);
+
+// Create a new medical report
+router.post("/medical-reports", doctorMiddleware, createMedicalReport);
+
+// Get notifications for the doctor
+router.get("/notifications", doctorMiddleware, getNotifications);
+
+// Mark a notification as read
+router.put(
+  "/notifications/:notificationId",
+  doctorMiddleware,
+  markNotificationAsRead
+);
+
+export default router;

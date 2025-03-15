@@ -1,0 +1,22 @@
+import PatientRecord from "../models/patientRecord.model.js";
+
+// Create a new patient record
+export const createPatientRecord = async (data) => {
+  try {
+    const newRecord = new PatientRecord(data);
+    return await newRecord.save();
+  } catch (error) {
+    throw new Error("Error creating patient record: " + error.message);
+  }
+};
+
+// Update a patient record
+export const updatePatientRecord = async (recordId, updatedData) => {
+  try {
+    return await PatientRecord.findByIdAndUpdate(recordId, updatedData, {
+      new: true,
+    });
+  } catch (error) {
+    throw new Error("Error updating patient record: " + error.message);
+  }
+};
