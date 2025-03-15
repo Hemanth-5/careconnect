@@ -1,7 +1,7 @@
 import Notification from "../models/notification.model.js";
 
 // Get notifications by user
-export const getNotificationsByUser = async (userId) => {
+const getNotificationsByUser = async (userId) => {
   try {
     return await Notification.find({ user: userId })
       .sort({ dateSent: -1 })
@@ -12,7 +12,7 @@ export const getNotificationsByUser = async (userId) => {
 };
 
 // Mark a notification as read
-export const markNotificationAsRead = async (notificationId) => {
+const markNotificationAsRead = async (notificationId) => {
   try {
     return await Notification.findByIdAndUpdate(
       notificationId,
@@ -23,3 +23,10 @@ export const markNotificationAsRead = async (notificationId) => {
     throw new Error("Error marking notification as read: " + error.message);
   }
 };
+
+const NotificationService = {
+  getNotificationsByUser,
+  markNotificationAsRead,
+};
+
+export default NotificationService;

@@ -1,7 +1,7 @@
 import Prescription from "../models/prescription.model.js";
 
 // Create a new prescription
-export const createPrescription = async (data) => {
+const createPrescription = async (data) => {
   try {
     const newPrescription = new Prescription(data);
     return await newPrescription.save();
@@ -11,7 +11,7 @@ export const createPrescription = async (data) => {
 };
 
 // Update a prescription
-export const updatePrescription = async (prescriptionId, updatedData) => {
+const updatePrescription = async (prescriptionId, updatedData) => {
   try {
     return await Prescription.findByIdAndUpdate(prescriptionId, updatedData, {
       new: true,
@@ -20,3 +20,10 @@ export const updatePrescription = async (prescriptionId, updatedData) => {
     throw new Error("Error updating prescription: " + error.message);
   }
 };
+
+const PrescriptionService = {
+  createPrescription,
+  updatePrescription,
+};
+
+export default PrescriptionService;

@@ -1,0 +1,87 @@
+/* Global styles */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: "Poppins", sans-serif;
+}
+
+/* Centering the login page */
+body {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background: var(--white-secondary);
+}
+
+/* Login Container */
+.login-container {
+  background-color: #fff;
+  width: 100%;
+  max-width: 400px;
+  padding: 30px;
+  box-shadow: var(--box-shadow);
+  border-radius: var(--b-radius);
+  text-align: center;
+}
+
+/* Heading */
+.login-container h2 {
+  margin-bottom: 20px;
+  font-size: 2rem;
+  font-weight: 600;
+  text-shadow: var(--text-shadow);
+}
+
+/* Error Message */
+.login-error {
+  color: var(--red-primary);
+  margin-bottom: 20px;
+  font-size: 1rem;
+}
+
+/* Form and Input Fields */
+.login-form div {
+  margin-bottom: 20px;
+  text-align: left;
+}
+
+.login-form label {
+  font-size: 1rem;
+  color: var(--grey-primary);
+  margin-bottom: 8px;
+  display: block;
+}
+
+.login-form input,
+.login-role-select {
+  width: 100%;
+  padding: 12px;
+  border: var(--border);
+  border-radius: 5px;
+  font-size: 1rem;
+  color: var(--black-primary);
+  background: var(--white-primary);
+  transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+.login-form input:focus,
+.login-role-select:focus {
+  border-color: var(--primary-color);
+  outline: none;
+  box-shadow: 0 0 5px var(--primary-color);
+}
+
+/* Login Button */
+.login-form button {
+  width: 100%;
+  padding: 12px;
+  background: var(--primary-color);
+  color: var(--black-primary);
+  border: none;
+  border-radius: 5px;
+  font-size: 1.1rem;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}

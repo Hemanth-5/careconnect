@@ -1,7 +1,7 @@
 import Appointment from "../models/appointment.model.js";
 
 // Get appointments by doctor
-export const getAppointmentsByDoctor = async (doctorId) => {
+const getAppointments = async (doctorId) => {
   try {
     return await Appointment.find({ doctor: doctorId })
       .populate("patient")
@@ -12,7 +12,7 @@ export const getAppointmentsByDoctor = async (doctorId) => {
 };
 
 // Create a new appointment
-export const createAppointment = async (data) => {
+const createAppointment = async (data) => {
   try {
     const newAppointment = new Appointment(data);
     return await newAppointment.save();
@@ -22,7 +22,7 @@ export const createAppointment = async (data) => {
 };
 
 // Update an appointment
-export const updateAppointment = async (appointmentId, updatedData) => {
+const updateAppointment = async (appointmentId, updatedData) => {
   try {
     return await Appointment.findByIdAndUpdate(appointmentId, updatedData, {
       new: true,
@@ -33,10 +33,19 @@ export const updateAppointment = async (appointmentId, updatedData) => {
 };
 
 // Delete an appointment
-export const deleteAppointment = async (appointmentId) => {
+const deleteAppointment = async (appointmentId) => {
   try {
     return await Appointment.findByIdAndDelete(appointmentId);
   } catch (error) {
     throw new Error("Error deleting appointment: " + error.message);
   }
 };
+
+const AppointmentService = {
+  getAppointments,
+  createAppointment,
+  updateAppointment,
+  deleteAppointment,
+};
+
+export default AppointmentService;

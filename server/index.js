@@ -1,6 +1,7 @@
 // Necessary imports
 import express from "express";
 import dotenv from "dotenv";
+import cors from "cors";
 
 // Configs
 import { connectDB } from "./config/database.js"; // Assuming connectDB function is in this file
@@ -17,6 +18,12 @@ const app = express();
 
 // Middleware
 app.use(express.json());
+app.use(
+  cors({
+    origin: "*",
+    credentials: true,
+  })
+);
 
 // Routes
 app.use("/api/users", userRoutes);

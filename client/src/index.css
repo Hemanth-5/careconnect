@@ -1,13 +1,180 @@
-body {
-  margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap");
+@import "@fortawesome/fontawesome-free/css/all.css";
+
+/* Global Variables */
+:root {
+  --green-primary: #16a085;
+  --green-secondary: rgba(22, 160, 132, 0.088);
+
+  --yellow-primary: #f4b400;
+  --yellow-secondary: rgba(244, 180, 0, 0.1);
+
+  --blue-primary: #1e88e5;
+  --blue-secondary: rgba(30, 136, 229, 0.1);
+
+  --red-primary: #e53935;
+  --red-secondary: rgba(229, 57, 53, 0.05);
+
+  --black-primary: rgb(0, 0, 0);
+  --black-secondary: rgba(0, 0, 0, 0.1);
+
+  --grey-primary: rgb(123, 122, 122);
+  --grey-secondary: rgb(199, 199, 199);
+
+  --white-primary: #eceaea;
+  --white-secondary: rgb(245, 245, 245);
+
+  --box-shadow: 0 0.5rem 1.5rem var(--black-secondary);
+  --border: 1px solid var(--black-secondary);
+  --text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+  --b-radius: 0.5rem;
 }
 
-code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
-    monospace;
+/* Universal Reset */
+* {
+  font-family: "Poppins", sans-serif;
+  font-size: 1.1rem;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  outline: none;
+  border: none;
+  text-decoration: none;
+  transition: all 0.2s ease-out;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 0.5rem;
+}
+::-webkit-scrollbar-track {
+  background: var(--white-primary);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--black-primary);
+  cursor: pointer;
+}
+
+/* Common Body */
+body {
+  width: 100%;
+  background: var(--white-secondary);
+  position: relative;
+}
+
+/* Patient Portal Theme */
+.patient-theme {
+  --primary-color: var(--green-primary);
+  --secondary-color: var(--green-secondary);
+  --accent-color: var(--blue-primary);
+}
+
+/* Admin Portal Theme */
+.admin-theme {
+  --primary-color: var(--yellow-primary);
+  --secondary-color: var(--yellow-secondary);
+  --accent-color: var(--red-primary);
+}
+
+/* Doctor Portal Theme */
+.doctor-theme {
+  --primary-color: var(--blue-primary);
+  --secondary-color: var(--blue-secondary);
+  --accent-color: var(--green-primary);
+}
+
+/* Buttons */
+button {
+  padding: 0.8rem 1.2rem;
+  border-radius: var(--b-radius);
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  box-shadow: var(--box-shadow);
+}
+
+.patient-theme button {
+  background: var(--primary-color);
+  color: white;
+}
+.patient-theme button:hover {
+  background: var(--accent-color);
+}
+
+.admin-theme button {
+  background: var(--primary-color);
+  color: black;
+}
+.admin-theme button:hover {
+  background: var(--accent-color);
+  color: white;
+}
+
+.doctor-theme button {
+  background: var(--primary-color);
+  color: white;
+}
+.doctor-theme button:hover {
+  background: var(--accent-color);
+}
+
+/* Navbar */
+.navbar {
+  width: 100%;
+  padding: 1rem 2rem;
+  box-shadow: var(--box-shadow);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.patient-theme .navbar {
+  background: var(--primary-color);
+  color: white;
+}
+.admin-theme .navbar {
+  background: var(--primary-color);
+  color: black;
+}
+.doctor-theme .navbar {
+  background: var(--primary-color);
+  color: white;
+}
+
+/* Cards */
+.card {
+  padding: 1.5rem;
+  border-radius: var(--b-radius);
+  box-shadow: var(--box-shadow);
+}
+
+.patient-theme .card {
+  background: var(--secondary-color);
+}
+.admin-theme .card {
+  background: var(--secondary-color);
+}
+.doctor-theme .card {
+  background: var(--secondary-color);
+}
+
+/* Footer */
+.footer {
+  width: 100%;
+  padding: 1rem;
+  text-align: center;
+  color: var(--grey-primary);
+}
+
+.patient-theme .footer {
+  background: var(--primary-color);
+  color: white;
+}
+.admin-theme .footer {
+  background: var(--primary-color);
+  color: black;
+}
+.doctor-theme .footer {
+  background: var(--primary-color);
+  color: white;
 }

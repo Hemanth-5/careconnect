@@ -1,7 +1,7 @@
 import PatientRecord from "../models/patientRecord.model.js";
 
 // Create a new patient record
-export const createPatientRecord = async (data) => {
+const createPatientRecord = async (data) => {
   try {
     const newRecord = new PatientRecord(data);
     return await newRecord.save();
@@ -11,7 +11,7 @@ export const createPatientRecord = async (data) => {
 };
 
 // Update a patient record
-export const updatePatientRecord = async (recordId, updatedData) => {
+const updatePatientRecord = async (recordId, updatedData) => {
   try {
     return await PatientRecord.findByIdAndUpdate(recordId, updatedData, {
       new: true,
@@ -20,3 +20,10 @@ export const updatePatientRecord = async (recordId, updatedData) => {
     throw new Error("Error updating patient record: " + error.message);
   }
 };
+
+const PatientRecordService = {
+  createPatientRecord,
+  updatePatientRecord,
+};
+
+export default PatientRecordService;
