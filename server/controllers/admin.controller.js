@@ -109,3 +109,138 @@ export const getAllUsers = async (req, res) => {
     res.status(500).json({ message: "Server error", error });
   }
 };
+
+// Create specializations (Admin only)
+export const createSpecialization = async (req, res) => {
+  try {
+    const { name, description } = req.body;
+
+    const existing = await Specialization.findOne({
+      name: { $regex: new RegExp(name, "i") },
+    });
+    if (existing) {
+      return res
+        .status(400)
+        .json({ message: "Specialization already exists." });
+    }
+
+    const newSpecialization = new Specialization({ name, description });
+    await newSpecialization.save();
+
+    res.json({ message: "Specialization created successfully." });
+  } catch (error) {
+    res.status(500).json({ message: "Error creating specialization.", error });
+  }
+};
+
+// Get all specializations
+export const getSpecializations = async (req, res) => {
+  try {
+    const specializations = await Specialization.find();
+    res.json(specializations);
+  } catch (error) {
+    res.status(500).json({ message: "Error fetching specializations.", error });
+  }
+};
+
+// Update specialization (Admin only)
+export const updateSpecialization = async (req, res) => {
+  try {
+    const { specializationId } = req.params;
+    const updatedData = req.body;
+
+    const specialization = await Specialization.findByIdAndUpdate(
+      specializationId,
+      updatedData,
+      {
+        new: true,
+      }
+    );
+    if (!specialization) {
+      return res.status(404).json({ message: "Specialization not found." });
+    }
+
+    res.json(specialization);
+  } catch (error) {
+    res.status(500).json({ message: "Error updating specialization.", error });
+  }
+};
+
+// Delete specialization (Admin only)
+export const deleteSpecialization = async (req, res) => {
+  try {
+    const { specializationId } = req.params;
+
+    const specialization = await Specialization.findByIdAndDelete(
+      specializationId
+    );
+    if (!specialization) {
+      return res.status(404).json({ message: "Specialization not found." });
+    }
+
+    res.json({ message: "Specialization deleted successfully." });
+  } catch (error) {
+    res.status(500).json({ message: "Error deleting specialization.", error });
+  }
+};
+
+// Doctors
+// Get all doctors
+export const getDoctors = async (req, res) => {
+  try {
+    const doctors = await Doctor.find().populate("user");
+    res.json(doctors);
+  } catch (error) {
+    res.status(500).json({ message: "Error fetching doctors.", error });
+  }
+};
+
+// Get doctor by id
+export const getDoctorById = async (req, res) => {
+  try {
+    const { doctorId } = req.params;
+    const doctor = await Doctor.findById(doctorId).populate("user");
+    if (!doctor) {
+      return res.status(404).json({ message: "Doctor not found." });
+    }
+    res.json(doctor);
+  } catch (error) {
+    res.status(500).json({ message: "Error fetching doctor.", error });
+  }
+};
+
+// Get doctor by specialization
+export const getDoctorsBySpecialization = async (req, res) => {
+  try {
+    const { specialization } = req.params;
+    const doctors = await Doctor.find({ specialization }).populate("user");
+    res.json(doctors);
+  } catch (error) {
+    res.status(500).json({ message: "Error fetching doctors.", error });
+  }
+};
+
+// Patients
+// Get all patients
+export const getPatients = async (req, res) => {
+  try {
+    const patients = await Patient.find().populate("user");
+    res.json(patients);
+  } catch (error) {
+    res.status(500).json({ message: "Error fetching patients.", error });
+  }
+};
+
+// Get patient by id
+export const getPatientById = async (req, res) => {
+  try {
+    const { patientId } = req.params;
+    const patient = await Patient.findById(patientId).populate("user");
+    if (!patient) {
+      return res.status(404).json({ message: "Patient not found." });
+    }
+    res.json(patient);
+  } catch (error) {
+    res.status(500).json({ message: "Error fetching patient.", error });
+  }
+};
