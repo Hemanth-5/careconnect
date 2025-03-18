@@ -8,6 +8,50 @@ import User from "../models/user.model.js";
 import Doctor from "../models/doctor.model.js";
 import Patient from "../models/patient.model.js";
 
+// Get doctor profile
+export const getDoctorProfile = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.userId);
+    if (!user) {
+      res.status(404).json({ message: "User not found" });
+    }
+    const doctor = await Doctor.findOne({ user: user._id });
+    if (!doctor) {
+      return res.status(404).json({ message: "Doctor not found" });
+    }
+
+    res.status(200).json(doctor);
+  } catch (error) {
+    res.status(500).json({ message: "Error fetching doctor profile", error });
+  }
+};
+
+// Update doctor profile
+export const updateDoctorProfile = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.userId);
+    if (!user) {
+      res.status(404).json({ message: "User not found" });
+    }
+
+    const updatedData = req.body;
+    const updatedDoctor = await Doctor.findOneAndUpdate(
+      { user: user._id },
+      updatedData,
+      { new: true }
+    );
+    if (!updatedDoctor) {
+      return res.status(404).json({ message: "Doctor not found" });
+    }
+
+    res
+      .status(200)
+      .json({ message: "Doctor profile updated successfully", updatedDoctor });
+  } catch (error) {
+    res.status(500).json({ message: "Error updating doctor profile", error });
+  }
+};
+
 // Controller for managing appointments
 export const getAppointments = async (req, res) => {
   try {

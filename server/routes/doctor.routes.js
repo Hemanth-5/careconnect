@@ -1,5 +1,7 @@
 import express from "express";
 import {
+  getDoctorProfile,
+  updateDoctorProfile,
   getAppointments,
   createAppointment,
   updateAppointment,
@@ -17,6 +19,11 @@ import { doctorMiddleware } from "../middlewares/auth.middleware.js";
 const router = express.Router();
 
 // Protected routes (authentication required)
+// Get doctor profile
+router.get("/profile", doctorMiddleware, getDoctorProfile);
+
+// Update doctor profile
+router.put("/profile", doctorMiddleware, updateDoctorProfile);
 
 // Get all appointments for the doctor
 router.get("/appointments", doctorMiddleware, getAppointments);

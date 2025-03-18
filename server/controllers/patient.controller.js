@@ -39,22 +39,22 @@ export const updatePatientProfile = async (req, res) => {
   }
 };
 
-// Schedule an appointment
-export const scheduleAppointment = async (req, res) => {
-  try {
-    const { patientId, doctorId, date, timeSlot, reason } = req.body;
-    const appointment = await AppointmentService.scheduleAppointment(
-      patientId,
-      doctorId,
-      date,
-      timeSlot,
-      reason
-    );
-    res.json(appointment);
-  } catch (error) {
-    res.status(500).json({ message: "Error scheduling appointment.", error });
-  }
-};
+// // Schedule an appointment
+// export const scheduleAppointment = async (req, res) => {
+//   try {
+//     const { patientId, doctorId, date, timeSlot, reason } = req.body;
+//     const appointment = await AppointmentService.scheduleAppointment(
+//       patientId,
+//       doctorId,
+//       date,
+//       timeSlot,
+//       reason
+//     );
+//     res.json(appointment);
+//   } catch (error) {
+//     res.status(500).json({ message: "Error scheduling appointment.", error });
+//   }
+// };
 
 // Get patient's upcoming appointments
 export const getPatientAppointments = async (req, res) => {

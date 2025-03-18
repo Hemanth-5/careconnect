@@ -2,7 +2,6 @@ import express from "express";
 import {
   getPatientDetails,
   updatePatientProfile,
-  scheduleAppointment,
   getPatientAppointments,
   getPatientPrescriptions,
   getPatientNotifications,
@@ -21,7 +20,7 @@ router.get("/profile", authMiddleware, getPatientDetails);
 router.put("/profile", authMiddleware, updatePatientProfile);
 
 // Schedule an appointment
-router.post("/appointments", authMiddleware, scheduleAppointment);
+// router.post("/appointments", authMiddleware, scheduleAppointment);
 
 // Get the patient's upcoming appointments
 router.get("/appointments", authMiddleware, getPatientAppointments);
