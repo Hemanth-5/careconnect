@@ -1,6 +1,8 @@
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import User from "../models/user.model.js";
+import Doctor from "../models/doctor.model.js";
+import Patient from "../models/patient.model.js";
 import generateUsername from "../utils/generateUsername.js";
 
 // Register a new admin user
@@ -59,7 +61,24 @@ export const registerUser = async (req, res) => {
 
     await newUser.save();
 
-    res.status(201).json({ message: "User created successfully.", username });
+    // Add doctor / patient to the database
+    if (role === "doctor") {
+      // Add doctor details
+      const doctor = new Doctor({
+        user: newUser._id,
+      });
+      await doctor.save();
+    } else if (role === "patient") {
+      // Add patient details
+      const patient = new Patient({
+        user: newUser._id,
+      });
+      await patient.save();
+    }
+
+    res
+      .status(201)
+      .json({ message: `${role} created successfully.`, username });
   } catch (error) {
     res.status(500).json({ message: "Error registering user.", error });
   }

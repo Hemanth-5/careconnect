@@ -20,10 +20,17 @@ const patientSchema = new mongoose.Schema(
       policyNumber: { type: String },
       coverageDetails: { type: String },
     },
-    contact: {
-      phone: { type: String },
-      address: { type: String },
-    },
+    consultedDoctors: [
+      {
+        doctor: { type: mongoose.Schema.Types.ObjectId, ref: "Doctor" },
+        appointments: [
+          {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "Appointment",
+          },
+        ],
+      },
+    ],
   },
   { timestamps: true }
 );

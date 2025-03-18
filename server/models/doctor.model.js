@@ -7,17 +7,31 @@ const doctorSchema = new mongoose.Schema(
       { type: mongoose.Schema.Types.ObjectId, ref: "Specialization" },
     ],
     license: {
-      number: { type: String, required: true },
+      number: { type: String },
       expirationDate: { type: Date },
     },
     availability: {
       days: [{ type: String }],
       hours: { type: String }, // Example: "9 AM - 5 PM"
     },
-    contact: {
-      phone: { type: String },
-      email: { type: String },
-    },
+    appointments: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Appointment",
+      },
+    ],
+    exhaustedAppointments: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Appointment",
+      },
+    ],
+    patientsUnderCare: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Patient",
+      },
+    ],
   },
   { timestamps: true }
 );
