@@ -1,5 +1,16 @@
 import Appointment from "../models/appointment.model.js";
 
+// Get appointment by id
+const getAppointmentById = async (appointmentId) => {
+  try {
+    return await Appointment.findById(appointmentId)
+      .populate("patient")
+      .populate("doctor");
+  } catch (error) {
+    throw new Error("Error fetching appointment: " + error.message);
+  }
+};
+
 // Get appointments by doctor
 const getAppointments = async (doctorId) => {
   try {
@@ -42,6 +53,7 @@ const deleteAppointment = async (appointmentId) => {
 };
 
 const AppointmentService = {
+  getAppointmentById,
   getAppointments,
   createAppointment,
   updateAppointment,

@@ -7,7 +7,6 @@ import NotificationService from "../services/notification.service.js";
 import User from "../models/user.model.js";
 import Doctor from "../models/doctor.model.js";
 import Patient from "../models/patient.model.js";
-import Appointment from "../models/appointment.model.js";
 
 // Controller for managing appointments
 export const getAppointments = async (req, res) => {
@@ -153,8 +152,8 @@ export const updateAppointment = async (req, res) => {
 export const deleteAppointment = async (req, res) => {
   try {
     const { appointmentId } = req.params;
-    const appointment = await Appointment.findById(appointmentId).populate(
-      "doctor patient"
+    const appointment = await AppointmentService.getAppointmentById(
+      appointmentId
     );
     // console.log(appointmentId);
     if (!appointment) {
@@ -230,15 +229,48 @@ export const deleteAppointment = async (req, res) => {
 export const createPrescription = async (req, res) => {
   try {
     const { patient, medications, startDate, endDate, notes } = req.body;
-    const newPrescription = await PrescriptionService.createPrescription(
+    // console.log(req.body);
+
+    // Validate the patient exists
+    const dbPatient = await Patient.findById(patient);
+    if (!dbPatient) {
+      return res.status(404).json({ message: "Patient not found" });
+    }
+
+    const dbUser = await User.findById(req.user.userId);
+    if (!dbUser) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    const dbDoctor = await Doctor.findOne({ user: dbUser._id });
+    if (!dbDoctor) {
+      return res.status(404).json({ message: "Doctor not found" });
+    }
+
+    // Create a new prescription
+    const newPrescription = await PrescriptionService.createPrescription({
       patient,
-      req.user._id,
+      doctor: dbDoctor._id,
       medications,
       startDate,
       endDate,
-      notes
-    );
-    res.status(201).json(newPrescription);
+      notes,
+    });
+    // console.log(newPrescription);
+
+    // Optionally, add the prescription to the patient's record
+    dbPatient.prescriptions.push(newPrescription._id);
+    await dbPatient.save();
+
+    // Optionally, add the prescription to the doctor's record
+    dbDoctor.prescriptions.push(newPrescription._id);
+    await dbDoctor.save();
+
+    // Return the new prescription with populated patient and doctor details
+    // const populatedPrescription = await Prescription.findById(newPrescription._id)
+    //   .populate('patient')
+    //   .populate('doctor');
+
+    res.status(201).json({ message: "Prescription created successfully" });
   } catch (error) {
     res.status(500).json({ message: "Error creating prescription", error });
   }
@@ -248,14 +280,52 @@ export const updatePrescription = async (req, res) => {
   try {
     const { prescriptionId } = req.params;
     const updatedData = req.body;
+
+    // Validate the prescription exists
+    const dbPrescription = await PrescriptionService.getPrescription(
+      prescriptionId
+    );
+    if (!dbPrescription) {
+      return res.status(404).json({ message: "Prescription not found" });
+    }
+
+    // Validate the patient exists
+    const dbPatient = await Patient.findById(dbPrescription.patient);
+    if (!dbPatient) {
+      return res.status(404).json({ message: "Patient not found" });
+    }
+
+    // Optionally, update the patient's prescriptions list (remove old prescription if needed)
+    if (!dbPatient.prescriptions.includes(prescriptionId)) {
+      dbPatient.prescriptions.push(prescriptionId);
+    }
+    await dbPatient.save();
+
+    // Update the prescription details
     const updatedPrescription = await PrescriptionService.updatePrescription(
       prescriptionId,
       updatedData
     );
     if (!updatedPrescription) {
-      return res.status(404).json({ message: "Prescription not found" });
+      return res.status(404).json({ message: "Error updating prescription" });
     }
-    res.json(updatedPrescription);
+
+    const doctor = await Doctor.findById(dbPrescription.doctor);
+    if (!doctor) {
+      return res.status(404).json({ message: "Doctor not found" });
+    }
+
+    // Update the doctor’s record with the new prescription
+    if (!doctor.prescriptions.includes(prescriptionId)) {
+      doctor.prescriptions.push(prescriptionId);
+    }
+    await doctor.save();
+
+    // Return the updated prescription
+    res.status(200).json({
+      message: "Prescription updated successfully",
+      updatedPrescription,
+    });
   } catch (error) {
     res.status(500).json({ message: "Error updating prescription", error });
   }
