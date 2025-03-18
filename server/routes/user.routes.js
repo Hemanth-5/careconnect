@@ -1,5 +1,6 @@
 import express from "express";
 import {
+  registerUser,
   loginUser,
   getUserDetails,
   updateUserProfile,
@@ -11,6 +12,7 @@ import { authMiddleware } from "../middlewares/auth.middleware.js";
 const router = express.Router();
 
 // Public routes
+router.post("/register", registerUser);
 router.post("/login", loginUser);
 router.post("/refresh-token", refreshToken); // For generating a new access token using refresh token
 

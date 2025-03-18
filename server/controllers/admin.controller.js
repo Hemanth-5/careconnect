@@ -1,28 +1,65 @@
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import User from "../models/user.model.js";
+import generateUsername from "../utils/generateUsername.js";
+
+// Register a new admin user
+export const registerAdmin = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    // Generate a unique username for admin
+    const username = await generateUsername("admin");
+
+    const existing = await User.findOne({ email });
+    if (existing) {
+      return res.status(400).json({ message: "Email already registered." });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10); // Use a numeric salt rounds value
+
+    const newUser = new User({
+      username,
+      email,
+      password: hashedPassword,
+      role: "admin",
+    });
+
+    await newUser.save();
+
+    res
+      .status(201)
+      .json({ message: "Admin user created successfully.", username });
+  } catch (error) {
+    res.status(500).json({ message: "Error creating admin user.", error });
+  }
+};
 
 // Register a new user (Admin only can create users)
 export const registerUser = async (req, res) => {
   try {
-    const { username, password, role } = req.body;
+    const { email, password, role } = req.body;
 
-    const existingUser = await User.findOne({ username });
+    // Generate a unique username based on role
+    const username = await generateUsername(role);
+
+    const existingUser = await User.findOne({ email });
     if (existingUser) {
-      return res.status(400).json({ message: "Username already taken." });
+      return res.status(400).json({ message: "Email already registered." });
     }
 
-    const hashedPassword = await bcrypt.hash(password, 12);
+    const hashedPassword = await bcrypt.hash(password, 10); // Use a numeric salt rounds value
 
     const newUser = new User({
       username,
+      email,
       password: hashedPassword,
       role,
     });
 
     await newUser.save();
 
-    res.status(201).json({ message: "User created successfully." });
+    res.status(201).json({ message: "User created successfully.", username });
   } catch (error) {
     res.status(500).json({ message: "Error registering user.", error });
   }

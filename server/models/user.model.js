@@ -11,7 +11,7 @@ const userSchema = new mongoose.Schema(
       enum: ["admin", "doctor", "patient"],
       required: true,
     },
-    fullName: { type: String, required: true },
+    fullName: { type: String },
     profilePicture: { type: String }, // URL to profile picture
     contact: {
       phone: { type: String },
@@ -22,5 +22,10 @@ const userSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+// A function to compare passwords
+userSchema.methods.comparePassword = async function (enteredPassword) {
+  return await bcrypt.compare(enteredPassword, this.password);
+};
 
 export default mongoose.model("User", userSchema);

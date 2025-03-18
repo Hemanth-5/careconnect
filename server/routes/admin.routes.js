@@ -1,5 +1,6 @@
 import express from "express";
 import {
+  registerAdmin,
   registerUser,
   deleteUser,
   getAllUsers,
@@ -9,8 +10,9 @@ import { adminMiddleware } from "../middlewares/auth.middleware.js";
 const router = express.Router();
 
 // Admin routes (admin only)
+router.post("/register-admin", adminMiddleware, registerAdmin); // Admin only
 router.post("/register", adminMiddleware, registerUser); // Admin only
-router.delete("/:userId", adminMiddleware, deleteUser); // Admin can delete users
-router.get("/", adminMiddleware, getAllUsers); // Admin can get all users
+router.delete("/users/:userId", adminMiddleware, deleteUser); // Admin can delete users
+router.get("/users", adminMiddleware, getAllUsers); // Admin can get all users
 
 export default router;
