@@ -79,9 +79,30 @@ export const registerUser = async (req, res) => {
 
     res
       .status(201)
-      .json({ message: `${role} created successfully.`, username });
+      .json({ message: `${role} created successfully.`, user: newUser });
   } catch (error) {
     res.status(500).json({ message: "Error registering user.", error });
+  }
+};
+
+// Update user (Admin only)
+export const updateUser = async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    const updatedData = req.body;
+
+    const user = await User.findByIdAndUpdate(userId, updatedData, {
+      new: true,
+    });
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found." });
+    }
+
+    res.json({ message: "User updated successfully" });
+  } catch (error) {
+    res.status(500).json({ message: "Error updating user.", error });
   }
 };
 
@@ -94,6 +115,10 @@ export const deleteUser = async (req, res) => {
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
+
+    // Delete associated doctor or patient
+    await Doctor.findOneAndDelete({ user: userId });
+    await Patient.findOneAndDelete({ user: userId });
 
     res.json({ message: "User deleted successfully" });
   } catch (error) {
@@ -229,12 +254,70 @@ export const getDoctorById = async (req, res) => {
 export const getDoctorsBySpecialization = async (req, res) => {
   try {
     const { specializationId } = req.params;
+
+    console.log(`Filtering doctors by specialization: ${specializationId}`);
+
+    // Make sure we handle both string IDs and ObjectId references
     const doctors = await Doctor.find({
-      specializations: specializationId,
-    }).populate("user");
+      specializations: { $in: [specializationId] },
+    })
+      .populate("user")
+      .populate("specializations");
+
+    console.log(
+      `Found ${doctors.length} doctors with specialization ${specializationId}`
+    );
+
     res.json(doctors);
   } catch (error) {
+    console.error("Error fetching doctors by specialization:", error);
     res.status(500).json({ message: "Error fetching doctors.", error });
+  }
+};
+
+// Update doctor by id
+export const updateDoctor = async (req, res) => {
+  try {
+    const { doctorId } = req.params;
+    const updatedData = req.body;
+
+    // Find the doctor
+    const doctor = await Doctor.findById(doctorId);
+    if (!doctor) {
+      return res.status(404).json({ message: "Doctor not found." });
+    }
+
+    // Update doctor details
+    // Only update fields that are provided in the request
+    Object.keys(updatedData).forEach((key) => {
+      if (key !== "user") {
+        // Prevent updating the user reference
+        doctor[key] = updatedData[key];
+      }
+    });
+
+    await doctor.save();
+
+    // If user information is being updated
+    if (updatedData.userInfo && doctor.user) {
+      const user = await User.findById(doctor.user);
+      if (user) {
+        // Update user fields except password and role
+        const { password, role, ...userUpdateData } = updatedData.userInfo;
+
+        Object.keys(userUpdateData).forEach((key) => {
+          user[key] = userUpdateData[key];
+        });
+
+        await user.save();
+      }
+    }
+
+    res.json({ message: "Doctor updated successfully", doctor });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ message: "Error updating doctor", error: error.message });
   }
 };
 
@@ -260,5 +343,51 @@ export const getPatientById = async (req, res) => {
     res.json(patient);
   } catch (error) {
     res.status(500).json({ message: "Error fetching patient.", error });
+  }
+};
+
+// Update patient by id
+export const updatePatient = async (req, res) => {
+  try {
+    const { patientId } = req.params;
+    const updatedData = req.body;
+
+    // Find the patient
+    const patient = await Patient.findById(patientId);
+    if (!patient) {
+      return res.status(404).json({ message: "Patient not found." });
+    }
+
+    // Update patient details
+    // Only update fields that are provided in the request
+    Object.keys(updatedData).forEach((key) => {
+      if (key !== "user") {
+        // Prevent updating the user reference
+        patient[key] = updatedData[key];
+      }
+    });
+
+    await patient.save();
+
+    // If user information is being updated
+    if (updatedData.userInfo && patient.user) {
+      const user = await User.findById(patient.user);
+      if (user) {
+        // Update user fields except password and role
+        const { password, role, ...userUpdateData } = updatedData.userInfo;
+
+        Object.keys(userUpdateData).forEach((key) => {
+          user[key] = userUpdateData[key];
+        });
+
+        await user.save();
+      }
+    }
+
+    res.json({ message: "Patient updated successfully", patient });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ message: "Error updating patient", error: error.message });
   }
 };

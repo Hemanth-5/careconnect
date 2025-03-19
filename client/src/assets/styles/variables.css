@@ -1,0 +1,126 @@
+/* src/assets/styles/variables.css */
+:root {
+  /* Common colors */
+  --white: #ffffff;
+  --black: #000000;
+  --gray-100: #f8f9fa;
+  --gray-200: #e9ecef;
+  --gray-300: #dee2e6;
+  --gray-400: #ced4da;
+  --gray-500: #adb5bd;
+  --gray-600: #6c757d;
+  --gray-700: #495057;
+  --gray-800: #343a40;
+  --gray-900: #212529;
+
+  /* Shadow */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
+
+  /* Typography */
+  --font-family: "Poppins", sans-serif;
+  --font-size-xs: 0.75rem;
+  --font-size-sm: 0.875rem;
+  --font-size-md: 1rem;
+  --font-size-lg: 1.125rem;
+  --font-size-xl: 1.25rem;
+  --font-size-2xl: 1.5rem;
+  --font-size-3xl: 1.875rem;
+  --font-size-4xl: 2.25rem;
+
+  /* Spacing */
+  --spacing-1: 0.25rem;
+  --spacing-2: 0.5rem;
+  --spacing-3: 0.75rem;
+  --spacing-4: 1rem;
+  --spacing-5: 1.25rem;
+  --spacing-6: 1.5rem;
+  --spacing-8: 2rem;
+  --spacing-10: 2.5rem;
+  --spacing-12: 3rem;
+  --spacing-16: 4rem;
+
+  /* Border radius */
+  --border-radius-sm: 0.125rem;
+  --border-radius: 0.25rem;
+  --border-radius-md: 0.375rem;
+  --border-radius-lg: 0.5rem;
+  --border-radius-xl: 0.75rem;
+  --border-radius-2xl: 1rem;
+  --border-radius-full: 9999px;
+
+  /* Transitions */
+  --transition-fast: 150ms;
+  --transition-normal: 300ms;
+  --transition-slow: 500ms;
+}
+
+/* Admin Theme */
+.admin-theme {
+  --primary: #3f51b5;
+  --primary-light: #757de8;
+  --primary-dark: #002984;
+  --secondary: #ff4081;
+  --secondary-light: #ff79b0;
+  --secondary-dark: #c60055;
+  --accent: #7c4dff;
+  --success: #4caf50;
+  --info: #2196f3;
+  --warning: #ff9800;
+  --danger: #f44336;
+
+  --bg-primary: #f5f6fa;
+  --bg-sidebar: #1a237e;
+  --text-sidebar: #ffffff;
+  --bg-card: #ffffff;
+
+  --header-height: 60px;
+  --sidebar-width: 240px;
+}
+
+/* Doctor Theme */
+.doctor-theme {
+  --primary: #009688;
+  --primary-light: #52c7b8;
+  --primary-dark: #00675b;
+  --secondary: #ffc107;
+  --secondary-light: #fff350;
+  --secondary-dark: #c79100;
+  --accent: #00bcd4;
+  --success: #4caf50;
+  --info: #03a9f4;
+  --warning: #ff9800;
+  --danger: #f44336;
+
+  --bg-primary: #f0f7f5;
+  --bg-sidebar: #004d40;
+  --text-sidebar: #ffffff;
+  --bg-card: #ffffff;
+
+  --header-height: 60px;
+  --sidebar-width: 240px;
+}
+
+/* Patient Theme */
+.patient-theme {
+  --primary: #2196f3;
+  --primary-light: #6ec6ff;
+  --primary-dark: #0069c0;
+  --secondary: #ff5722;
+  --secondary-light: #ff8a50;
+  --secondary-dark: #c41c00;
+  --accent: #673ab7;
+  --success: #8bc34a;
+  --info: #03a9f4;
+  --warning: #ffc107;
+  --danger: #f44336;
+
+  --bg-primary: #f4f9fe;
+  --bg-sidebar: #01579b;
+  --text-sidebar: #ffffff;
+  --bg-card: #ffffff;
+
+  --header-height: 60px;
+  --sidebar-width: 240px;
+}

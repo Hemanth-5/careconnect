@@ -1,3 +1,4 @@
+// src/constants/api.js
 const BASE_URL = "http://localhost:5000/api";
 
 export const API = {
@@ -9,11 +10,38 @@ export const API = {
     CHANGE_PASSWORD: `${BASE_URL}/users/me/password`,
   },
   ADMIN: {
-    REGISTER: `${BASE_URL}/admin/register`,
-    DELETE: (userId) => `${BASE_URL}/admin/${userId}`,
-    GET_ALL: `${BASE_URL}/admin`,
+    REGISTER_ADMIN: `${BASE_URL}/admin/register-admin`,
+    REGISTER_USER: `${BASE_URL}/admin/register`,
+    UPDATE_USER: (userId) => `${BASE_URL}/admin/users/${userId}`,
+    DELETE_USER: (userId) => `${BASE_URL}/admin/users/${userId}`,
+    GET_USERS: `${BASE_URL}/admin/users`,
+    GET_SPECIALIZATIONS: `${BASE_URL}/admin/specializations`,
+    CREATE_SPECIALIZATION: `${BASE_URL}/admin/specializations`,
+    UPDATE_SPECIALIZATION: (specializationId) =>
+      `${BASE_URL}/admin/specializations/${specializationId}`,
+    DELETE_SPECIALIZATION: (specializationId) =>
+      `${BASE_URL}/admin/specializations/${specializationId}`,
+
+    GET_DOCTORS: `${BASE_URL}/admin/doctors`,
+    GET_DOCTOR_BY_ID: (doctorId) => `${BASE_URL}/admin/doctors/${doctorId}`,
+    GET_DOCTORS_BY_SPECIALIZATION: (specializationId) =>
+      `${BASE_URL}/admin/doctors/specialization/${specializationId}`,
+    GET_PATIENTS: `${BASE_URL}/admin/patients`,
+    GET_PATIENT_BY_ID: (patientId) => `${BASE_URL}/admin/patients/${patientId}`,
+    UPDATE_DOCTOR: (doctorId) => `${BASE_URL}/admin/doctors/${doctorId}`,
+    UPDATE_PATIENT: (patientId) => `${BASE_URL}/admin/patients/${patientId}`,
+    GET_APPOINTMENTS: `${BASE_URL}/admin/appointments`,
+    GET_APPOINTMENT_BY_ID: (appointmentId) =>
+      `${BASE_URL}/admin/appointments/${appointmentId}`,
+    UPDATE_APPOINTMENT_STATUS: (appointmentId) =>
+      `${BASE_URL}/admin/appointments/${appointmentId}/status`,
+    GET_APPOINTMENT_ANALYTICS: `${BASE_URL}/admin/appointments/analytics`,
   },
   DOCTORS: {
+    GET_PROFILE: `${BASE_URL}/doctors/profile`,
+    UPDATE_PROFILE: `${BASE_URL}/doctors/profile`,
+    ASSIGN_SPECIALIZATIONS: `${BASE_URL}/doctors/me/specializations`,
+    REMOVE_SPECIALIZATIONS: `${BASE_URL}/doctors/me/specializations`,
     GET_APPOINTMENTS: `${BASE_URL}/doctors/appointments`,
     CREATE_APPOINTMENT: `${BASE_URL}/doctors/appointments`,
     UPDATE_APPOINTMENT: (appointmentId) =>
@@ -27,6 +55,9 @@ export const API = {
     UPDATE_PATIENT_RECORD: (recordId) =>
       `${BASE_URL}/doctors/patient-records/${recordId}`,
     CREATE_MEDICAL_REPORT: `${BASE_URL}/doctors/medical-reports`,
+    UPDATE_MEDICAL_REPORT: (reportId) =>
+      `${BASE_URL}/doctors/medical-reports/${reportId}`,
+    GET_MY_PATIENTS: `${BASE_URL}/doctors/my-patients`,
     GET_NOTIFICATIONS: `${BASE_URL}/doctors/notifications`,
     MARK_NOTIFICATION_AS_READ: (notificationId) =>
       `${BASE_URL}/doctors/notifications/${notificationId}`,

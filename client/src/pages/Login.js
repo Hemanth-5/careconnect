@@ -1,92 +1,313 @@
-import React, { useState } from "react";
-import { login } from "../service/auth.service"; // Import the login function (username, password)
-import { useNavigate } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
+import Card from "../components/common/Card";
+import Button from "../components/common/Button";
+import Input from "../components/common/Input";
+import Spinner from "../components/common/Spinner";
+import { API } from "../constants/api";
 import "./Login.css";
 
 const Login = () => {
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
-  const [isLoggedIn, setIsLoggedIn] = useState(false); // Track login status
-  const [role, setRole] = useState(""); // Selected role after login
   const navigate = useNavigate();
+  const location = useLocation();
+  const [formData, setFormData] = useState({
+    email: "",
+    password: "", // Keep password field but make it optional in validation
+  });
+  const [errors, setErrors] = useState({});
+  const [loading, setLoading] = useState(false);
+  const [loginError, setLoginError] = useState("");
+  const [rememberMe, setRememberMe] = useState(false);
+  const [forgotPasswordMode, setForgotPasswordMode] = useState(false);
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
 
-  const handleLogin = async (e) => {
+  // Check if user is already logged in or has remembered credentials
+  useEffect(() => {
+    // Add a small delay to prevent immediate redirects
+    const timer = setTimeout(() => {
+      const token = localStorage.getItem("token");
+
+      if (token) {
+        // Check if the token is valid before redirecting
+        try {
+          const tokenData = JSON.parse(atob(token.split(".")[1]));
+          const expiryTime = tokenData.exp * 1000; // Convert to milliseconds
+
+          if (Date.now() < expiryTime) {
+            navigate("/redirect");
+            return;
+          } else {
+            // Token expired, clear it
+            localStorage.removeItem("token");
+            localStorage.removeItem("refreshToken");
+            localStorage.removeItem("userType");
+          }
+        } catch (e) {
+          // Invalid token format, clear it
+          localStorage.removeItem("token");
+          localStorage.removeItem("refreshToken");
+          localStorage.removeItem("userType");
+        }
+      }
+
+      // Load remembered credentials if they exist
+      const rememberedUser = localStorage.getItem("rememberedUser");
+      if (rememberedUser) {
+        try {
+          const userData = JSON.parse(rememberedUser);
+          setFormData(userData);
+          setRememberMe(true);
+        } catch (e) {
+          localStorage.removeItem("rememberedUser");
+        }
+      }
+
+      setIsCheckingAuth(false);
+    }, 100);
+
+    return () => clearTimeout(timer);
+  }, [navigate]);
+
+  const handleChange = (e) => {
+    const { id, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [id]: value,
+    }));
+
+    // Clear errors when user starts typing
+    if (errors[id]) {
+      setErrors((prev) => ({
+        ...prev,
+        [id]: "",
+      }));
+    }
+    if (loginError) {
+      setLoginError("");
+    }
+  };
+
+  const validateForm = () => {
+    const newErrors = {};
+
+    // Email validation - more comprehensive
+    if (!formData.email) {
+      newErrors.email = "Email is required";
+    } else if (
+      !/^[\w-]+(\.[\w-]+)*@([\w-]+\.)+[a-zA-Z]{2,7}$/.test(formData.email)
+    ) {
+      newErrors.email = "Please enter a valid email address";
+    }
+
+    // Password validation is now optional - only validate if password is entered
+    // Skip validation in forgot password mode
+    if (
+      !forgotPasswordMode &&
+      formData.password &&
+      formData.password.length < 6
+    ) {
+      newErrors.password = "Password must be at least 6 characters";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (!validateForm()) return;
+
+    // Handle forgot password flow
+    if (forgotPasswordMode) {
+      await handleForgotPassword();
+      return;
+    }
+
+    setLoading(true);
+    setLoginError("");
+
     try {
-      // Call the login API with username and password
-      const data = await login(username, password);
+      // Create request body with email and password if provided
+      const requestBody = {
+        email: formData.email,
+      };
 
-      // Store JWT token (if returned)
-      localStorage.setItem("authToken", data.token);
+      // Only include password if it has been entered
+      if (formData.password) {
+        requestBody.password = formData.password;
+      }
 
-      // After successful login, set login status to true
-      setIsLoggedIn(true);
-    } catch (err) {
-      setError("Invalid username or password.");
+      const response = await fetch(API.USERS.LOGIN, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(requestBody),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Login failed");
+      }
+
+      // Handle "Remember me" functionality
+      if (rememberMe) {
+        localStorage.setItem(
+          "rememberedUser",
+          JSON.stringify({
+            email: formData.email,
+            password: formData.password,
+          })
+        );
+      } else {
+        localStorage.removeItem("rememberedUser");
+      }
+
+      // Store tokens and user role
+      localStorage.setItem("token", data.accessToken);
+      localStorage.setItem("refreshToken", data.refreshToken);
+
+      try {
+        // Decode JWT to get user role
+        const userRole = JSON.parse(atob(data.accessToken.split(".")[1])).role;
+        localStorage.setItem("userType", userRole);
+      } catch (error) {
+        console.error("Error decoding token:", error);
+      }
+
+      // Redirect based on user role
+      navigate("/redirect");
+    } catch (error) {
+      setLoginError(error.message || "An error occurred during login");
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleRoleSelect = () => {
-    // Save the selected role (this can be stored in localStorage or context)
-    localStorage.setItem("role", role);
+  const handleForgotPassword = async () => {
+    if (!formData.email) {
+      setErrors({ email: "Please enter your email address" });
+      return;
+    }
 
-    // Navigate to the correct dashboard based on the role
-    if (role === "admin") {
-      navigate("/admin/dashboard");
-    } else if (role === "doctor") {
-      navigate("/doctor/dashboard");
-    } else if (role === "patient") {
-      navigate("/patient/dashboard");
+    setLoading(true);
+    try {
+      // This would typically call an API endpoint to send a reset password email
+      // For now, we'll just simulate it
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+
+      // Show success message
+      setLoginError("");
+      alert(
+        `If an account exists for ${formData.email}, a password reset link will be sent.`
+      );
+      setForgotPasswordMode(false);
+    } catch (error) {
+      setLoginError("Unable to process your request. Please try again later.");
+    } finally {
+      setLoading(false);
     }
   };
+
+  const toggleForgotPassword = (e) => {
+    e.preventDefault();
+    setForgotPasswordMode(!forgotPasswordMode);
+    setLoginError("");
+    setErrors({});
+  };
+
+  // Show a loading state while checking auth
+  if (isCheckingAuth) {
+    return (
+      <div className="login-container">
+        <Spinner center size="large" />
+      </div>
+    );
+  }
 
   return (
     <div className="login-container">
-      <h2>Login</h2>
-      {error && <p className="login-error">{error}</p>}
-      {!isLoggedIn ? (
-        <form onSubmit={handleLogin} className="login-form">
-          <div>
-            <label htmlFor="username">Username</label>
-            <input
-              type="text"
-              id="username"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
+      <div className="login-wrapper">
+        <Card className="login-card">
+          <div className="login-header">
+            <h2>Welcome to CareConnect</h2>
+            <p>
+              {forgotPasswordMode
+                ? "Reset your password"
+                : "Sign in to your account"}
+            </p>
+          </div>
+
+          {loginError && (
+            <div className="login-error">
+              <i className="fas fa-exclamation-circle"></i> {loginError}
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit}>
+            <Input
+              label="Email"
+              type="email"
+              id="email"
+              placeholder="Enter your email"
+              value={formData.email}
+              onChange={handleChange}
+              error={errors.email}
               required
             />
+
+            {!forgotPasswordMode && (
+              <Input
+                label="Password (if applicable)"
+                type="password"
+                id="password"
+                placeholder="Enter your password if required"
+                value={formData.password}
+                onChange={handleChange}
+                error={errors.password}
+              />
+            )}
+
+            <div className="login-options">
+              {!forgotPasswordMode && (
+                <label className="remember-me">
+                  <input
+                    type="checkbox"
+                    checked={rememberMe}
+                    onChange={() => setRememberMe(!rememberMe)}
+                  />{" "}
+                  Remember me
+                </label>
+              )}
+              <a
+                href="#"
+                onClick={toggleForgotPassword}
+                className="forgot-password"
+              >
+                {forgotPasswordMode ? "Back to login" : "Forgot Password?"}
+              </a>
+            </div>
+
+            <Button
+              type="submit"
+              variant="primary"
+              fullWidth
+              disabled={loading}
+              loading={loading}
+            >
+              {forgotPasswordMode ? "Send Reset Link" : "Sign In"}
+            </Button>
+          </form>
+
+          <div className="login-footer">
+            <p>
+              © {new Date().getFullYear()} CareConnect. All rights reserved.
+            </p>
           </div>
-          <div>
-            <label htmlFor="password">Password</label>
-            <input
-              type="password"
-              id="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
-          </div>
-          <button type="submit">Login</button>
-        </form>
-      ) : (
-        <div>
-          <h3>Select Your Role</h3>
-          <select
-            onChange={(e) => setRole(e.target.value)}
-            value={role}
-            className="login-role-select"
-          >
-            <option value="">Select Role</option>
-            <option value="admin">Admin</option>
-            <option value="doctor">Doctor</option>
-            <option value="patient">Patient</option>
-          </select>
-          <button onClick={handleRoleSelect} disabled={!role}>
-            Continue
-          </button>
-        </div>
-      )}
+        </Card>
+      </div>
     </div>
   );
 };

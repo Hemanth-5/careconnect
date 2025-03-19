@@ -1,207 +1,198 @@
 import React, { useState, useEffect } from "react";
 import {
   BrowserRouter as Router,
-  Route,
   Routes,
+  Route,
   Navigate,
+  useLocation,
+  Outlet,
 } from "react-router-dom";
-
-// Hooks
-import useAuth from "./hooks/useAuth";
-
-// Login Pages
 import Login from "./pages/Login";
+import Unauthorized from "./pages/Unauthorized";
+import Spinner from "./components/common/Spinner";
 
-// Admin Portal Pages
-import AdminDashboard from "./pages/admin/AdminDashboard";
-import AdminProfile from "./pages/admin/AdminProfile";
-import ManageUsers from "./pages/admin/ManageUsers";
-import AdminReports from "./pages/admin/Reports";
-import AdminSettings from "./pages/admin/Settings";
+// Import Admin Pages
+import AdminLayout from "./containers/AdminLayout";
+import AdminDashboard from "./pages/AdminPages/Dashboard";
+import UserManagement from "./pages/AdminPages/UserManagement";
+// Import additional admin pages as they're created
+import SpecializationManagement from "./pages/AdminPages/SpecializationManagement";
+import DoctorsList from "./pages/AdminPages/DoctorsList";
+import PatientsList from "./pages/AdminPages/PatientsList";
+import AppointmentManagement from "./pages/AdminPages/AppointmentManagement";
+import AnalyticsDashboard from "./pages/AdminPages/AnalyticsDashboard";
 
-// Doctor Portal Pages
-import DoctorDashboard from "./pages/doctor/DoctorDashboard";
-import ManageAppointments from "./pages/doctor/ManageAppointments";
-import DoctorProfile from "./pages/doctor/DoctorProfile";
-import DoctorNotifications from "./pages/doctor/Notifications";
-import PatientHistory from "./pages/doctor/PatientHistory";
+import "./assets/styles/global.css";
 
-// Patient Portal Pages
-import PatientDashboard from "./pages/patient/PatientDashboard";
-import PatientProfile from "./pages/patient/PatientProfile";
-import BookAppointments from "./pages/patient/BookAppointments";
-import PatientNotifications from "./pages/patient/Notifications";
-import MedicalHistory from "./pages/patient/MedicalHistory";
+// Wrapper for the AuthCheck functionality
+const AuthCheckWrapper = ({ redirectTo, children }) => {
+  // useLocation hook can only be used in a component within Router
+  return <AuthCheck redirectTo={redirectTo}>{children}</AuthCheck>;
+};
+
+// Create a component to check auth state with access to location
+const AuthCheck = ({ children, redirectTo }) => {
+  const token = localStorage.getItem("token");
+  const [isAuthenticated, setIsAuthenticated] = useState(null);
+  const location = useLocation();
+
+  useEffect(() => {
+    // This ensures we don't redirect away from login page
+    if (location.pathname === "/login") {
+      return;
+    }
+
+    setIsAuthenticated(!!token);
+  }, [location, token]);
+
+  // Wait until auth state is checked
+  if (isAuthenticated === null) {
+    return <Spinner center size="medium" />; // Replace null with Spinner
+  }
+
+  // Don't redirect if we're already at the login page
+  if (!isAuthenticated && location.pathname === redirectTo) {
+    return children;
+  }
+
+  return isAuthenticated ? (
+    children
+  ) : (
+    <Navigate to={redirectTo} state={{ from: location }} replace />
+  );
+};
+
+// Create a simple RedirectBasedOnRole component that doesn't immediately redirect
+const RedirectBasedOnRole = () => {
+  const [destination, setDestination] = useState(null);
+  const location = useLocation();
+
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    const userType = localStorage.getItem("userType");
+
+    if (!token) {
+      setDestination("/login");
+      return;
+    }
+
+    switch (userType) {
+      case "admin":
+        setDestination("/admin/dashboard");
+        break;
+      case "doctor":
+        setDestination("/doctor/dashboard");
+        break;
+      case "patient":
+        setDestination("/patient/dashboard");
+        break;
+      default:
+        setDestination("/unauthorized");
+        break;
+    }
+  }, []);
+
+  if (destination === null) {
+    return <Spinner center size="medium" />; // Replace null with Spinner
+  }
+
+  return <Navigate to={destination} replace />;
+};
+
+// Home component with safer redirect
+const Home = () => {
+  const [redirect, setRedirect] = useState(null);
+
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    setRedirect(token ? "/redirect" : "/login");
+  }, []);
+
+  if (redirect === null) {
+    return <Spinner center size="medium" />; // Replace null with Spinner
+  }
+
+  return <Navigate to={redirect} replace />;
+};
 
 const App = () => {
-  const role = useAuth(); // Get the role (admin, doctor, or patient) after login
+  // Add a mechanism to prevent immediate token checking
+  const [initialized, setInitialized] = useState(false);
 
-  // ProtectedRoute component to handle role-based access
-  const ProtectedRoute = ({ roleRequired, children }) => {
-    if (role === roleRequired) {
-      return children;
-    }
-    return <Navigate to={`/login`} />;
-  };
+  useEffect(() => {
+    // This delay allows the app to fully render before checking tokens
+    // Which helps prevent immediate redirects
+    const timer = setTimeout(() => {
+      setInitialized(true);
+    }, 50);
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  if (!initialized) {
+    return (
+      <div className="app-loading-container">
+        <Spinner center size="large" />
+      </div>
+    ); // Replace div with styled spinner
+  }
 
   return (
     <Router>
       <Routes>
-        {/* Login Routes */}
+        {/* Public routes */}
         <Route path="/login" element={<Login />} />
+        <Route path="/unauthorized" element={<Unauthorized />} />
 
-        {/* Admin Routes */}
-        {/* <Route path="/admin/login" element={<AdminLogin />} /> */}
-        <Route
-          path="/admin/dashboard"
-          element={
-            <ProtectedRoute roleRequired="admin">
-              <AdminDashboard />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/admin/settings"
-          element={
-            <ProtectedRoute roleRequired="admin">
-              <AdminSettings />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/admin/profile"
-          element={
-            <ProtectedRoute roleRequired="admin">
-              <AdminProfile />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/admin/users"
-          element={
-            <ProtectedRoute roleRequired="admin">
-              <ManageUsers />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/admin/reports"
-          element={
-            <ProtectedRoute roleRequired="admin">
-              <AdminReports />
-            </ProtectedRoute>
-          }
-        />
+        {/* Role-based redirect */}
+        <Route path="/redirect" element={<RedirectBasedOnRole />} />
 
-        {/* Doctor Routes */}
-        {/* <Route path="/doctor/login" element={<DoctorLogin />} /> */}
+        {/* Default route */}
+        <Route path="/" element={<Home />} />
+
+        {/* Admin routes - now using AdminLayout */}
+        <Route
+          path="/admin"
+          element={
+            <AuthCheckWrapper redirectTo="/login">
+              <AdminLayout />
+            </AuthCheckWrapper>
+          }
+        >
+          <Route path="dashboard" element={<AdminDashboard />} />
+          <Route path="users" element={<UserManagement />} />
+          <Route
+            path="specializations"
+            element={<SpecializationManagement />}
+          />
+          <Route path="doctors" element={<DoctorsList />} />
+          <Route path="patients" element={<PatientsList />} />
+          <Route path="appointments" element={<AppointmentManagement />} />
+          <Route path="analytics" element={<AnalyticsDashboard />} />
+        </Route>
+
+        {/* Doctor routes placeholder */}
         <Route
           path="/doctor/dashboard"
           element={
-            <ProtectedRoute roleRequired="doctor">
-              <DoctorDashboard />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/doctor/appointments"
-          element={
-            <ProtectedRoute roleRequired="doctor">
-              <ManageAppointments />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/doctor/profile"
-          element={
-            <ProtectedRoute roleRequired="doctor">
-              <DoctorProfile />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/doctor/notifications"
-          element={
-            <ProtectedRoute roleRequired="doctor">
-              <DoctorNotifications />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/doctor/patient-history"
-          element={
-            <ProtectedRoute roleRequired="doctor">
-              <PatientHistory />
-            </ProtectedRoute>
+            <AuthCheckWrapper redirectTo="/login">
+              <div>Doctor Dashboard Placeholder</div>
+            </AuthCheckWrapper>
           }
         />
 
-        {/* Patient Routes */}
-        {/* <Route path="/patient/login" element={<PatientLogin />} /> */}
+        {/* Patient routes placeholder */}
         <Route
           path="/patient/dashboard"
           element={
-            <ProtectedRoute roleRequired="patient">
-              <PatientDashboard />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/patient/profile"
-          element={
-            <ProtectedRoute roleRequired="patient">
-              <PatientProfile />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/patient/appointments"
-          element={
-            <ProtectedRoute roleRequired="patient">
-              <BookAppointments />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/patient/notifications"
-          element={
-            <ProtectedRoute roleRequired="patient">
-              <PatientNotifications />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/patient/medical-history"
-          element={
-            <ProtectedRoute roleRequired="patient">
-              <MedicalHistory />
-            </ProtectedRoute>
+            <AuthCheckWrapper redirectTo="/login">
+              <div>Patient Dashboard Placeholder</div>
+            </AuthCheckWrapper>
           }
         />
 
-        {/* Default Route */}
-        <Route
-          path="/"
-          element={
-            <>
-              <h1>Welcome to the Health Portal</h1>
-              <p>Please log in to continue.</p>
-
-              <p>
-                <a href="/admin/login">Admin Login</a>
-              </p>
-              <p>
-                <a href="/doctor/login">Doctor Login</a>
-              </p>
-              <p>
-                <a href="/patient/login">Patient Login</a>
-              </p>
-            </>
-          }
-        />
-
-        {/* Catch-all route */}
-        <Route path="*" element={<h1>404 - Page Not Found</h1>} />
+        {/* Any other route */}
+        <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
     </Router>
   );

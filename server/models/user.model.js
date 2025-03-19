@@ -1,35 +1,53 @@
 import mongoose from "mongoose";
-import bcrypt from "bcryptjs";
+
+const contactSchema = new mongoose.Schema({
+  phone: { type: String },
+  address: { type: String },
+  city: { type: String },
+  state: { type: String },
+  zipCode: { type: String },
+  country: { type: String },
+});
 
 const userSchema = new mongoose.Schema(
   {
-    username: { type: String, required: true, unique: true },
-    email: { type: String, required: true, unique: true },
-    password: { type: String, required: true },
-    role: {
+    username: {
       type: String,
-      enum: ["admin", "doctor", "patient"],
+      required: true,
+      unique: true,
+      trim: true,
+    },
+    email: {
+      type: String,
+      required: true,
+      unique: true,
+      trim: true,
+      lowercase: true,
+    },
+    password: {
+      type: String,
       required: true,
     },
-    fullName: { type: String },
-    profilePicture: {
+    fullname: { type: String },
+    role: {
       type: String,
-      default:
-        "https://static.vecteezy.com/system/resources/thumbnails/009/292/244/small/default-avatar-icon-of-social-media-user-vector.jpg",
-    }, // URL to profile picture
-    contact: {
-      phone: { type: String },
-      address: { type: String },
+      enum: ["patient", "doctor", "admin"],
+      default: "patient",
     },
-    lastLogin: { type: Date, default: Date.now },
-    refreshToken: { type: String, required: false },
+    gender: {
+      type: String,
+      enum: ["male", "female", "other", "prefer not to say"],
+    },
+    dateOfBirth: { type: Date },
+    age: { type: Number },
+    profilePicture: { type: String },
+    contact: contactSchema,
+    isActive: { type: Boolean, default: true },
+    lastLogin: { type: Date },
+    passwordResetToken: { type: String },
+    passwordResetExpires: { type: Date },
   },
   { timestamps: true }
 );
-
-// A function to compare passwords
-userSchema.methods.comparePassword = async function (enteredPassword) {
-  return await bcrypt.compare(enteredPassword, this.password);
-};
 
 export default mongoose.model("User", userSchema);

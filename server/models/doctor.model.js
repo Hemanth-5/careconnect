@@ -1,5 +1,23 @@
 import mongoose from "mongoose";
 
+const availabilitySlotSchema = new mongoose.Schema({
+  day: {
+    type: String,
+    enum: [
+      "Monday",
+      "Tuesday",
+      "Wednesday",
+      "Thursday",
+      "Friday",
+      "Saturday",
+      "Sunday",
+    ],
+  },
+  startTime: { type: String },
+  endTime: { type: String },
+  isAvailable: { type: Boolean, default: true },
+});
+
 const doctorSchema = new mongoose.Schema(
   {
     user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
@@ -10,10 +28,10 @@ const doctorSchema = new mongoose.Schema(
       number: { type: String },
       expirationDate: { type: Date },
     },
-    availability: {
-      days: [{ type: String }],
-      hours: { type: String }, // Example: "9 AM - 5 PM"
-    },
+    experience: { type: Number }, // Years of experience
+    education: { type: String }, // Educational qualifications
+    // Changed from availability.days and availability.hours to a more structured approach
+    availability: [availabilitySlotSchema],
     appointments: [
       {
         type: mongoose.Schema.Types.ObjectId,
@@ -44,6 +62,23 @@ const doctorSchema = new mongoose.Schema(
         ref: "MedicalReport",
       },
     ],
+    // Added ratings and reviews for potential future feature
+    ratings: {
+      average: { type: Number, default: 0 },
+      count: { type: Number, default: 0 },
+    },
+    reviews: [
+      {
+        patient: { type: mongoose.Schema.Types.ObjectId, ref: "Patient" },
+        rating: { type: Number },
+        comment: { type: String },
+        date: { type: Date, default: Date.now },
+      },
+    ],
+    consultationFee: { type: Number },
+    bio: { type: String },
+    // Added specializationIds to handle the case in DoctorsList.js
+    specializationIds: [{ type: mongoose.Schema.Types.ObjectId }],
   },
   { timestamps: true }
 );
