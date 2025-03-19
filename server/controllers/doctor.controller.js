@@ -7,6 +7,7 @@ import NotificationService from "../services/notification.service.js";
 import User from "../models/user.model.js";
 import Doctor from "../models/doctor.model.js";
 import Patient from "../models/patient.model.js";
+import Specialization from "../models/specialization.model.js";
 
 // Get doctor profile
 export const getDoctorProfile = async (req, res) => {
@@ -49,6 +50,78 @@ export const updateDoctorProfile = async (req, res) => {
       .json({ message: "Doctor profile updated successfully", updatedDoctor });
   } catch (error) {
     res.status(500).json({ message: "Error updating doctor profile", error });
+  }
+};
+
+// Assign specializations to a doctor
+export const assignSpecializations = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.userId);
+    if (!user) {
+      res.status(404).json({ message: "User not found" });
+    }
+
+    const doctor = await Doctor.findOne({ user: user._id });
+    if (!doctor) {
+      return res.status(404).json({ message: "Doctor not found" });
+    }
+
+    const { specializations } = req.body;
+    for (const specializationId of specializations) {
+      const specialization = await Specialization.findById(specializationId);
+      if (!specialization) {
+        return res.status(404).json({ message: "Specialization not found" });
+      }
+      if (!doctor.specializations.includes(specializationId)) {
+        doctor.specializations.push(specializationId);
+      }
+      if (!specialization.doctors.includes(doctor._id)) {
+        specialization.doctors.push(doctor._id);
+      }
+
+      await specialization.save();
+    }
+
+    await doctor.save();
+    res.status(200).json({ message: "Specializations assigned successfully" });
+  } catch (error) {
+    res.status(500).json({ message: "Error assigning specializations", error });
+  }
+};
+
+// Remove specializations from a doctor
+export const removeSpecializations = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.userId);
+    if (!user) {
+      res.status(404).json({ message: "User not found" });
+    }
+
+    const doctor = await Doctor.findOne({ user: user._id });
+    if (!doctor) {
+      return res.status(404).json({ message: "Doctor not found" });
+    }
+
+    const { specializations } = req.body;
+    for (const specializationId of specializations) {
+      const specialization = await Specialization.findById(specializationId);
+      if (!specialization) {
+        return res.status(404).json({ message: "Specialization not found" });
+      }
+      doctor.specializations = doctor.specializations.filter(
+        (id) => id.toString() !== specializationId
+      );
+      specialization.doctors = specialization.doctors.filter(
+        (id) => id.toString() !== doctor._id.toString()
+      );
+
+      await specialization.save();
+    }
+
+    await doctor.save();
+    res.status(200).json({ message: "Specializations removed successfully" });
+  } catch (error) {
+    res.status(500).json({ message: "Error removing specializations", error });
   }
 };
 
@@ -376,13 +449,27 @@ export const updatePrescription = async (req, res) => {
 };
 
 // Controller for managing patient records
+// Controller for managing patient records
 export const createPatientRecord = async (req, res) => {
   try {
     const { patient, records } = req.body;
+
+    // Validate if patient exists
+    const dbPatient = await Patient.findById(patient);
+    if (!dbPatient) {
+      return res.status(404).json({ message: "Patient not found" });
+    }
+
+    // Create a new patient record with the provided records
     const newPatientRecord = await PatientRecordService.createPatientRecord(
       patient,
       records
     );
+
+    // Optionally, we could update the patient's record array in the Patient model, if needed
+    dbPatient.patientRecords.push(newPatientRecord._id);
+    await dbPatient.save();
+
     res.status(201).json(newPatientRecord);
   } catch (error) {
     res.status(500).json({ message: "Error creating patient record", error });
@@ -393,13 +480,17 @@ export const updatePatientRecord = async (req, res) => {
   try {
     const { recordId } = req.params;
     const updatedData = req.body;
+
+    // Validate if the patient record exists
     const updatedPatientRecord = await PatientRecordService.updatePatientRecord(
       recordId,
       updatedData
     );
+
     if (!updatedPatientRecord) {
       return res.status(404).json({ message: "Patient record not found" });
     }
+
     res.json(updatedPatientRecord);
   } catch (error) {
     res.status(500).json({ message: "Error updating patient record", error });
@@ -418,6 +509,26 @@ export const createMedicalReport = async (req, res) => {
     res.status(201).json(newMedicalReport);
   } catch (error) {
     res.status(500).json({ message: "Error creating medical report", error });
+  }
+};
+
+// Update a medical report
+export const updateMedicalReport = async (req, res) => {
+  try {
+    const { reportId } = req.params;
+    const updatedData = req.body;
+
+    const updatedReport = await MedicalReportService.updateMedicalReport(
+      reportId,
+      updatedData
+    );
+    if (!updatedReport) {
+      return res.status(404).json({ message: "Medical report not found" });
+    }
+
+    res.json(updatedReport);
+  } catch (error) {
+    res.status(500).json({ message: "Error updating medical report", error });
   }
 };
 

@@ -37,6 +37,12 @@ const patientSchema = new mongoose.Schema(
         ref: "Prescription",
       },
     ],
+    patientRecords: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "PatientRecord",
+      },
+    ],
   },
   { timestamps: true }
 );

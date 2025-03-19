@@ -3,6 +3,7 @@ import jwt from "jsonwebtoken";
 import User from "../models/user.model.js";
 import Doctor from "../models/doctor.model.js";
 import Patient from "../models/patient.model.js";
+import Specialization from "../models/specialization.model.js";
 import generateUsername from "../utils/generateUsername.js";
 
 // Register a new admin user
@@ -171,11 +172,26 @@ export const deleteSpecialization = async (req, res) => {
   try {
     const { specializationId } = req.params;
 
+    // Find and delete the specialization
     const specialization = await Specialization.findByIdAndDelete(
       specializationId
     );
+
     if (!specialization) {
       return res.status(404).json({ message: "Specialization not found." });
+    }
+
+    // Find all doctors with this specialization
+    const doctorsWithSpecialization = await Doctor.find({
+      specializations: specializationId,
+    });
+
+    // Update each doctor to remove the deleted specialization
+    for (const doctor of doctorsWithSpecialization) {
+      doctor.specializations = doctor.specializations.filter(
+        (id) => id.toString() !== specializationId
+      );
+      await doctor.save(); // Await each save operation
     }
 
     res.json({ message: "Specialization deleted successfully." });

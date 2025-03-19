@@ -2,6 +2,8 @@ import express from "express";
 import {
   getDoctorProfile,
   updateDoctorProfile,
+  assignSpecializations,
+  removeSpecializations,
   getAppointments,
   createAppointment,
   updateAppointment,
@@ -11,6 +13,7 @@ import {
   createPatientRecord,
   updatePatientRecord,
   createMedicalReport,
+  updateMedicalReport,
   getNotifications,
   markNotificationAsRead,
 } from "../controllers/doctor.controller.js";
@@ -24,6 +27,12 @@ router.get("/profile", doctorMiddleware, getDoctorProfile);
 
 // Update doctor profile
 router.put("/profile", doctorMiddleware, updateDoctorProfile);
+
+// Assign specializations to doctor
+router.put("/me/specializations", doctorMiddleware, assignSpecializations);
+
+// Remove specializations from doctor
+router.delete("/me/specializations", doctorMiddleware, removeSpecializations);
 
 // Get all appointments for the doctor
 router.get("/appointments", doctorMiddleware, getAppointments);
@@ -59,6 +68,9 @@ router.put("/patient-records/:recordId", doctorMiddleware, updatePatientRecord);
 
 // Create a new medical report
 router.post("/medical-reports", doctorMiddleware, createMedicalReport);
+
+// Update an existing medical report
+router.put("/medical-reports/:reportId", doctorMiddleware, updateMedicalReport);
 
 // Get notifications for the doctor
 router.get("/notifications", doctorMiddleware, getNotifications);
