@@ -38,6 +38,12 @@ const doctorSchema = new mongoose.Schema(
         ref: "Prescription",
       },
     ],
+    issuedReports: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "MedicalReport",
+      },
+    ],
   },
   { timestamps: true }
 );

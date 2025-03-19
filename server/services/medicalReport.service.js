@@ -3,6 +3,7 @@ import MedicalReport from "../models/medicalReport.model.js";
 // Create a new medical report
 const createMedicalReport = async (data) => {
   try {
+    console.log(data);
     const newReport = new MedicalReport(data);
     return await newReport.save();
   } catch (error) {

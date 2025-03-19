@@ -449,28 +449,27 @@ export const updatePrescription = async (req, res) => {
 };
 
 // Controller for managing patient records
-// Controller for managing patient records
 export const createPatientRecord = async (req, res) => {
   try {
     const { patient, records } = req.body;
 
-    // Validate if patient exists
+    // 1️⃣ Validate if patient exists
     const dbPatient = await Patient.findById(patient);
     if (!dbPatient) {
       return res.status(404).json({ message: "Patient not found" });
     }
 
-    // Create a new patient record with the provided records
-    const newPatientRecord = await PatientRecordService.createPatientRecord(
+    // 2️⃣ Create a new patient record
+    const newPatientRecord = await PatientRecordService.createPatientRecord({
       patient,
-      records
-    );
+      records,
+    });
 
-    // Optionally, we could update the patient's record array in the Patient model, if needed
+    // 3️⃣ Link to Patient Model
     dbPatient.patientRecords.push(newPatientRecord._id);
     await dbPatient.save();
 
-    res.status(201).json(newPatientRecord);
+    res.status(201).json({ message: "Patient record created successfully" });
   } catch (error) {
     res.status(500).json({ message: "Error creating patient record", error });
   }
@@ -500,13 +499,38 @@ export const updatePatientRecord = async (req, res) => {
 // Controller for managing medical reports
 export const createMedicalReport = async (req, res) => {
   try {
-    const { reportType, document, comments } = req.body;
+    const data = req.body;
+
+    // Validate patient
+    const patientExists = await Patient.findById(data.associatedPatient);
+    if (!patientExists) {
+      return res.status(404).json({ message: "Patient not found" });
+    }
+
+    // Validate doctor
+    const user = await User.findById(req.user.userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    const doctorExists = await Doctor.findOne({ user: user._id });
+    if (!doctorExists) {
+      return res.status(404).json({ message: "Doctor not found" });
+    }
+
+    // Create new medical report
     const newMedicalReport = await MedicalReportService.createMedicalReport(
-      reportType,
-      document,
-      comments
+      data
     );
-    res.status(201).json(newMedicalReport);
+    // console.log(newMedicalReport);
+
+    if (!newMedicalReport) {
+      return res.status(404).json({ message: "Error creating medical report" });
+    }
+
+    doctorExists.issuedReports.push(newMedicalReport._id);
+    await doctorExists.save();
+
+    res.status(201).json({ message: "Medical report created successfully" });
   } catch (error) {
     res.status(500).json({ message: "Error creating medical report", error });
   }

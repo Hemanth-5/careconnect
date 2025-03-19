@@ -4,10 +4,12 @@ const medicalRecordSchema = new mongoose.Schema(
   {
     appointment: { type: mongoose.Schema.Types.ObjectId, ref: "Appointment" },
     prescription: { type: mongoose.Schema.Types.ObjectId, ref: "Prescription" },
-    medicalReport: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "MedicalReport",
-    },
+    medicalReports: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "MedicalReport",
+      },
+    ],
     diagnosis: { type: String },
     treatmentProgress: { type: String },
     notes: { type: String },
