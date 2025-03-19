@@ -12,7 +12,11 @@ const userSchema = new mongoose.Schema(
       required: true,
     },
     fullName: { type: String },
-    profilePicture: { type: String }, // URL to profile picture
+    profilePicture: {
+      type: String,
+      default:
+        "https://static.vecteezy.com/system/resources/thumbnails/009/292/244/small/default-avatar-icon-of-social-media-user-vector.jpg",
+    }, // URL to profile picture
     contact: {
       phone: { type: String },
       address: { type: String },

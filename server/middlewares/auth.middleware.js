@@ -55,3 +55,12 @@ export const doctorMiddleware = async (req, res, next) => {
   }
   next();
 };
+
+// Patient Middleware (for Patient only)
+export const patientMiddleware = async (req, res, next) => {
+  await authMiddleware(req, res, () => {}); // Call the authMiddleware first
+  if (req.user.role !== "patient") {
+    return res.status(403).json({ message: "Access denied. Patients only." });
+  }
+  next();
+};

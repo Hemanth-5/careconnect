@@ -14,6 +14,7 @@ import {
   updatePatientRecord,
   createMedicalReport,
   updateMedicalReport,
+  getMyPatients,
   getNotifications,
   markNotificationAsRead,
 } from "../controllers/doctor.controller.js";
@@ -71,6 +72,9 @@ router.post("/medical-reports", doctorMiddleware, createMedicalReport);
 
 // Update an existing medical report
 router.put("/medical-reports/:reportId", doctorMiddleware, updateMedicalReport);
+
+// Get all patients of the doctor
+router.get("/my-patients", doctorMiddleware, getMyPatients);
 
 // Get notifications for the doctor
 router.get("/notifications", doctorMiddleware, getNotifications);

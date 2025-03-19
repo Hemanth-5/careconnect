@@ -556,6 +556,27 @@ export const updateMedicalReport = async (req, res) => {
   }
 };
 
+// Controller to get my patients
+export const getMyPatients = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    const doctor = await Doctor.findOne({ user: user._id });
+    if (!doctor) {
+      return res.status(404).json({ message: "Doctor not found" });
+    }
+
+    const patients = await Patient.find({
+      _id: { $in: doctor.patientsUnderCare },
+    }).populate("user", ["username", "email", "_id", "profilePicture"]);
+    res.status(200).json(patients);
+  } catch (error) {
+    res.status(500).json({ message: "Error fetching patients", error });
+  }
+};
+
 // Controller for managing notifications
 export const getNotifications = async (req, res) => {
   try {

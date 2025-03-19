@@ -1,7 +1,7 @@
-import AppointmentService from "../services/appointment.service.js";
-import PrescriptionService from "../services/prescription.service.js";
 import NotificationService from "../services/notification.service.js";
 import Patient from "../models/patient.model.js";
+import Appointment from "../models/appointment.model.js";
+import Prescription from "../models/prescription.model.js";
 
 // Get patient's profile details
 export const getPatientDetails = async (req, res) => {
@@ -23,6 +23,7 @@ export const updatePatientProfile = async (req, res) => {
   try {
     const { userId } = req.user;
     const updatedData = req.body;
+    // console.log("updatedData", updatedData);
     const patient = await Patient.findOneAndUpdate(
       { user: userId },
       updatedData,
@@ -30,10 +31,12 @@ export const updatePatientProfile = async (req, res) => {
         new: true,
       }
     );
+
+    await patient.save();
     if (!patient) {
       return res.status(404).json({ message: "Patient not found" });
     }
-    res.json(patient);
+    res.json({ message: "Patient profile updated successfully" });
   } catch (error) {
     res.status(500).json({ message: "Server error", error });
   }
@@ -59,10 +62,24 @@ export const updatePatientProfile = async (req, res) => {
 // Get patient's upcoming appointments
 export const getPatientAppointments = async (req, res) => {
   try {
-    const appointments = await AppointmentService.getPatientAppointments(
-      req.user.userId
-    );
-    res.json(appointments);
+    const userId = req.user.userId; // Extract patient ID from logged-in user
+    if (!userId) {
+      return res.status(404).json({ message: "User not found." });
+    }
+
+    const patientId = await Patient.findOne({ user: userId }).select("_id");
+    if (!patientId) {
+      return res.status(404).json({ message: "Patient not found." });
+    }
+
+    // Find upcoming appointments for the patient
+    const appointments = await Appointment.find({
+      patient: patientId,
+    })
+      .populate("doctor", "name specialization") // Populate doctor details
+      .sort({ date: 1 }); // Sort by nearest appointment first
+
+    res.json({ success: true, appointments });
   } catch (error) {
     res.status(500).json({ message: "Error fetching appointments.", error });
   }
@@ -71,10 +88,16 @@ export const getPatientAppointments = async (req, res) => {
 // Get patient's prescriptions
 export const getPatientPrescriptions = async (req, res) => {
   try {
-    const prescriptions = await PrescriptionService.getPatientPrescriptions(
-      req.user.userId
+    const patientId = await Patient.findOne({ user: req.user.userId }).select(
+      "_id"
     );
-    res.json(prescriptions);
+
+    // Find prescriptions for the patient
+    const prescriptions = await Prescription.find({
+      patient: patientId,
+    }).populate("doctor", "name specialization"); // Populate doctor details
+
+    res.json({ success: true, prescriptions });
   } catch (error) {
     res.status(500).json({ message: "Error fetching prescriptions.", error });
   }
