@@ -22,6 +22,9 @@ import PatientsList from "./pages/AdminPages/PatientsList";
 import AppointmentManagement from "./pages/AdminPages/AppointmentManagement";
 import AnalyticsDashboard from "./pages/AdminPages/AnalyticsDashboard";
 
+// Import the ResetPassword component
+import ResetPassword from "./pages/ResetPassword";
+
 import "./assets/styles/global.css";
 
 // Wrapper for the AuthCheck functionality
@@ -190,6 +193,9 @@ const App = () => {
             </AuthCheckWrapper>
           }
         />
+
+        {/* Add this route to your Routes component */}
+        <Route path="/reset-password/:token" element={<ResetPassword />} />
 
         {/* Any other route */}
         <Route path="*" element={<Navigate to="/login" replace />} />

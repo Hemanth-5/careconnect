@@ -1,4 +1,6 @@
 import mongoose from "mongoose";
+import bcrypt from "bcryptjs";
+import crypto from "crypto";
 
 const contactSchema = new mongoose.Schema({
   phone: { type: String },
@@ -26,7 +28,10 @@ const userSchema = new mongoose.Schema(
     },
     password: {
       type: String,
-      required: true,
+      required: function () {
+        // Only require password during regular operation, not during password reset
+        return !this.passwordResetToken;
+      },
     },
     fullname: { type: String },
     role: {
@@ -49,5 +54,40 @@ const userSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+// Add password hashing middleware if not already present
+// userSchema.pre("save", async function (next) {
+//   if (!this.isModified("password")) {
+//     return next();
+//   }
+
+//   try {
+//     const salt = await bcrypt.genSalt(parseInt(process.env.BCRYPT_SALT) || 10);
+//     this.password = await bcrypt.hash(this.password, salt);
+//     next();
+//   } catch (error) {
+//     next(error);
+//   }
+// });
+
+// Add password comparison method if not already present
+// userSchema.methods.matchPassword = async function (enteredPassword) {
+//   return await bcrypt.compare(enteredPassword, this.password);
+// };
+
+// Generate password reset token
+userSchema.methods.createPasswordResetToken = function () {
+  const resetToken = crypto.randomBytes(32).toString("hex");
+
+  this.passwordResetToken = resetToken;
+  this.passwordResetExpires = Date.now() + 3600000; // 1 hour
+
+  return resetToken;
+};
+
+// Verify if reset token is valid
+userSchema.methods.isPasswordResetTokenValid = function () {
+  return this.passwordResetExpires > Date.now();
+};
 
 export default mongoose.model("User", userSchema);

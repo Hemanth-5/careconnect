@@ -5,6 +5,7 @@ import Button from "../components/common/Button";
 import Input from "../components/common/Input";
 import Spinner from "../components/common/Spinner";
 import { API } from "../constants/api";
+import authAPI from "../api/auth";
 import "./Login.css";
 
 const Login = () => {
@@ -194,9 +195,8 @@ const Login = () => {
 
     setLoading(true);
     try {
-      // This would typically call an API endpoint to send a reset password email
-      // For now, we'll just simulate it
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      // Use authAPI instead of direct fetch for consistency
+      await authAPI.requestPasswordReset(formData.email);
 
       // Show success message
       setLoginError("");
@@ -206,6 +206,7 @@ const Login = () => {
       setForgotPasswordMode(false);
     } catch (error) {
       setLoginError("Unable to process your request. Please try again later.");
+      console.error("Password reset error:", error);
     } finally {
       setLoading(false);
     }

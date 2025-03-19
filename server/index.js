@@ -11,6 +11,7 @@ import userRoutes from "./routes/user.routes.js";
 import adminRoutes from "./routes/admin.routes.js";
 import doctorRoutes from "./routes/doctor.routes.js";
 import patientRoutes from "./routes/patient.routes.js";
+import passwordResetRoutes from "./routes/passwordReset.js";
 
 dotenv.config();
 
@@ -30,6 +31,7 @@ app.use("/api/users", userRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/doctors", doctorRoutes);
 app.use("/api/patients", patientRoutes);
+app.use("/api/password-reset", passwordResetRoutes);
 
 // Server startup and DB connection
 const startServer = async () => {

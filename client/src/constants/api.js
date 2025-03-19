@@ -8,6 +8,11 @@ export const API = {
     ME: `${BASE_URL}/users/me`,
     UPDATE_PROFILE: `${BASE_URL}/users/me`,
     CHANGE_PASSWORD: `${BASE_URL}/users/me/password`,
+    // Add password reset endpoints
+    REQUEST_PASSWORD_RESET: `${BASE_URL}/password-reset/request`,
+    VERIFY_RESET_TOKEN: (token) =>
+      `${BASE_URL}/password-reset/verify-token/${token}`,
+    RESET_PASSWORD: `${BASE_URL}/password-reset/reset`,
   },
   ADMIN: {
     REGISTER_ADMIN: `${BASE_URL}/admin/register-admin`,
