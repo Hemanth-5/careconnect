@@ -22,6 +22,7 @@ const UserManagement = () => {
     role: "patient",
     gender: "",
     dateOfBirth: "",
+    // profilePicture: "",
     contact: {
       phone: "",
       address: "",
@@ -90,6 +91,7 @@ const UserManagement = () => {
       role: "patient",
       gender: "",
       dateOfBirth: "",
+      profilePicture: "",
       contact: {
         phone: "",
         address: "",
@@ -129,6 +131,7 @@ const UserManagement = () => {
       fullname: user.fullname || "",
       role: user.role || "patient",
       gender: user.gender || "",
+      // profilePicture: user.profilePicture || "",
       dateOfBirth: user.dateOfBirth
         ? new Date(user.dateOfBirth).toISOString().split("T")[0]
         : "",
@@ -263,6 +266,19 @@ const UserManagement = () => {
         ...prevData,
         specializations: selectedValues,
       }));
+    } else if (name === "profilePicture") {
+      // Handle file upload for profile picture
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          setFormData((prevData) => ({
+            ...prevData,
+            profilePicture: reader.result,
+          }));
+        };
+        reader.readAsDataURL(file);
+      }
     } else {
       // Handle regular fields
       setFormData((prevData) => ({
@@ -282,6 +298,7 @@ const UserManagement = () => {
       fullname: formData.fullname,
       role: formData.role,
       gender: formData.gender,
+      // profilePicture: formData.profilePicture,
       dateOfBirth: formData.dateOfBirth || undefined,
       contact: formData.contact,
     };
@@ -798,6 +815,7 @@ const UserManagement = () => {
           <table className="users-table">
             <thead>
               <tr>
+                <th>Profile</th>
                 <th>Username</th>
                 <th>Name</th>
                 <th>Email</th>
@@ -810,6 +828,23 @@ const UserManagement = () => {
               {filteredUsers.length > 0 ? (
                 filteredUsers.map((user) => (
                   <tr key={user._id}>
+                    <td>
+                      <div className="user-avatar">
+                        {user.profilePicture ? (
+                          <img
+                            src={user.profilePicture}
+                            alt={`${user.fullname || "User"} profile`}
+                            className="profile-picture"
+                          />
+                        ) : (
+                          <div className="profile-placeholder">
+                            {(user.fullname || user.username || "U")
+                              .charAt(0)
+                              .toUpperCase()}
+                          </div>
+                        )}
+                      </div>
+                    </td>
                     <td>{user.username || "N/A"}</td>
                     <td>{user.fullname || "N/A"}</td>
                     <td>{user.email || "N/A"}</td>
@@ -850,7 +885,7 @@ const UserManagement = () => {
                 ))
               ) : (
                 <tr>
-                  <td colSpan="6" className="no-results">
+                  <td colSpan="7" className="no-results">
                     No users found
                   </td>
                 </tr>
@@ -873,6 +908,34 @@ const UserManagement = () => {
             <div className="modal-body">
               <form onSubmit={handleSubmit}>
                 <h3 className="form-section-title">Basic Information</h3>
+
+                {/* <div className="form-group profile-upload-container">
+                  <label htmlFor="profilePicture">Profile Picture</label>
+                  <div className="profile-preview">
+                    {formData.profilePicture ? (
+                      <img 
+                        src={formData.profilePicture} 
+                        alt="Profile preview" 
+                        className="profile-image-preview" 
+                      />
+                    ) : (
+                      <div className="profile-placeholder-large">
+                        <i className="fas fa-user"></i>
+                      </div>
+                    )}
+                  </div>
+                  <input
+                    type="file"
+                    id="profilePicture"
+                    name="profilePicture"
+                    accept="image/*"
+                    onChange={handleInputChange}
+                    className="file-input"
+                  />
+                  <label htmlFor="profilePicture" className="file-input-label">
+                    <i className="fas fa-upload"></i> {formData.profilePicture ? 'Change Photo' : 'Upload Photo'}
+                  </label>
+                </div> */}
 
                 <div className="form-row">
                   {/* <div className="form-group">

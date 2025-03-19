@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Outlet, NavLink, useNavigate } from "react-router-dom";
 import "./AdminLayout.css";
 
@@ -13,6 +13,13 @@ const AdminLayout = () => {
     profilePicture: null,
   });
   const [isLoading, setIsLoading] = useState(true);
+
+  // New state variables for profile picture editing
+  const [showProfileModal, setShowProfileModal] = useState(false);
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [previewUrl, setPreviewUrl] = useState(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef(null);
 
   useEffect(() => {
     // Fetch user profile data using the API instead of parsing token
@@ -52,6 +59,15 @@ const AdminLayout = () => {
     fetchUserProfile();
   }, []);
 
+  // // Clean up preview URL when component unmounts or when a new file is selected
+  // useEffect(() => {
+  //   return () => {
+  //     if (previewUrl) {
+  //       URL.revokeObjectURL(previewUrl);
+  //     }
+  //   };
+  // }, [previewUrl]);
+
   const toggleSidebar = () => {
     setIsSidebarCollapsed(!isSidebarCollapsed);
   };
@@ -64,6 +80,70 @@ const AdminLayout = () => {
 
     // Redirect to login
     navigate("/login");
+  };
+
+  // Handle clicking on profile picture
+  const handleProfileClick = () => {
+    setShowProfileModal(true);
+  };
+
+  // Handle file selection
+  const handleFileChange = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      setSelectedImage(file);
+
+      // Create preview URL
+      const fileUrl = URL.createObjectURL(file);
+      setPreviewUrl(fileUrl);
+    }
+  };
+
+  // Trigger file input click
+  const triggerFileInput = () => {
+    fileInputRef.current.click();
+  };
+
+  // Close modal and reset states
+  const handleCloseModal = () => {
+    setShowProfileModal(false);
+    setSelectedImage(null);
+    setPreviewUrl(null);
+  };
+
+  // Upload profile picture
+  const handleUploadProfilePicture = async () => {
+    if (!selectedImage) return;
+
+    try {
+      setIsUploading(true);
+
+      // Create form data for file upload
+      const formData = new FormData();
+      formData.append("image", selectedImage);
+
+      // Call the API to update profile picture
+      const response = await userAPI.updateProfilePicture(formData);
+
+      // Update the UI with the new profile picture
+      if (response && response.data && response.data.profilePicture) {
+        setAdminData((prev) => ({
+          ...prev,
+          profilePicture: response.data.profilePicture,
+        }));
+
+        // Display success message
+        alert("Profile picture updated successfully!");
+      }
+
+      // Close the modal
+      handleCloseModal();
+    } catch (error) {
+      console.error("Error uploading profile picture:", error);
+      alert("Failed to upload profile picture. Please try again.");
+    } finally {
+      setIsUploading(false);
+    }
   };
 
   return (
@@ -170,7 +250,12 @@ const AdminLayout = () => {
             <h2 className="admin-title">Admin Portal</h2>
             <div className="admin-user-info">
               <span className="admin-user-name">{adminData.username}</span>
-              <div className="admin-user-avatar">
+              <div
+                className="admin-user-avatar"
+                onClick={handleProfileClick}
+                style={{ cursor: "pointer" }}
+                title="Click to change profile picture"
+              >
                 {adminData.profilePicture ? (
                   <img
                     src={adminData.profilePicture}
@@ -189,6 +274,65 @@ const AdminLayout = () => {
           <Outlet />
         </div>
       </main>
+
+      {/* Profile Picture Modal */}
+      {showProfileModal && (
+        <div className="profile-modal-overlay">
+          <div className="profile-modal">
+            <div className="profile-modal-header">
+              <h3>Update Profile Picture</h3>
+              <button className="close-button" onClick={handleCloseModal}>
+                <i className="fas fa-times"></i>
+              </button>
+            </div>
+            <div className="profile-modal-body">
+              <div className="profile-preview">
+                {previewUrl ? (
+                  <img
+                    src={previewUrl}
+                    alt="Preview"
+                    className="preview-image"
+                  />
+                ) : adminData.profilePicture ? (
+                  <img
+                    src={adminData.profilePicture}
+                    alt="Current"
+                    className="preview-image"
+                  />
+                ) : (
+                  <div className="no-image">
+                    <i className="fas fa-user-circle"></i>
+                    <p>No profile picture</p>
+                  </div>
+                )}
+              </div>
+              <input
+                type="file"
+                ref={fileInputRef}
+                onChange={handleFileChange}
+                accept="image/*"
+                style={{ display: "none" }}
+              />
+              <div className="profile-modal-actions">
+                <button
+                  className="select-image-button"
+                  onClick={triggerFileInput}
+                  disabled={isUploading}
+                >
+                  Select Image
+                </button>
+                <button
+                  className="upload-button"
+                  onClick={handleUploadProfilePicture}
+                  disabled={!selectedImage || isUploading}
+                >
+                  {isUploading ? "Uploading..." : "Upload"}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

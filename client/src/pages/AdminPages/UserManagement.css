@@ -345,6 +345,121 @@ textarea:focus {
   outline: none;
 }
 
+.user-profile-cell {
+  display: flex;
+  align-items: center;
+  justify-self: unset;
+}
+
+/* Profile picture styles for the user table */
+.user-avatar {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 40px;
+  height: 40px;
+  margin: 0 auto;
+}
+
+.profile-picture {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #e0e0e0;
+}
+
+.profile-placeholder {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: #4a90e2;
+  color: white;
+  font-weight: bold;
+  font-size: 16px;
+}
+
+/* Profile picture styles for the modal form */
+.profile-upload-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.profile-preview {
+  width: 120px;
+  height: 120px;
+  margin-bottom: 15px;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 3px solid #e0e0e0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.profile-image-preview {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.profile-placeholder-large {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+  background-color: #f0f0f0;
+  color: #777;
+  font-size: 3rem;
+}
+
+.file-input {
+  width: 0.1px;
+  height: 0.1px;
+  opacity: 0;
+  overflow: hidden;
+  position: absolute;
+  z-index: -1;
+}
+
+.file-input-label {
+  display: inline-block;
+  cursor: pointer;
+  padding: 8px 12px;
+  background-color: #f0f0f0;
+  border-radius: 4px;
+  font-size: 14px;
+  transition: all 0.3s;
+  margin-top: 5px;
+}
+
+.file-input-label:hover {
+  background-color: #e0e0e0;
+}
+
+.file-input-label i {
+  margin-right: 5px;
+}
+
+/* Adjust table to fit the profile column */
+.users-table th:first-child,
+.users-table td:first-child {
+  width: 60px;
+  text-align: center;
+}
+
+/* Make sure the modal is wide enough for the profile upload */
+.user-form-modal {
+  min-width: 700px;
+  max-width: 90%;
+}
+
 /* Mobile responsiveness for forms */
 @media (max-width: 768px) {
   .filter-bar {

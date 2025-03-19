@@ -4,10 +4,15 @@ import {
   loginUser,
   getUserDetails,
   updateUserProfile,
+  updateProfilePicture,
   changePassword,
   refreshToken,
 } from "../controllers/user.controller.js";
 import { authMiddleware } from "../middlewares/auth.middleware.js";
+import {
+  upload,
+  handleUploadErrors,
+} from "../middlewares/upload.middleware.js";
 
 const router = express.Router();
 
@@ -15,6 +20,15 @@ const router = express.Router();
 router.post("/register", registerUser);
 router.post("/login", loginUser);
 router.post("/refresh-token", refreshToken); // For generating a new access token using refresh token
+
+// Profile picture - use upload.single middleware for file uploads
+router.put(
+  "/profile-picture",
+  authMiddleware,
+  upload.single("image"),
+  handleUploadErrors,
+  updateProfilePicture
+);
 
 // Protected routes (authentication required)
 router.get("/me", authMiddleware, getUserDetails); // Get current user details (only accessible after login)

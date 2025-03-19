@@ -13,6 +13,7 @@ export const API = {
     VERIFY_RESET_TOKEN: (token) =>
       `${BASE_URL}/password-reset/verify-token/${token}`,
     RESET_PASSWORD: `${BASE_URL}/password-reset/reset`,
+    UPDATE_PROFILE_PICTURE: `${BASE_URL}/users/profile-picture`,
   },
   ADMIN: {
     REGISTER_ADMIN: `${BASE_URL}/admin/register-admin`,

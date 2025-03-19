@@ -46,6 +46,7 @@ const userSchema = new mongoose.Schema(
     dateOfBirth: { type: Date },
     age: { type: Number },
     profilePicture: { type: String },
+    profilePicturePublicId: { type: String },
     contact: contactSchema,
     isActive: { type: Boolean, default: true },
     lastLogin: { type: Date },

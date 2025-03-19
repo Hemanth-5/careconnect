@@ -3,6 +3,7 @@ import jwt from "jsonwebtoken";
 import User from "../models/user.model.js";
 import dotenv from "dotenv";
 import generateUsername from "../utils/generateUsername.js";
+import { uploadImage, deleteImage } from "../utils/cloudinary.js";
 
 dotenv.config();
 
@@ -212,5 +213,58 @@ export const refreshToken = async (req, res) => {
     res.json({ accessToken });
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
+// Update user profile picture (accessible to users only)
+export const updateProfilePicture = async (req, res) => {
+  try {
+    const { userId } = req.user;
+
+    // Check if file exists in the request
+    if (!req.file && !req.body.image) {
+      return res.status(400).json({ message: "No image provided" });
+    }
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Delete the old profile picture from Cloudinary if it exists
+    if (user.profilePicture && user.profilePicture.publicId) {
+      await deleteImage(user.profilePicture.publicId);
+    }
+
+    // Upload the new image to Cloudinary
+    let uploadResult;
+    if (req.file) {
+      // If it's a file upload through multer with memoryStorage
+      // Create a base64 string from buffer
+      const base64String = `data:${
+        req.file.mimetype
+      };base64,${req.file.buffer.toString("base64")}`;
+      uploadResult = await uploadImage(base64String);
+    } else if (req.body.image) {
+      // If it's a base64 string
+      uploadResult = await uploadImage(req.body.image);
+    }
+
+    // Update user's profile picture info
+    user.profilePicture = uploadResult.secure_url;
+    user.profilePicturePublicId = uploadResult.public_id;
+
+    await user.save();
+
+    res.json({
+      message: "Profile picture updated successfully",
+      profilePicture: user.profilePicture,
+    });
+  } catch (error) {
+    console.error("Error updating profile picture:", error);
+    res.status(500).json({
+      message: "Failed to update profile picture",
+      error: error.message,
+    });
   }
 };
