@@ -228,8 +228,10 @@ export const getDoctorById = async (req, res) => {
 // Get doctor by specialization
 export const getDoctorsBySpecialization = async (req, res) => {
   try {
-    const { specialization } = req.params;
-    const doctors = await Doctor.find({ specialization }).populate("user");
+    const { specializationId } = req.params;
+    const doctors = await Doctor.find({
+      specializations: specializationId,
+    }).populate("user");
     res.json(doctors);
   } catch (error) {
     res.status(500).json({ message: "Error fetching doctors.", error });

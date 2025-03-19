@@ -42,7 +42,7 @@ router.delete(
 router.get("/doctors", adminMiddleware, getDoctors); // Get all doctors
 router.get("/doctors/:doctorId", adminMiddleware, getDoctorById); // Get doctor by id
 router.get(
-  "/doctors/specialization/:specialization",
+  "/doctors/specialization/:specializationId",
   adminMiddleware,
   getDoctorsBySpecialization
 ); // Get doctors by specialization
