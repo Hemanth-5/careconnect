@@ -52,12 +52,24 @@ const deleteAppointment = async (appointmentId) => {
   }
 };
 
+// Get doctor appointments
+const getDoctorAppointments = async (doctorId) => {
+  try {
+    return await Appointment.find({ doctor: doctorId })
+      .populate("patient")
+      .populate("doctor");
+  } catch (error) {
+    throw new Error("Error fetching appointments: " + error.message);
+  }
+};
+
 const AppointmentService = {
   getAppointmentById,
   getAppointments,
   createAppointment,
   updateAppointment,
   deleteAppointment,
+  getDoctorAppointments,
 };
 
 export default AppointmentService;

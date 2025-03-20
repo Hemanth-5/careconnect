@@ -128,7 +128,18 @@ export const removeSpecializations = async (req, res) => {
 // Controller for managing appointments
 export const getAppointments = async (req, res) => {
   try {
-    const appointments = await AppointmentService.getAppointments(req.user._id);
+    const user = await User.findById(req.user.userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    const doctor = await Doctor.findOne({ user: user._id });
+    if (!doctor) {
+      return res.status(404).json({ message: "Doctor not found" });
+    }
+
+    const appointments = await AppointmentService.getDoctorAppointments(
+      doctor._id
+    );
     res.status(200).json(appointments);
   } catch (error) {
     res.status(500).json({ message: "Error fetching appointments", error });
@@ -137,7 +148,7 @@ export const getAppointments = async (req, res) => {
 
 export const createAppointment = async (req, res) => {
   try {
-    const { patient, date, timeSlot, reason } = req.body;
+    const { patient, appointmentDate, reason } = req.body;
 
     const user = await User.findById(req.user.userId);
     if (!user) {
@@ -151,13 +162,15 @@ export const createAppointment = async (req, res) => {
     const newAppointment = await AppointmentService.createAppointment({
       patient,
       doctor: doctor._id,
-      date,
-      timeSlot,
+      appointmentDate,
       reason,
+      status: "scheduled",
     });
 
     // Populate new details in doctor model
     doctor.appointments.push(newAppointment._id);
+    
+    // Make sure the patient is added to patientsUnderCare array if not already there
     if (!doctor.patientsUnderCare.includes(patient)) {
       doctor.patientsUnderCare.push(patient);
     }
@@ -580,8 +593,13 @@ export const getMyPatients = async (req, res) => {
 // Controller for managing notifications
 export const getNotifications = async (req, res) => {
   try {
+    const user = await User.findById(req.user.userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    
     const notifications = await NotificationService.getNotifications(
-      req.user._id
+      req.user.userId
     );
     res.status(200).json(notifications);
   } catch (error) {
@@ -599,8 +617,115 @@ export const markNotificationAsRead = async (req, res) => {
     }
     res.json(updatedNotification);
   } catch (error) {
-    res
-      .status(500)
-      .json({ message: "Error marking notification as read", error });
+    res.status(500).json({ message: "Error marking notification as read", error });
+  }
+};
+
+// Controller to get all patients
+export const getAllPatients = async (req, res) => {
+  try {
+    const patients = await Patient.find({})
+      .populate("user", ["fullname", "email", "_id", "profilePicture", "username"])
+      .sort({ "user.username": 1 }); // Sort alphabetically by name
+    res.status(200).json(patients);
+  } catch (error) {
+    res.status(500).json({ message: "Error fetching all patients", error });
+  }
+};
+
+// Controller to get doctor dashboard statistics
+export const getDoctorDashboard = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    const doctor = await Doctor.findOne({ user: user._id }).populate(
+      "specializations"
+    );
+    if (!doctor) {
+      return res.status(404).json({ message: "Doctor not found" });
+    }
+    
+    // Get appointments
+    const allAppointments = await AppointmentService.getDoctorAppointments(
+      doctor._id
+    );
+
+    // Get total patients count
+    const totalPatients = doctor.patientsUnderCare.length;
+    
+    // Calculate pending and completed appointments
+    const pendingAppointments = allAppointments.filter(
+      (apt) =>
+        apt.status === "pending" ||
+        apt.status === "confirmed" ||
+        apt.status === "scheduled"
+    ).length;
+
+    const completedAppointments = allAppointments.filter(
+      (apt) => apt.status === "completed"
+    ).length;
+
+    // Get today's appointments
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+
+    const todayAppointments = allAppointments.filter((apt) => {
+      const aptDate = new Date(apt.appointmentDate);
+      return aptDate >= today && aptDate < tomorrow;
+    }).length;
+
+    // Get 5 most recent appointments
+    const recentAppointments = await AppointmentService.getDoctorAppointments(
+      doctor._id,
+      { limit: 5, sort: { appointmentDate: -1 } }
+    );
+
+    // Populate patient details for recent appointments
+    const populatedAppointments = await Promise.all(
+      recentAppointments.map(async (apt) => {
+        const patient = await Patient.findById(apt.patient).populate("user", [
+          "fullname",
+          "email",
+          "profilePicture",
+        ]);
+        return {
+          ...apt.toObject(),
+          patient: patient,
+        };
+      })
+    );
+
+    // Get 5 most recent patients
+    const recentPatientsList = await Patient.find({
+      _id: { $in: doctor.patientsUnderCare },
+    })
+      .sort({ createdAt: -1 })
+      .limit(5)
+      .populate("user", ["fullname", "email", "profilePicture", "username"]);
+
+    // Return dashboard data
+    res.status(200).json({
+      stats: {
+        totalPatients,
+        totalAppointments: allAppointments.length,
+        pendingAppointments,
+        completedAppointments,
+        todayAppointments,
+      },
+      recentAppointments: populatedAppointments,
+      recentPatients: recentPatientsList,
+      doctorInfo: {
+        name: user.fullname,
+        email: user.email,
+        specializations: doctor.specializations,
+      },
+    });
+  } catch (error) {
+    console.error("Error getting doctor dashboard:", error);
+    res.status(500).json({ message: "Error fetching dashboard data", error });
   }
 };

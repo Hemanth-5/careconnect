@@ -139,6 +139,7 @@ const Login = () => {
         requestBody.password = formData.password;
       }
 
+      console.log("Login request:", API.USERS.LOGIN);
       const response = await fetch(API.USERS.LOGIN, {
         method: "POST",
         headers: {

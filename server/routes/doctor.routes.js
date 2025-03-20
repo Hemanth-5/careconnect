@@ -15,12 +15,17 @@ import {
   createMedicalReport,
   updateMedicalReport,
   getMyPatients,
+  getAllPatients, // Add this import
   getNotifications,
   markNotificationAsRead,
+  getDoctorDashboard,
 } from "../controllers/doctor.controller.js";
 import { doctorMiddleware } from "../middlewares/auth.middleware.js";
 
 const router = express.Router();
+
+// Add the dashboard route
+router.get("/dashboard", doctorMiddleware, getDoctorDashboard);
 
 // Protected routes (authentication required)
 // Get doctor profile
@@ -75,6 +80,9 @@ router.put("/medical-reports/:reportId", doctorMiddleware, updateMedicalReport);
 
 // Get all patients of the doctor
 router.get("/my-patients", doctorMiddleware, getMyPatients);
+
+// Get all patients in the database
+router.get("/patients", doctorMiddleware, getAllPatients);
 
 // Get notifications for the doctor
 router.get("/notifications", doctorMiddleware, getNotifications);

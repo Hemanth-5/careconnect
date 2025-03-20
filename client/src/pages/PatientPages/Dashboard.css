@@ -1,0 +1,43 @@
+.patient-dashboard {
+  animation: fadeIn 0.3s ease;
+}
+
+.placeholder-message {
+  background-color: white;
+  border-radius: var(--border-radius-lg);
+  padding: var(--spacing-6);
+  box-shadow: var(--shadow-md);
+  text-align: center;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.placeholder-icon {
+  font-size: 4rem;
+  color: var(--green-primary);
+  margin-bottom: var(--spacing-4);
+}
+
+.placeholder-message h2 {
+  font-size: var(--font-size-2xl);
+  color: var(--gray-800);
+  margin-bottom: var(--spacing-4);
+}
+
+.placeholder-message p {
+  color: var(--gray-700);
+  margin-bottom: var(--spacing-4);
+  font-size: var(--font-size-lg);
+}
+
+.placeholder-message ul {
+  display: inline-block;
+  text-align: left;
+  margin: var(--spacing-4) 0;
+  color: var(--gray-700);
+}
+
+.placeholder-message ul li {
+  margin-bottom: var(--spacing-2);
+  font-size: var(--font-size-md);
+}

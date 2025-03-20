@@ -5,7 +5,6 @@ import {
   Route,
   Navigate,
   useLocation,
-  Outlet,
 } from "react-router-dom";
 import Login from "./pages/Login";
 import Unauthorized from "./pages/Unauthorized";
@@ -15,15 +14,30 @@ import Spinner from "./components/common/Spinner";
 import AdminLayout from "./containers/AdminLayout";
 import AdminDashboard from "./pages/AdminPages/Dashboard";
 import UserManagement from "./pages/AdminPages/UserManagement";
-// Import additional admin pages as they're created
 import SpecializationManagement from "./pages/AdminPages/SpecializationManagement";
 import DoctorsList from "./pages/AdminPages/DoctorsList";
 import PatientsList from "./pages/AdminPages/PatientsList";
 import AppointmentManagement from "./pages/AdminPages/AppointmentManagement";
 import AnalyticsDashboard from "./pages/AdminPages/AnalyticsDashboard";
 
+// Import Doctor Pages - Now with correct paths
+import DoctorLayout from "./containers/DoctorLayout";
+import DoctorDashboard from "./pages/DoctorPages/Dashboard";
+import DoctorProfile from "./pages/DoctorPages/Profile";
+import DoctorAppointments from "./pages/DoctorPages/Appointments";
+import DoctorPatients from "./pages/DoctorPages/Patients";
+import DoctorPrescriptions from "./pages/DoctorPages/Prescriptions";
+import DoctorMedicalRecords from "./pages/DoctorPages/MedicalRecords";
+import DoctorReports from "./pages/DoctorPages/Reports";
+import DoctorNotifications from "./pages/DoctorPages/Notifications";
+
+// Import Patient Layout & Pages (placeholder for now)
+import PatientLayout from "./layout/PatientLayout";
+import PatientDashboard from "./pages/PatientPages/Dashboard";
+
 // Import the ResetPassword component
 import ResetPassword from "./pages/ResetPassword";
+import NotFound from "./pages/NotFound";
 
 import "./assets/styles/global.css";
 
@@ -50,7 +64,7 @@ const AuthCheck = ({ children, redirectTo }) => {
 
   // Wait until auth state is checked
   if (isAuthenticated === null) {
-    return <Spinner center size="medium" />; // Replace null with Spinner
+    return <Spinner center size="medium" />;
   }
 
   // Don't redirect if we're already at the login page
@@ -68,7 +82,6 @@ const AuthCheck = ({ children, redirectTo }) => {
 // Create a simple RedirectBasedOnRole component that doesn't immediately redirect
 const RedirectBasedOnRole = () => {
   const [destination, setDestination] = useState(null);
-  const location = useLocation();
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -84,10 +97,10 @@ const RedirectBasedOnRole = () => {
         setDestination("/admin/dashboard");
         break;
       case "doctor":
-        setDestination("/doctor/dashboard");
+        setDestination("/doctor");
         break;
       case "patient":
-        setDestination("/patient/dashboard");
+        setDestination("/patient");
         break;
       default:
         setDestination("/unauthorized");
@@ -96,7 +109,7 @@ const RedirectBasedOnRole = () => {
   }, []);
 
   if (destination === null) {
-    return <Spinner center size="medium" />; // Replace null with Spinner
+    return <Spinner center size="medium" />;
   }
 
   return <Navigate to={destination} replace />;
@@ -112,7 +125,7 @@ const Home = () => {
   }, []);
 
   if (redirect === null) {
-    return <Spinner center size="medium" />; // Replace null with Spinner
+    return <Spinner center size="medium" />;
   }
 
   return <Navigate to={redirect} replace />;
@@ -137,7 +150,7 @@ const App = () => {
       <div className="app-loading-container">
         <Spinner center size="large" />
       </div>
-    ); // Replace div with styled spinner
+    );
   }
 
   return (
@@ -146,14 +159,15 @@ const App = () => {
         {/* Public routes */}
         <Route path="/login" element={<Login />} />
         <Route path="/unauthorized" element={<Unauthorized />} />
-
-        {/* Role-based redirect */}
-        <Route path="/redirect" element={<RedirectBasedOnRole />} />
+        <Route path="/reset-password/:token" element={<ResetPassword />} />
 
         {/* Default route */}
         <Route path="/" element={<Home />} />
 
-        {/* Admin routes - now using AdminLayout */}
+        {/* Role-based redirect */}
+        <Route path="/redirect" element={<RedirectBasedOnRole />} />
+
+        {/* Admin routes */}
         <Route
           path="/admin"
           element={
@@ -172,33 +186,43 @@ const App = () => {
           <Route path="patients" element={<PatientsList />} />
           <Route path="appointments" element={<AppointmentManagement />} />
           <Route path="analytics" element={<AnalyticsDashboard />} />
+          <Route index element={<Navigate to="/admin/dashboard" replace />} />
         </Route>
 
-        {/* Doctor routes placeholder */}
+        {/* Doctor routes */}
         <Route
-          path="/doctor/dashboard"
+          path="/doctor"
           element={
             <AuthCheckWrapper redirectTo="/login">
-              <div>Doctor Dashboard Placeholder</div>
+              <DoctorLayout />
             </AuthCheckWrapper>
           }
-        />
+        >
+          <Route index element={<DoctorDashboard />} />
+          <Route path="profile" element={<DoctorProfile />} />
+          <Route path="appointments" element={<DoctorAppointments />} />
+          <Route path="patients" element={<DoctorPatients />} />
+          <Route path="prescriptions" element={<DoctorPrescriptions />} />
+          <Route path="medical-records" element={<DoctorMedicalRecords />} />
+          <Route path="reports" element={<DoctorReports />} />
+          <Route path="notifications" element={<DoctorNotifications />} />
+        </Route>
 
-        {/* Patient routes placeholder */}
+        {/* Patient routes - using placeholders for now */}
         <Route
-          path="/patient/dashboard"
+          path="/patient"
           element={
             <AuthCheckWrapper redirectTo="/login">
-              <div>Patient Dashboard Placeholder</div>
+              <PatientLayout />
             </AuthCheckWrapper>
           }
-        />
+        >
+          <Route index element={<PatientDashboard />} />
+          {/* Add more patient routes here as they're developed */}
+        </Route>
 
-        {/* Add this route to your Routes component */}
-        <Route path="/reset-password/:token" element={<ResetPassword />} />
-
-        {/* Any other route */}
-        <Route path="*" element={<Navigate to="/login" replace />} />
+        {/* 404 route */}
+        <Route path="*" element={<NotFound />} />
       </Routes>
     </Router>
   );

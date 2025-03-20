@@ -1,0 +1,127 @@
+.doctor-notifications {
+  animation: fadeIn 0.3s ease;
+}
+
+.notifications-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--spacing-6);
+}
+
+.notifications-section {
+  margin-bottom: var(--spacing-6);
+}
+
+.section-title {
+  font-size: var(--font-size-lg);
+  color: var(--gray-600);
+  margin-bottom: var(--spacing-3);
+}
+
+.notifications-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-4);
+}
+
+.notification-item {
+  display: flex;
+  align-items: flex-start;
+  background-color: white;
+  border-radius: var(--border-radius-lg);
+  padding: var(--spacing-4);
+  box-shadow: var(--shadow-sm);
+  gap: var(--spacing-4);
+  transition: background-color 0.2s;
+}
+
+.notification-item.unread {
+  background-color: rgba(var(--primary-rgb), 0.05);
+  border-left: 4px solid var(--primary);
+}
+
+.notification-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: var(--primary-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--primary);
+  font-size: var(--font-size-lg);
+  flex-shrink: 0;
+}
+
+.notification-content {
+  flex: 1;
+}
+
+.notification-text {
+  margin: 0 0 var(--spacing-1);
+  color: var(--gray-800);
+}
+
+.notification-date {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  color: var(--gray-500);
+}
+
+.mark-read-btn {
+  background: none;
+  border: none;
+  color: var(--gray-500);
+  font-size: var(--font-size-md);
+  cursor: pointer;
+  padding: var(--spacing-1);
+  border-radius: 50%;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.mark-read-btn:hover {
+  background-color: var(--primary-light);
+  color: var(--primary);
+}
+
+.no-notifications {
+  text-align: center;
+  padding: var(--spacing-8);
+  background-color: white;
+  border-radius: var(--border-radius-lg);
+  box-shadow: var(--shadow-sm);
+  color: var(--gray-600);
+}
+
+.no-notifications i {
+  font-size: 3rem;
+  color: var(--gray-400);
+  margin-bottom: var(--spacing-4);
+}
+
+.no-notifications p {
+  margin-bottom: var(--spacing-2);
+}
+
+/* Responsive styles */
+@media (max-width: 768px) {
+  .notifications-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--spacing-3);
+  }
+
+  .notification-item {
+    flex-direction: column;
+  }
+
+  .notification-icon {
+    margin-bottom: var(--spacing-2);
+  }
+
+  .mark-read-btn {
+    align-self: flex-end;
+    margin-top: var(--spacing-2);
+  }
+}

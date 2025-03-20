@@ -44,6 +44,7 @@ export const API = {
     GET_APPOINTMENT_ANALYTICS: `${BASE_URL}/admin/appointments/analytics`,
   },
   DOCTORS: {
+    DASHBOARD_STATS: `${BASE_URL}/doctors/dashboard`,
     GET_PROFILE: `${BASE_URL}/doctors/profile`,
     UPDATE_PROFILE: `${BASE_URL}/doctors/profile`,
     ASSIGN_SPECIALIZATIONS: `${BASE_URL}/doctors/me/specializations`,
@@ -64,6 +65,7 @@ export const API = {
     UPDATE_MEDICAL_REPORT: (reportId) =>
       `${BASE_URL}/doctors/medical-reports/${reportId}`,
     GET_MY_PATIENTS: `${BASE_URL}/doctors/my-patients`,
+    ALL_PATIENTS: `${BASE_URL}/doctors/patients`,
     GET_NOTIFICATIONS: `${BASE_URL}/doctors/notifications`,
     MARK_NOTIFICATION_AS_READ: (notificationId) =>
       `${BASE_URL}/doctors/notifications/${notificationId}`,
