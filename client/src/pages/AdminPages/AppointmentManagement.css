@@ -107,28 +107,28 @@
 }
 
 .status-pending {
-  background-color: rgba(var(--warning-rgb), 0.1);
-  color: var(--warning);
+  background-color: rgba(var(--admin-warning-rgb), 0.1);
+  color: var(--admin-warning);
 }
 
 .status-confirmed {
-  background-color: rgba(var(--primary-rgb), 0.1);
-  color: var(--primary);
+  background-color: rgba(var(--admin-primary-rgb), 0.1);
+  color: var(--admin-primary);
 }
 
 .status-scheduled {
-  background-color: rgba(var(--info-rgb), 0.1);
-  color: var(--info);
+  background-color: rgba(var(--admin-info-rgb), 0.1);
+  color: var(--admin-info);
 }
 
 .status-completed {
-  background-color: rgba(var(--success-rgb), 0.1);
-  color: var(--success);
+  background-color: rgba(var(--admin-success-rgb), 0.1);
+  color: var(--admin-success);
 }
 
 .status-cancelled {
-  background-color: rgba(var(--danger-rgb), 0.1);
-  color: var(--danger);
+  background-color: rgba(var(--admin-danger-rgb), 0.1);
+  color: var(--admin-danger);
 }
 
 .status-no-show {
@@ -156,21 +156,21 @@
 }
 
 .view-btn {
-  color: var(--primary);
-  background-color: rgba(var(--primary-rgb), 0.1);
+  color: var(--admin-primary);
+  background-color: rgba(var(--admin-primary-rgb), 0.1);
 }
 
 .view-btn:hover {
-  background-color: rgba(var(--primary-rgb), 0.2);
+  background-color: rgba(var(--admin-primary-rgb), 0.2);
 }
 
 .edit-btn {
-  color: var(--info);
-  background-color: rgba(var(--info-rgb), 0.1);
+  color: var(--admin-info);
+  background-color: rgba(var(--admin-info-rgb), 0.1);
 }
 
 .edit-btn:hover {
-  background-color: rgba(var(--info-rgb), 0.2);
+  background-color: rgba(var(--admin-info-rgb), 0.2);
 }
 
 /* Modal styles for appointment details */
@@ -197,7 +197,7 @@
 .doctor-info h3,
 .status-history h3 {
   font-size: var(--font-size-lg);
-  color: var(--primary-dark);
+  color: var(--admin-primary-dark);
   margin-top: 0;
   margin-bottom: var(--spacing-3);
   border-bottom: 1px solid var(--gray-200);
@@ -242,7 +242,7 @@
   width: 20px;
   height: 20px;
   border-radius: 50%;
-  background-color: var(--primary);
+  background-color: var(--admin-primary);
   border: 3px solid white;
   box-shadow: 0 0 0 1px var(--gray-300);
   z-index: 1;

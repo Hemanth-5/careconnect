@@ -13,7 +13,7 @@
   display: flex;
   gap: var(--spacing-1);
   margin-bottom: var(--spacing-6);
-  background-color: white;
+  background-color: var(--doctor-bg-card);
   padding: var(--spacing-2);
   border-radius: var(--border-radius-lg);
   box-shadow: var(--shadow-sm);
@@ -35,7 +35,7 @@
 }
 
 .filter-tab.active {
-  background-color: var(--primary);
+  background-color: var(--doctor-primary);
   color: white;
 }
 
@@ -48,7 +48,7 @@
 .appointment-card {
   display: flex;
   align-items: center;
-  background-color: white;
+  background-color: var(--doctor-bg-card);
   border-radius: var(--border-radius-lg);
   padding: var(--spacing-4);
   box-shadow: var(--shadow-sm);
@@ -112,25 +112,25 @@
 }
 
 .status-pending {
-  background-color: rgba(var(--warning-rgb), 0.1);
-  color: var(--warning);
+  background-color: rgba(var(--doctor-warning-rgb), 0.1);
+  color: var(--doctor-warning);
 }
 
 .status-confirmed,
 .status-scheduled {
-  background-color: rgba(var(--info-rgb), 0.1);
-  color: var(--info);
+  background-color: rgba(var(--doctor-info-rgb), 0.1);
+  color: var(--doctor-info);
 }
 
 .status-completed {
-  background-color: rgba(var(--success-rgb), 0.1);
-  color: var(--success);
+  background-color: rgba(var(--doctor-success-rgb), 0.1);
+  color: var(--doctor-success);
 }
 
 .status-cancelled,
 .status-no-show {
-  background-color: rgba(var(--danger-rgb), 0.1);
-  color: var(--danger);
+  background-color: rgba(var(--doctor-danger-rgb), 0.1);
+  color: var(--doctor-danger);
 }
 
 .appointment-actions {
@@ -157,24 +157,24 @@
 }
 
 .view-btn:hover {
-  background-color: rgba(var(--info-rgb), 0.1);
-  color: var(--info);
+  background-color: rgba(var(--doctor-info-rgb), 0.1);
+  color: var(--doctor-info);
 }
 
 .edit-btn:hover {
-  background-color: rgba(var(--success-rgb), 0.1);
-  color: var(--success);
+  background-color: rgba(var(--doctor-success-rgb), 0.1);
+  color: var(--doctor-success);
 }
 
 .delete-btn:hover {
-  background-color: rgba(var(--danger-rgb), 0.1);
-  color: var(--danger);
+  background-color: rgba(var(--doctor-danger-rgb), 0.1);
+  color: var(--doctor-danger);
 }
 
 .no-appointments {
   text-align: center;
   padding: var(--spacing-8);
-  background-color: white;
+  background-color: var(--doctor-bg-card);
   border-radius: var(--border-radius-lg);
   box-shadow: var(--shadow-sm);
   color: var(--gray-600);

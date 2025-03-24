@@ -4,6 +4,8 @@ import doctorAPI from "../../api/doctor";
 import Button from "../../components/common/Button";
 import Spinner from "../../components/common/Spinner";
 import Modal from "../../components/common/Modal";
+import jsPDF from "jspdf";
+import { saveAs } from "file-saver";
 import "./Prescriptions.css";
 
 const Prescriptions = () => {
@@ -13,6 +15,7 @@ const Prescriptions = () => {
   const [myPatients, setMyPatients] = useState([]);
   const [allPatients, setAllPatients] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [actionLoading, setActionLoading] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
   const [selectedPrescription, setSelectedPrescription] = useState(null);
@@ -24,9 +27,12 @@ const Prescriptions = () => {
   // Form state for creating/editing prescriptions
   const [formData, setFormData] = useState({
     patient: "",
-    medications: [{ name: "", dosage: "", frequency: "", duration: "" }],
+    medications: [
+      { name: "", dosage: "", instructions: "", frequency: "", duration: "" },
+    ],
     startDate: new Date().toISOString().split("T")[0],
     endDate: "",
+    status: "active",
     notes: "",
   });
 
@@ -77,22 +83,54 @@ const Prescriptions = () => {
     setSelectedPrescription(null);
     setFormData({
       patient: patientId,
-      medications: [{ name: "", dosage: "", frequency: "", duration: "" }],
+      medications: [
+        { name: "", dosage: "", instructions: "", frequency: "", duration: "" },
+      ],
+      startDate: new Date().toISOString().split("T")[0],
+      endDate: calculateDefaultEndDate(new Date()),
+      status: "active",
       notes: "",
-      date: new Date().toISOString().split("T")[0],
     });
     setShowPrescriptionModal(true);
   };
 
+  // Calculate a default end date (7 days from start)
+  const calculateDefaultEndDate = (startDate) => {
+    const endDate = new Date(startDate);
+    endDate.setDate(endDate.getDate() + 7);
+    return endDate.toISOString().split("T")[0];
+  };
+
   const handleOpenEditPrescription = (prescription) => {
     setSelectedPrescription(prescription);
+    console.log(prescription);
+
+    // Format dates for the form
+    const startDate = prescription.startDate
+      ? new Date(prescription.startDate).toISOString().split("T")[0]
+      : new Date().toISOString().split("T")[0];
+    const endDate = prescription.endDate
+      ? new Date(prescription.endDate).toISOString().split("T")[0]
+      : "";
+
     setFormData({
       patient: prescription.patient?._id || "",
-      medications: prescription.medications || [
-        { name: "", dosage: "", frequency: "", duration: "" },
-      ],
+      medications:
+        prescription.medications && prescription.medications.length > 0
+          ? prescription.medications
+          : [
+              {
+                name: "",
+                dosage: "",
+                instructions: "",
+                frequency: "",
+                duration: "",
+              },
+            ],
+      startDate,
+      endDate,
+      status: prescription.status || "active",
       notes: prescription.notes || "",
-      date: new Date(prescription.date).toISOString().split("T")[0],
     });
     setShowPrescriptionModal(true);
   };
@@ -124,7 +162,7 @@ const Prescriptions = () => {
       ...formData,
       medications: [
         ...formData.medications,
-        { name: "", dosage: "", frequency: "", duration: "" },
+        { name: "", dosage: "", instructions: "", frequency: "", duration: "" },
       ],
     });
   };
@@ -141,15 +179,47 @@ const Prescriptions = () => {
     });
   };
 
+  const validateForm = () => {
+    // Check patient selection
+    if (!formData.patient) {
+      setError("Please select a patient");
+      return false;
+    }
+
+    // Check medication entries
+    for (const medication of formData.medications) {
+      if (!medication.name || !medication.dosage) {
+        setError("Please provide name and dosage for all medications");
+        return false;
+      }
+    }
+
+    // Check dates
+    if (!formData.startDate) {
+      setError("Please provide a start date");
+      return false;
+    }
+
+    return true;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    if (!validateForm()) {
+      return;
+    }
+
     try {
-      setLoading(true);
+      setActionLoading(true);
+      setError(null);
 
       const prescriptionData = {
         ...formData,
-        date: new Date(formData.date).toISOString(),
+        startDate: new Date(formData.startDate).toISOString(),
+        endDate: formData.endDate
+          ? new Date(formData.endDate).toISOString()
+          : null,
       };
 
       let response;
@@ -178,17 +248,19 @@ const Prescriptions = () => {
     } catch (err) {
       console.error("Error saving prescription:", err);
       setError(
-        selectedPrescription
-          ? "Failed to update prescription. Please try again."
-          : "Failed to create prescription. Please try again."
+        err.response?.data?.message ||
+          (selectedPrescription
+            ? "Failed to update prescription. Please try again."
+            : "Failed to create prescription. Please try again.")
       );
     } finally {
-      setLoading(false);
+      setActionLoading(false);
     }
   };
 
   // Format date for display
   const formatDate = (dateString) => {
+    if (!dateString) return "N/A";
     return new Date(dateString).toLocaleDateString("en-US", {
       year: "numeric",
       month: "short",
@@ -196,18 +268,174 @@ const Prescriptions = () => {
     });
   };
 
-  // Filter prescriptions based on search term
+  // Generate a PDF prescription with jsPDF instead of pdf-lib
+  const generatePrescriptionPDF = async (prescription) => {
+    try {
+      setActionLoading(true);
+
+      // Create a new jsPDF instance
+      const doc = new jsPDF();
+
+      // Define variables for positioning
+      const margin = 20;
+      let y = 20;
+      const lineHeight = 10;
+
+      // Add title
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(18);
+      doc.setTextColor(0, 102, 102); // Teal color
+      doc.text("CARE CONNECT", margin, y);
+      y += lineHeight * 2;
+
+      // Add prescription header
+      doc.setFontSize(16);
+      doc.setTextColor(0, 0, 0);
+      doc.text("PRESCRIPTION", margin, y);
+      y += lineHeight * 1.5;
+
+      // Patient information
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(12);
+      doc.text(
+        `Patient: ${
+          prescription.patient?.user?.fullname ||
+          prescription.patient?.user?.username ||
+          "Unknown Patient"
+        }`,
+        margin,
+        y
+      );
+      y += lineHeight;
+
+      // Date information
+      doc.text(`Date: ${formatDate(prescription.startDate)}`, margin, y);
+      y += lineHeight;
+
+      if (prescription.endDate) {
+        doc.text(`End Date: ${formatDate(prescription.endDate)}`, margin, y);
+        y += lineHeight;
+      }
+
+      y += lineHeight;
+
+      // Medications header
+      doc.setFont("helvetica", "bold");
+      doc.text("MEDICATIONS", margin, y);
+      y += lineHeight;
+
+      // List all medications
+      doc.setFont("helvetica", "normal");
+      prescription.medications?.forEach((med, index) => {
+        doc.text(`${index + 1}. ${med.name} - ${med.dosage}`, margin, y);
+        y += lineHeight;
+
+        if (med.frequency) {
+          doc.text(`   Frequency: ${med.frequency}`, margin, y);
+          y += lineHeight;
+        }
+
+        if (med.duration) {
+          doc.text(`   Duration: ${med.duration}`, margin, y);
+          y += lineHeight;
+        }
+
+        if (med.instructions) {
+          doc.text(`   Instructions: ${med.instructions}`, margin, y);
+          y += lineHeight;
+        }
+
+        y += lineHeight / 2; // Add space between medications
+
+        // Check if we need a new page
+        if (y > 270) {
+          doc.addPage();
+          y = 20;
+        }
+      });
+
+      // Add notes if any
+      if (prescription.notes) {
+        doc.setFont("helvetica", "bold");
+        doc.text("Notes:", margin, y);
+        y += lineHeight;
+
+        doc.setFont("helvetica", "normal");
+        // Split notes by newlines to properly display them
+        const notes = prescription.notes.split("\n");
+        notes.forEach((line) => {
+          doc.text(line, margin, y);
+          y += lineHeight;
+
+          // Check if we need a new page
+          if (y > 270) {
+            doc.addPage();
+            y = 20;
+          }
+        });
+      }
+
+      // Doctor signature
+      y += lineHeight;
+      doc.text("Dr. Signature: ______________________", margin, y);
+
+      // Save the PDF
+      const patientName = prescription.patient?.user?.fullname || "patient";
+      const date = formatDate(prescription.startDate)
+        .replace(/,/g, "")
+        .replace(/ /g, "-");
+
+      const pdfBlob = doc.output("blob");
+      saveAs(pdfBlob, `prescription_${patientName}_${date}.pdf`);
+    } catch (error) {
+      console.error("Error generating PDF:", error);
+      setError("Failed to generate PDF. Please try again.");
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  // Filter prescriptions based on search term and patient filter
   const filteredPrescriptions = prescriptions.filter((prescription) => {
-    const patientName = prescription.patient?.user?.fullname || "";
+    const patientName =
+      prescription.patient?.user?.fullname ||
+      prescription.patient?.user?.username ||
+      "";
+    const patientId = prescription.patient?._id || "";
     const searchValue = searchTerm.toLowerCase();
 
-    return patientName.toLowerCase().includes(searchValue);
+    const matchesSearch = patientName.toLowerCase().includes(searchValue);
+    const matchesPatientFilter = !patientFilter || patientId === patientFilter;
+
+    return matchesSearch && matchesPatientFilter;
   });
 
   // Get patient name by ID
   const getPatientName = (patientId) => {
     const patient = allPatients.find((p) => p._id === patientId);
-    return patient?.user?.fullname || "Unknown Patient";
+    return (
+      patient?.user?.fullname || patient?.user?.username || "Unknown Patient"
+    );
+  };
+
+  // Render status badge based on status
+  const renderStatusBadge = (status) => {
+    let className;
+    switch (status) {
+      case "active":
+        className = "status-badge status-active";
+        break;
+      case "completed":
+        className = "status-badge status-completed";
+        break;
+      case "expired":
+        className = "status-badge status-expired";
+        break;
+      default:
+        className = "status-badge";
+    }
+
+    return <span className={className}>{status}</span>;
   };
 
   return (
@@ -238,103 +466,139 @@ const Prescriptions = () => {
           <Spinner center size="large" />
         </div>
       ) : (
-        <div className="prescriptions-list">
-          {filteredPrescriptions.length > 0 ? (
-            <table className="prescriptions-table">
-              <thead>
-                <tr>
-                  <th>Date</th>
-                  <th>Patient</th>
-                  <th>Medications</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredPrescriptions.map((prescription) => (
-                  <tr key={prescription._id}>
-                    <td className="date-cell">
-                      {formatDate(prescription.date)}
-                    </td>
-                    <td className="patient-cell">
-                      {prescription.patient?.user?.fullname ||
+        <>
+          {/* Filter bar */}
+          {prescriptions.length > 0 && (
+            <div className="filter-bar">
+              <div className="filter-select">
+                <label htmlFor="patientFilter">Filter by patient:</label>
+                <select
+                  id="patientFilter"
+                  value={patientFilter}
+                  onChange={(e) => setPatientFilter(e.target.value)}
+                >
+                  <option value="">All Patients</option>
+                  {myPatients.map((patient) => (
+                    <option key={patient._id} value={patient._id}>
+                      {patient.user?.fullname ||
+                        patient.user?.username ||
                         "Unknown Patient"}
-                    </td>
-                    <td className="medications-cell">
-                      {prescription.medications?.length > 0 ? (
-                        <ul className="medications-list">
-                          {prescription.medications
-                            .slice(0, 2)
-                            .map((med, index) => (
-                              <li key={index}>
-                                {med.name} - {med.dosage}
-                              </li>
-                            ))}
-                          {prescription.medications.length > 2 && (
-                            <li className="more-medications">
-                              {prescription.medications.length - 2} more...
-                            </li>
-                          )}
-                        </ul>
-                      ) : (
-                        <span className="no-data">No medications listed</span>
-                      )}
-                    </td>
-                    <td className="actions-cell">
-                      <Button
-                        variant="outline-primary"
-                        size="sm"
-                        onClick={() => handleViewDetails(prescription)}
-                      >
-                        View
-                      </Button>
-                      <Button
-                        variant="outline-secondary"
-                        size="sm"
-                        onClick={() => handleOpenEditPrescription(prescription)}
-                      >
-                        Edit
-                      </Button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          ) : (
-            <div className="no-prescriptions">
-              <i className="fas fa-prescription-bottle-alt"></i>
-              <p>
-                No prescriptions found
-                {searchTerm ? " matching your search criteria" : ""}.
-              </p>
-              <Button
-                variant="primary"
-                onClick={() => handleOpenNewPrescription()}
-              >
-                Create First Prescription
-              </Button>
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="filter-select">
+                <label htmlFor="statusFilter">Filter by status:</label>
+                <select
+                  id="statusFilter"
+                  value={formData.status}
+                  onChange={(e) =>
+                    setFormData({ ...formData, status: e.target.value })
+                  }
+                >
+                  <option value="">All Statuses</option>
+                  <option value="active">Active</option>
+                  <option value="completed">Completed</option>
+                  <option value="expired">Expired</option>
+                </select>
+              </div>
             </div>
           )}
-        </div>
-      )}
 
-      {prescriptions.length > 0 && (
-        <div className="filters">
-          <div className="filter-select">
-            <label htmlFor="patientFilter">Filter by patient:</label>
-            <select
-              id="patientFilter"
-              value={patientFilter}
-              onChange={(e) => setPatientFilter(e.target.value)}
-            >
-              <option value="">All Patients</option>
-              {myPatients.map((patient) => (
-                <option key={patient._id} value={patient._id}>
-                  {patient.user?.fullname || "Unknown Patient"}
-                </option>
-              ))}
-            </select>
+          <div className="prescriptions-list">
+            {filteredPrescriptions.length > 0 ? (
+              <table className="prescriptions-table">
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Patient</th>
+                    <th>Medications</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredPrescriptions.map((prescription) => (
+                    <tr key={prescription._id}>
+                      <td className="date-cell">
+                        {formatDate(prescription.startDate)}
+                      </td>
+                      <td className="patient-cell">
+                        {prescription.patient?.user?.fullname ||
+                          prescription.patient?.user?.username ||
+                          "Unknown Patient"}
+                      </td>
+                      <td className="medications-cell">
+                        {prescription.medications?.length > 0 ? (
+                          <ul className="medications-list">
+                            {prescription.medications
+                              .slice(0, 2)
+                              .map((med, index) => (
+                                <li key={index}>
+                                  {med.name} - {med.dosage}
+                                </li>
+                              ))}
+                            {prescription.medications.length > 2 && (
+                              <li className="more-medications">
+                                {prescription.medications.length - 2} more...
+                              </li>
+                            )}
+                          </ul>
+                        ) : (
+                          <span className="no-data">No medications listed</span>
+                        )}
+                      </td>
+                      <td className="status-cell">
+                        {renderStatusBadge(prescription.status || "active")}
+                      </td>
+                      <td className="actions-cell">
+                        <Button
+                          variant="outline-primary"
+                          size="sm"
+                          onClick={() => handleViewDetails(prescription)}
+                        >
+                          View
+                        </Button>
+                        <Button
+                          variant="outline-secondary"
+                          size="sm"
+                          onClick={() =>
+                            handleOpenEditPrescription(prescription)
+                          }
+                        >
+                          Edit
+                        </Button>
+                        <Button
+                          variant="outline-info"
+                          size="sm"
+                          onClick={() => generatePrescriptionPDF(prescription)}
+                          loading={actionLoading}
+                        >
+                          <i className="fas fa-file-pdf"></i>
+                        </Button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            ) : (
+              <div className="no-prescriptions">
+                <i className="fas fa-prescription-bottle-alt"></i>
+                <p>
+                  No prescriptions found
+                  {searchTerm ? " matching your search criteria" : ""}.
+                </p>
+                <Button
+                  variant="primary"
+                  onClick={() => handleOpenNewPrescription()}
+                >
+                  Create First Prescription
+                </Button>
+              </div>
+            )}
           </div>
-        </div>
+        </>
       )}
 
       {/* Create/Edit Prescription Modal */}
@@ -402,22 +666,52 @@ const Prescriptions = () => {
                 {selectedPrescription && (
                   <option value={formData.patient}>
                     {selectedPrescription.patient?.user?.fullname ||
+                      selectedPrescription.patient?.user?.username ||
                       "Unknown Patient"}
                   </option>
                 )}
               </select>
             </div>
 
-            <div className="form-group">
-              <label htmlFor="date">Prescription Date</label>
-              <input
-                type="date"
-                id="date"
-                name="date"
-                value={formData.date}
-                onChange={handleInputChange}
-                required
-              />
+            <div className="form-row">
+              <div className="form-group">
+                <label htmlFor="startDate">Start Date</label>
+                <input
+                  type="date"
+                  id="startDate"
+                  name="startDate"
+                  value={formData.startDate}
+                  onChange={handleInputChange}
+                  required
+                />
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="endDate">End Date</label>
+                <input
+                  type="date"
+                  id="endDate"
+                  name="endDate"
+                  value={formData.endDate}
+                  onChange={handleInputChange}
+                  min={formData.startDate}
+                />
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="status">Status</label>
+                <select
+                  id="status"
+                  name="status"
+                  value={formData.status}
+                  onChange={handleInputChange}
+                  required
+                >
+                  <option value="active">Active</option>
+                  <option value="completed">Completed</option>
+                  <option value="expired">Expired</option>
+                </select>
+              </div>
             </div>
 
             <div className="medications-section">
@@ -500,29 +794,48 @@ const Prescriptions = () => {
                             )
                           }
                           placeholder="e.g., twice daily"
-                          required
                         />
                       </div>
                     </div>
 
-                    <div className="form-group">
-                      <label htmlFor={`medication-duration-${index}`}>
-                        Duration
-                      </label>
-                      <input
-                        type="text"
-                        id={`medication-duration-${index}`}
-                        value={medication.duration}
-                        onChange={(e) =>
-                          handleMedicationChange(
-                            index,
-                            "duration",
-                            e.target.value
-                          )
-                        }
-                        placeholder="e.g., 7 days"
-                        required
-                      />
+                    <div className="form-row">
+                      <div className="form-group">
+                        <label htmlFor={`medication-duration-${index}`}>
+                          Duration
+                        </label>
+                        <input
+                          type="text"
+                          id={`medication-duration-${index}`}
+                          value={medication.duration}
+                          onChange={(e) =>
+                            handleMedicationChange(
+                              index,
+                              "duration",
+                              e.target.value
+                            )
+                          }
+                          placeholder="e.g., 7 days"
+                        />
+                      </div>
+
+                      <div className="form-group">
+                        <label htmlFor={`medication-instructions-${index}`}>
+                          Instructions
+                        </label>
+                        <input
+                          type="text"
+                          id={`medication-instructions-${index}`}
+                          value={medication.instructions}
+                          onChange={(e) =>
+                            handleMedicationChange(
+                              index,
+                              "instructions",
+                              e.target.value
+                            )
+                          }
+                          placeholder="e.g., Take with food"
+                        />
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -552,8 +865,8 @@ const Prescriptions = () => {
               <Button
                 type="submit"
                 variant="primary"
-                loading={loading}
-                disabled={loading}
+                loading={actionLoading}
+                disabled={actionLoading}
               >
                 {selectedPrescription ? "Update" : "Create"} Prescription
               </Button>
@@ -567,6 +880,7 @@ const Prescriptions = () => {
         <Modal
           title="Prescription Details"
           onClose={() => setShowDetailsModal(false)}
+          size="medium"
         >
           <div className="prescription-details">
             <div className="details-header">
@@ -579,11 +893,29 @@ const Prescriptions = () => {
               </div>
 
               <div className="detail-group">
-                <h3>Date</h3>
+                <h3>Status</h3>
                 <p className="detail-value">
-                  {formatDate(selectedPrescription.date)}
+                  {renderStatusBadge(selectedPrescription.status || "active")}
                 </p>
               </div>
+            </div>
+
+            <div className="details-dates">
+              <div className="detail-group">
+                <h3>Start Date</h3>
+                <p className="detail-value">
+                  {formatDate(selectedPrescription.startDate)}
+                </p>
+              </div>
+
+              {selectedPrescription.endDate && (
+                <div className="detail-group">
+                  <h3>End Date</h3>
+                  <p className="detail-value">
+                    {formatDate(selectedPrescription.endDate)}
+                  </p>
+                </div>
+              )}
             </div>
 
             <div className="detail-group">
@@ -598,12 +930,22 @@ const Prescriptions = () => {
                         <p>
                           <strong>Dosage:</strong> {medication.dosage}
                         </p>
-                        <p>
-                          <strong>Frequency:</strong> {medication.frequency}
-                        </p>
-                        <p>
-                          <strong>Duration:</strong> {medication.duration}
-                        </p>
+                        {medication.frequency && (
+                          <p>
+                            <strong>Frequency:</strong> {medication.frequency}
+                          </p>
+                        )}
+                        {medication.duration && (
+                          <p>
+                            <strong>Duration:</strong> {medication.duration}
+                          </p>
+                        )}
+                        {medication.instructions && (
+                          <p>
+                            <strong>Instructions:</strong>{" "}
+                            {medication.instructions}
+                          </p>
+                        )}
                       </div>
                     </div>
                   ))}
@@ -638,10 +980,12 @@ const Prescriptions = () => {
                 Edit Prescription
               </Button>
               <Button
-                variant="secondary"
-                onClick={() => alert("Print functionality to be implemented")}
+                variant="outline-info"
+                onClick={() => generatePrescriptionPDF(selectedPrescription)}
+                loading={actionLoading}
+                disabled={actionLoading}
               >
-                <i className="fas fa-print"></i> Print
+                <i className="fas fa-file-pdf"></i> Generate PDF
               </Button>
             </div>
           </div>

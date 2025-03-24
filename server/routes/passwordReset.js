@@ -35,10 +35,10 @@ router.get("/test-email", async (req, res) => {
 // Request password reset (send email with token)
 router.post("/request", requestPasswordReset);
 
-// Verify token validity (optional - for frontend to check if token is valid before showing reset form)
-router.get("/verify-token/:token", verifyToken);
+// Verify token validity (for frontend to check if token is valid before showing reset form)
+router.get("/verify/:token", verifyToken);
 
-// Verify token and reset password
+// Reset password with token
 router.post("/reset", resetPassword);
 
 export default router;

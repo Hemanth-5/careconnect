@@ -1,30 +1,5 @@
 import mongoose from "mongoose";
 
-const statusHistorySchema = new mongoose.Schema({
-  status: {
-    type: String,
-    enum: [
-      "pending",
-      "confirmed",
-      "scheduled",
-      "completed",
-      "cancelled",
-      "no-show",
-    ],
-    required: true,
-  },
-  changedBy: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "User",
-    required: true,
-  },
-  notes: String,
-  timestamp: {
-    type: Date,
-    default: Date.now,
-  },
-});
-
 const appointmentSchema = new mongoose.Schema(
   {
     doctor: {
@@ -41,78 +16,79 @@ const appointmentSchema = new mongoose.Schema(
       type: Date,
       required: true,
     },
-    duration: {
-      type: Number,
-      default: 30, // Duration in minutes
-      min: 5,
-      max: 120,
+    timeSlot: {
+      type: String,
+      required: false,
     },
     status: {
       type: String,
       enum: [
         "pending",
         "confirmed",
-        "scheduled",
-        "completed",
         "cancelled",
+        "completed",
+        "rescheduled",
         "no-show",
+        "scheduled",
       ],
       default: "pending",
     },
-    notes: String,
-    reason: String,
-    symptoms: [String],
-    followUp: Boolean,
-    recommendedBy: String,
-    statusHistory: [statusHistorySchema],
-    paymentStatus: {
+    reason: {
       type: String,
-      enum: ["unpaid", "paid", "refunded", "pending"],
-      default: "unpaid",
+      default: "",
     },
-    paymentAmount: {
-      type: Number,
+    notes: {
+      type: String,
+      default: "",
     },
-    paymentMethod: String,
-    paymentId: String,
+    followUp: {
+      recommended: {
+        type: Boolean,
+        default: false,
+      },
+      date: {
+        type: Date,
+      },
+      notes: {
+        type: String,
+      },
+    },
+    statusHistory: [
+      {
+        status: {
+          type: String,
+          enum: [
+            "pending",
+            "confirmed",
+            "cancelled",
+            "completed",
+            "rescheduled",
+            "no-show",
+            "scheduled",
+          ],
+        },
+        changedBy: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "User",
+        },
+        timestamp: {
+          type: Date,
+          default: Date.now,
+        },
+        notes: {
+          type: String,
+        },
+      },
+    ],
   },
-  {
-    timestamps: true,
-  }
+  { timestamps: true }
 );
 
-// Index for efficient queries
+// Indexes for improving query performance
 appointmentSchema.index({ doctor: 1, appointmentDate: 1 });
 appointmentSchema.index({ patient: 1, appointmentDate: 1 });
 appointmentSchema.index({ status: 1 });
 appointmentSchema.index({ appointmentDate: 1 });
-
-// Static method to check for time conflicts
-appointmentSchema.statics.checkForConflicts = async function (
-  doctorId,
-  startTime,
-  endTime,
-  excludeAppointmentId = null
-) {
-  const filter = {
-    doctor: doctorId,
-    status: { $nin: ["cancelled", "no-show"] },
-    appointmentDate: { $lt: endTime },
-    $expr: {
-      $gt: [
-        { $add: ["$appointmentDate", { $multiply: ["$duration", 60000] }] },
-        startTime,
-      ],
-    },
-  };
-
-  if (excludeAppointmentId) {
-    filter._id = { $ne: excludeAppointmentId };
-  }
-
-  const conflictingAppointments = await this.find(filter);
-  return conflictingAppointments;
-};
 
 const Appointment = mongoose.model("Appointment", appointmentSchema);
 

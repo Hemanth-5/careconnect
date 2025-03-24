@@ -1,6 +1,22 @@
 // src/api/admin.js
 import api from "./index";
 import { API } from "../constants/api";
+import axios from "axios";
+
+// Helper to get auth token
+const getAuthHeader = () => {
+  const token = localStorage.getItem("token");
+
+  if (!token) {
+    throw new Error("Authentication token is missing");
+  }
+
+  return {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  };
+};
 
 /**
  * Admin API service

@@ -8,48 +8,166 @@ import User from "../models/user.model.js";
 import Doctor from "../models/doctor.model.js";
 import Patient from "../models/patient.model.js";
 import Specialization from "../models/specialization.model.js";
+import mongoose from "mongoose";
+import path from "path";
+import fs from "fs";
 
 // Get doctor profile
 export const getDoctorProfile = async (req, res) => {
   try {
-    const user = await User.findById(req.user.userId);
-    if (!user) {
-      res.status(404).json({ message: "User not found" });
-    }
-    const doctor = await Doctor.findOne({ user: user._id });
+    const doctor = await Doctor.findOne({ user: req.user.userId })
+      .populate("user")
+      .populate("specializations");
+
     if (!doctor) {
-      return res.status(404).json({ message: "Doctor not found" });
+      return res.status(404).json({ message: "Doctor profile not found" });
     }
 
     res.status(200).json(doctor);
   } catch (error) {
-    res.status(500).json({ message: "Error fetching doctor profile", error });
+    console.error("Error fetching doctor profile:", error);
+    res.status(500).json({ message: "Server error", error: error.message });
   }
 };
 
 // Update doctor profile
 export const updateDoctorProfile = async (req, res) => {
   try {
+    const { userId } = req.user;
+    const updateData = req.body;
+
+    // Find doctor by user ID
+    const doctor = await Doctor.findOne({ user: userId });
+    if (!doctor) {
+      return res.status(404).json({ message: "Doctor profile not found" });
+    }
+
+    // If user data is included, update the associated user document
+    if (updateData.user) {
+      const user = await User.findById(userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      // Update basic user fields
+      if (updateData.user.fullname) user.fullname = updateData.user.fullname;
+      if (updateData.user.email) user.email = updateData.user.email;
+      if (updateData.user.gender) user.gender = updateData.user.gender;
+
+      // Update user contact information
+      if (updateData.user.contact) {
+        user.contact = user.contact || {};
+        if (updateData.user.contact.phone) {
+          user.contact.phone = updateData.user.contact.phone;
+        }
+        if (updateData.user.contact.address) {
+          user.contact.address = updateData.user.contact.address;
+        }
+      }
+
+      await user.save();
+    }
+
+    // Update doctor-specific fields
+    if (updateData.experience !== undefined) {
+      doctor.experience = updateData.experience;
+    }
+
+    if (updateData.education) {
+      doctor.education = updateData.education;
+    }
+
+    if (updateData.bio) {
+      doctor.bio = updateData.bio;
+    }
+
+    if (updateData.consultationFee !== undefined) {
+      doctor.consultationFee = updateData.consultationFee;
+    }
+
+    // Update license details
+    if (updateData.license) {
+      doctor.license = doctor.license || {};
+      if (updateData.license.number) {
+        doctor.license.number = updateData.license.number;
+      }
+      if (updateData.license.expirationDate) {
+        doctor.license.expirationDate = updateData.license.expirationDate;
+      }
+    }
+
+    // Update specializations if provided
+    if (
+      updateData.specializations &&
+      Array.isArray(updateData.specializations)
+    ) {
+      doctor.specializations = updateData.specializations;
+    }
+
+    // Handle availability schedule update
+    if (updateData.availability && Array.isArray(updateData.availability)) {
+      doctor.availability = updateData.availability;
+    }
+
+    await doctor.save();
+
+    res.status(200).json({
+      message: "Doctor profile updated successfully",
+      doctor,
+    });
+  } catch (error) {
+    console.error("Error updating doctor profile:", error);
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
+// Upload profile image
+export const uploadProfileImage = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ message: "No file uploaded" });
+    }
+
     const user = await User.findById(req.user.userId);
     if (!user) {
-      res.status(404).json({ message: "User not found" });
+      return res.status(404).json({ message: "User not found" });
     }
 
-    const updatedData = req.body;
-    const updatedDoctor = await Doctor.findOneAndUpdate(
-      { user: user._id },
-      updatedData,
-      { new: true }
-    );
-    if (!updatedDoctor) {
-      return res.status(404).json({ message: "Doctor not found" });
+    // Delete previous profile picture if it exists
+    if (user.profilePicture) {
+      const oldImagePath = path.join(
+        process.cwd(),
+        "uploads",
+        path.basename(user.profilePicture)
+      );
+      if (fs.existsSync(oldImagePath)) {
+        fs.unlinkSync(oldImagePath);
+      }
     }
 
-    res
-      .status(200)
-      .json({ message: "Doctor profile updated successfully", updatedDoctor });
+    // Set new profile picture
+    const imageUrl = `/uploads/${req.file.filename}`;
+    user.profilePicture = imageUrl;
+    await user.save();
+
+    res.status(200).json({
+      message: "Profile image uploaded successfully",
+      profilePicture: imageUrl,
+    });
   } catch (error) {
-    res.status(500).json({ message: "Error updating doctor profile", error });
+    console.error("Error uploading profile image:", error);
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
+// Get all specializations
+export const getSpecializations = async (req, res) => {
+  try {
+    const specializations = await Specialization.find().sort({ name: 1 });
+    res.status(200).json(specializations);
+  } catch (error) {
+    console.error("Error fetching specializations:", error);
+    res.status(500).json({ message: "Server error", error: error.message });
   }
 };
 
@@ -169,7 +287,8 @@ export const createAppointment = async (req, res) => {
 
     // Populate new details in doctor model
     doctor.appointments.push(newAppointment._id);
-    
+    // console.log(doctor.patientsUnderCare);
+
     // Make sure the patient is added to patientsUnderCare array if not already there
     if (!doctor.patientsUnderCare.includes(patient)) {
       doctor.patientsUnderCare.push(patient);
@@ -355,6 +474,28 @@ export const deleteAppointment = async (req, res) => {
   }
 };
 
+// Get prescriptions
+export const getPrescriptions = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    const doctor = await Doctor.findOne({ user: user._id });
+    if (!doctor) {
+      return res.status(404).json({ message: "Doctor not found" });
+    }
+
+    const prescriptions = await PrescriptionService.getDoctorPrescriptions(
+      doctor._id
+    );
+    res.status(200).json(prescriptions);
+  } catch (error) {
+    res.status(500).json({ message: "Error fetching prescriptions", error });
+  }
+};
+
 // Controller for managing prescriptions
 export const createPrescription = async (req, res) => {
   try {
@@ -472,9 +613,21 @@ export const createPatientRecord = async (req, res) => {
       return res.status(404).json({ message: "Patient not found" });
     }
 
-    // 2️⃣ Create a new patient record
+    // Get the doctor ID from the authenticated user
+    const user = await User.findById(req.user.userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    const doctor = await Doctor.findOne({ user: user._id });
+    if (!doctor) {
+      return res.status(404).json({ message: "Doctor not found" });
+    }
+
+    // 2️⃣ Create a new patient record with the doctor ID
     const newPatientRecord = await PatientRecordService.createPatientRecord({
       patient,
+      doctor: doctor._id,
       records,
     });
 
@@ -482,9 +635,16 @@ export const createPatientRecord = async (req, res) => {
     dbPatient.patientRecords.push(newPatientRecord._id);
     await dbPatient.save();
 
-    res.status(201).json({ message: "Patient record created successfully" });
+    res.status(201).json({
+      message: "Patient record created successfully",
+      record: newPatientRecord,
+    });
   } catch (error) {
-    res.status(500).json({ message: "Error creating patient record", error });
+    console.error("Error creating patient record:", error);
+    res.status(500).json({
+      message: "Error creating patient record",
+      error: error.message,
+    });
   }
 };
 
@@ -569,6 +729,103 @@ export const updateMedicalReport = async (req, res) => {
   }
 };
 
+// Delete a medical report
+export const deleteMedicalReport = async (req, res) => {
+  try {
+    const { reportId } = req.params;
+
+    // First verify the report exists
+    const report = await MedicalReportService.getReportById(reportId);
+    if (!report) {
+      return res.status(404).json({ message: "Medical report not found" });
+    }
+
+    // Check if the doctor is authorized to delete this report
+    const user = await User.findById(req.user.userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    const doctor = await Doctor.findOne({ user: user._id });
+    if (!doctor) {
+      return res.status(404).json({ message: "Doctor not found" });
+    }
+
+    // Verify the report belongs to this doctor
+    if (report.issuedBy.toString() !== doctor._id.toString()) {
+      return res.status(403).json({
+        message: "Not authorized to delete this report",
+      });
+    }
+
+    // Delete the report using the service
+    const deletedReport = await MedicalReportService.deleteMedicalReport(
+      reportId
+    );
+
+    // Remove the report reference from the doctor's issuedReports array
+    doctor.issuedReports = doctor.issuedReports.filter(
+      (id) => id.toString() !== reportId
+    );
+    await doctor.save();
+
+    res.status(200).json({
+      message: "Medical report deleted successfully",
+    });
+  } catch (error) {
+    console.error("Error deleting medical report:", error);
+    res.status(500).json({
+      message: "Error deleting medical report",
+      error: error.message,
+    });
+  }
+};
+
+// Get all reports for a doctor
+export const getReports = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    const doctor = await Doctor.findOne({ user: user._id });
+    if (!doctor) {
+      return res.status(404).json({ message: "Doctor not found" });
+    }
+
+    // Get reports using the medical report service
+    const reports = await MedicalReportService.getDoctorReports(doctor._id);
+    res.status(200).json(reports);
+  } catch (error) {
+    console.error("Error fetching reports:", error);
+    res
+      .status(500)
+      .json({ message: "Error fetching reports", error: error.message });
+  }
+};
+
+// Get a specific report by ID
+export const getReportById = async (req, res) => {
+  try {
+    const { reportId } = req.params;
+
+    // Get the report using the medical report service
+    const report = await MedicalReportService.getReportById(reportId);
+
+    if (!report) {
+      return res.status(404).json({ message: "Report not found" });
+    }
+
+    res.status(200).json(report);
+  } catch (error) {
+    console.error("Error fetching report:", error);
+    res
+      .status(500)
+      .json({ message: "Error fetching report", error: error.message });
+  }
+};
+
 // Controller to get my patients
 export const getMyPatients = async (req, res) => {
   try {
@@ -597,7 +854,7 @@ export const getNotifications = async (req, res) => {
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
-    
+
     const notifications = await NotificationService.getNotifications(
       req.user.userId
     );
@@ -617,7 +874,9 @@ export const markNotificationAsRead = async (req, res) => {
     }
     res.json(updatedNotification);
   } catch (error) {
-    res.status(500).json({ message: "Error marking notification as read", error });
+    res
+      .status(500)
+      .json({ message: "Error marking notification as read", error });
   }
 };
 
@@ -625,7 +884,13 @@ export const markNotificationAsRead = async (req, res) => {
 export const getAllPatients = async (req, res) => {
   try {
     const patients = await Patient.find({})
-      .populate("user", ["fullname", "email", "_id", "profilePicture", "username"])
+      .populate("user", [
+        "fullname",
+        "email",
+        "_id",
+        "profilePicture",
+        "username",
+      ])
       .sort({ "user.username": 1 }); // Sort alphabetically by name
     res.status(200).json(patients);
   } catch (error) {
@@ -646,7 +911,7 @@ export const getDoctorDashboard = async (req, res) => {
     if (!doctor) {
       return res.status(404).json({ message: "Doctor not found" });
     }
-    
+
     // Get appointments
     const allAppointments = await AppointmentService.getDoctorAppointments(
       doctor._id
@@ -654,7 +919,7 @@ export const getDoctorDashboard = async (req, res) => {
 
     // Get total patients count
     const totalPatients = doctor.patientsUnderCare.length;
-    
+
     // Calculate pending and completed appointments
     const pendingAppointments = allAppointments.filter(
       (apt) =>

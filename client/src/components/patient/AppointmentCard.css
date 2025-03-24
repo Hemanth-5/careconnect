@@ -1,0 +1,133 @@
+.appointment-card-item {
+  display: flex;
+  align-items: center;
+  padding: var(--spacing-3);
+  border-radius: var(--border-radius);
+  background-color: var(--white);
+  margin-bottom: var(--spacing-3);
+  border: 1px solid var(--gray-200);
+  gap: var(--spacing-3);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.appointment-card-item:last-child {
+  margin-bottom: 0;
+}
+
+.appointment-card-item:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-sm);
+}
+
+.appointment-date-badge {
+  background-color: var(--patient-bg-light);
+  border-radius: var(--border-radius);
+  padding: var(--spacing-2);
+  width: 50px;
+  height: 50px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.appointment-day {
+  font-size: var(--font-size-xl);
+  font-weight: 700;
+  color: var(--patient-primary);
+  line-height: 1;
+}
+
+.appointment-month {
+  font-size: var(--font-size-xs);
+  color: var(--gray-600);
+}
+
+.appointment-details {
+  flex: 1;
+  min-width: 0;
+}
+
+.doctor-name {
+  margin: 0 0 var(--spacing-1);
+  font-size: var(--font-size-md);
+  color: var(--gray-800);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.appointment-info {
+  display: flex;
+  gap: var(--spacing-3);
+  font-size: var(--font-size-sm);
+  color: var(--gray-600);
+}
+
+.appointment-time,
+.appointment-reason {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-1);
+}
+
+.appointment-time i,
+.appointment-reason i {
+  color: var(--patient-primary);
+  font-size: 12px;
+}
+
+.appointment-status {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: var(--spacing-1);
+}
+
+.status-badge {
+  padding: var(--spacing-1) var(--spacing-2);
+  border-radius: var(--border-radius-full);
+  font-size: var(--font-size-xs);
+  font-weight: 500;
+  text-transform: capitalize;
+}
+
+.status-scheduled,
+.status-confirmed {
+  background-color: rgba(var(--patient-primary-rgb), 0.1);
+  color: var(--patient-primary);
+}
+
+.status-completed {
+  background-color: rgba(var(--success-rgb), 0.1);
+  color: var(--success);
+}
+
+.status-cancelled,
+.status-rejected {
+  background-color: rgba(var(--danger-rgb), 0.1);
+  color: var(--danger);
+}
+
+.status-pending {
+  background-color: rgba(var(--warning-rgb), 0.1);
+  color: var(--warning);
+}
+
+.view-details-link {
+  font-size: var(--font-size-xs);
+  color: var(--patient-primary);
+  text-decoration: none;
+}
+
+.view-details-link:hover {
+  text-decoration: underline;
+}
+
+@media (max-width: 768px) {
+  .appointment-info {
+    flex-direction: column;
+    gap: var(--spacing-1);
+  }
+}

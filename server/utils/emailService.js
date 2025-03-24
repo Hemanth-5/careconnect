@@ -1,66 +1,117 @@
 import nodemailer from "nodemailer";
+import dotenv from "dotenv";
 import config from "../config/config.js";
 
-// Create reusable transporter using environment variables
-const transporter = nodemailer.createTransport({
-  service: process.env.EMAIL_SERVICE || "gmail",
-  auth: {
-    user: process.env.EMAIL_USER || "your-email@gmail.com",
-    pass: process.env.EMAIL_PASSWORD || "your-email-password",
-  },
-});
+dotenv.config();
 
-/**
- * Send password reset email
- * @param {string} to Recipient email
- * @param {string} resetToken Reset token
- * @param {string} username User's name or email
- */
-export const sendPasswordResetEmail = async (to, resetToken, username) => {
-  // Frontend reset URL
-  const resetUrl = `${config.clientUrl}/reset-password/${resetToken}`;
+// Create reusable transporter
+const createTransporter = async () => {
+  // Use environment variables for configuration
+  const host = process.env.EMAIL_HOST;
+  const port = parseInt(process.env.EMAIL_PORT);
+  const secure = process.env.EMAIL_SECURE === "true";
+  const user = process.env.EMAIL_USER;
+  const pass = process.env.EMAIL_PASSWORD;
 
-  const mailOptions = {
-    from:
-      process.env.EMAIL_FROM ||
-      '"CareConnect Support" <support@careconnect.com>',
-    to,
-    subject: "CareConnect Password Reset",
-    html: `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        <h2 style="color: #4a90e2;">Password Reset Request</h2>
-        <p>Hello ${username || "there"},</p>
-        <p>We received a request to reset your password for your CareConnect account. 
-           To reset your password, click the button below:</p>
-        
-        <div style="text-align: center; margin: 30px 0;">
-          <a href="${resetUrl}" 
-             style="background-color: #4a90e2; color: white; padding: 12px 20px; 
-                    text-decoration: none; border-radius: 4px; font-weight: bold;">
-            Reset Password
-          </a>
-        </div>
-        
-        <p>If you didn't request this password reset, you can safely ignore this email.</p>
-        <p>This link will expire in 1 hour for security reasons.</p>
-        
-        <p>Thank you,<br>The CareConnect Team</p>
-        
-        <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #eee; font-size: 12px; color: #888;">
+  // For development, use a test account if credentials not provided
+  if (!host || !user || !pass) {
+    console.log("Email credentials not found, using test account...");
+    const testAccount = await nodemailer.createTestAccount();
+    return nodemailer.createTransport({
+      host: "smtp.ethereal.email",
+      port: 587,
+      secure: false,
+      auth: {
+        user: testAccount.user,
+        pass: testAccount.pass,
+      },
+    });
+  }
+
+  // Create production-ready transporter
+  return nodemailer.createTransport({
+    host,
+    port,
+    secure,
+    auth: {
+      user,
+      pass,
+    },
+  });
+};
+
+// Send password reset email
+export const sendPasswordResetEmail = async (email, token, name, resetUrl) => {
+  try {
+    const transporter = await createTransporter();
+
+    const mailOptions = {
+      from: `"CareConnect Support" <${
+        process.env.EMAIL_FROM || "support@careconnect.com"
+      }>`,
+      to: email,
+      subject: "Password Reset Request",
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <h2 style="color: #3498db;">CareConnect Password Reset</h2>
+          <p>Hello ${name || "there"},</p>
+          <p>We received a request to reset your password. If you didn't make this request, you can safely ignore this email.</p>
+          <p>To reset your password, click the button below:</p>
+          <div style="text-align: center; margin: 30px 0;">
+            <a href="${resetUrl}" style="background-color: #3498db; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px; font-weight: bold;">Reset Password</a>
+          </div>
+          <p>This link will expire in 1 hour.</p>
           <p>If the button doesn't work, copy and paste this URL into your browser:</p>
           <p>${resetUrl}</p>
+          <p>Thank you,<br>The CareConnect Team</p>
         </div>
-      </div>
-    `,
-  };
+      `,
+    };
 
-  try {
     const info = await transporter.sendMail(mailOptions);
-    return { success: true, messageId: info.messageId };
+
+    // Log preview URL for development (ethereal.email)
+    if (info.messageId && !process.env.EMAIL_HOST) {
+      console.log(
+        "Password reset email preview URL:",
+        nodemailer.getTestMessageUrl(info)
+      );
+    }
+
+    return info;
   } catch (error) {
-    console.error("Email sending error:", error);
-    throw new Error("Failed to send password reset email");
+    console.error("Error sending password reset email:", error);
+    throw error;
   }
 };
 
-// Add additional email utility functions if needed
+// Send notification email (e.g., for appointment confirmations)
+export const sendNotificationEmail = async (recipient, subject, content) => {
+  try {
+    const transporter = await createTransporter();
+
+    const mailOptions = {
+      from: `"CareConnect Notifications" <${
+        process.env.EMAIL_FROM || "notifications@careconnect.com"
+      }>`,
+      to: recipient.email,
+      subject: subject,
+      html: content,
+    };
+
+    const info = await transporter.sendMail(mailOptions);
+
+    // Log preview URL for development (ethereal.email)
+    if (info.messageId && !process.env.EMAIL_HOST) {
+      console.log(
+        "Notification email preview URL:",
+        nodemailer.getTestMessageUrl(info)
+      );
+    }
+
+    return info;
+  } catch (error) {
+    console.error("Error sending notification email:", error);
+    throw error;
+  }
+};

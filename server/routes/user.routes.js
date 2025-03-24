@@ -4,9 +4,8 @@ import {
   loginUser,
   getUserDetails,
   updateUserProfile,
-  updateProfilePicture,
   changePassword,
-  refreshToken,
+  updateProfilePicture,
 } from "../controllers/user.controller.js";
 import { authMiddleware } from "../middlewares/auth.middleware.js";
 import {
@@ -19,7 +18,6 @@ const router = express.Router();
 // Public routes
 router.post("/register", registerUser);
 router.post("/login", loginUser);
-router.post("/refresh-token", refreshToken); // For generating a new access token using refresh token
 
 // Profile picture - use upload.single middleware for file uploads
 router.put(

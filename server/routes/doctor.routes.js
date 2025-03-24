@@ -2,92 +2,104 @@ import express from "express";
 import {
   getDoctorProfile,
   updateDoctorProfile,
+  uploadProfileImage,
+  getSpecializations,
   assignSpecializations,
   removeSpecializations,
   getAppointments,
   createAppointment,
   updateAppointment,
   deleteAppointment,
+  getPrescriptions,
   createPrescription,
   updatePrescription,
   createPatientRecord,
   updatePatientRecord,
   createMedicalReport,
   updateMedicalReport,
+  deleteMedicalReport, // Make sure this is imported
   getMyPatients,
-  getAllPatients, // Add this import
   getNotifications,
   markNotificationAsRead,
+  getAllPatients,
   getDoctorDashboard,
+  getReports,
+  getReportById,
 } from "../controllers/doctor.controller.js";
+
+// Import the correct functions from patientRecord.controller.js
+import {
+  getDoctorPatientRecords as getMedicalRecords,
+  getPatientRecordById,
+} from "../controllers/patientRecord.controller.js";
+
 import { doctorMiddleware } from "../middlewares/auth.middleware.js";
+import { upload } from "../middlewares/upload.middleware.js";
 
 const router = express.Router();
 
-// Add the dashboard route
+// All routes are protected with doctorMiddleware
+
+// Dashboard
 router.get("/dashboard", doctorMiddleware, getDoctorDashboard);
 
-// Protected routes (authentication required)
-// Get doctor profile
+// Doctor Profile
 router.get("/profile", doctorMiddleware, getDoctorProfile);
-
-// Update doctor profile
 router.put("/profile", doctorMiddleware, updateDoctorProfile);
+router.post(
+  "/profile/upload-image",
+  doctorMiddleware,
+  upload.single("image"),
+  uploadProfileImage
+);
 
-// Assign specializations to doctor
-router.put("/me/specializations", doctorMiddleware, assignSpecializations);
+// Specializations
+router.get("/specializations", doctorMiddleware, getSpecializations);
+router.post("/specializations/assign", doctorMiddleware, assignSpecializations);
+router.post("/specializations/remove", doctorMiddleware, removeSpecializations);
 
-// Remove specializations from doctor
-router.delete("/me/specializations", doctorMiddleware, removeSpecializations);
-
-// Get all appointments for the doctor
+// Appointments
 router.get("/appointments", doctorMiddleware, getAppointments);
-
-// Create a new appointment
 router.post("/appointments", doctorMiddleware, createAppointment);
-
-// Update an existing appointment
 router.put("/appointments/:appointmentId", doctorMiddleware, updateAppointment);
-
-// Delete an appointment
 router.delete(
   "/appointments/:appointmentId",
   doctorMiddleware,
   deleteAppointment
 );
 
-// Create a new prescription
+// Prescriptions
+router.get("/prescriptions", doctorMiddleware, getPrescriptions);
 router.post("/prescriptions", doctorMiddleware, createPrescription);
-
-// Update an existing prescription
 router.put(
   "/prescriptions/:prescriptionId",
   doctorMiddleware,
   updatePrescription
 );
 
-// Create a new patient record
+// Patient Records
+router.get("/patient-records", doctorMiddleware, getMedicalRecords);
+router.get(
+  "/patient-records/:recordId",
+  doctorMiddleware,
+  getPatientRecordById
+);
 router.post("/patient-records", doctorMiddleware, createPatientRecord);
-
-// Update an existing patient record
 router.put("/patient-records/:recordId", doctorMiddleware, updatePatientRecord);
 
-// Create a new medical report
-router.post("/medical-reports", doctorMiddleware, createMedicalReport);
+// Medical Reports
+router.get("/reports", doctorMiddleware, getReports);
+router.get("/reports/:reportId", doctorMiddleware, getReportById);
+router.post("/reports", doctorMiddleware, createMedicalReport);
+router.put("/reports/:reportId", doctorMiddleware, updateMedicalReport);
+router.delete("/reports/:reportId", doctorMiddleware, deleteMedicalReport);
 
-// Update an existing medical report
-router.put("/medical-reports/:reportId", doctorMiddleware, updateMedicalReport);
+// Patients
+router.get("/patients", doctorMiddleware, getMyPatients);
+router.get("/all-patients", doctorMiddleware, getAllPatients);
 
-// Get all patients of the doctor
-router.get("/my-patients", doctorMiddleware, getMyPatients);
-
-// Get all patients in the database
-router.get("/patients", doctorMiddleware, getAllPatients);
-
-// Get notifications for the doctor
+// Notifications
 router.get("/notifications", doctorMiddleware, getNotifications);
-
-// Mark a notification as read
 router.put(
   "/notifications/:notificationId",
   doctorMiddleware,

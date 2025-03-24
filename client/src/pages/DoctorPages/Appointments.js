@@ -354,8 +354,10 @@ const Appointments = () => {
 
                 <div className="appointment-info">
                   <h3 className="patient-name">
-                    {console.log(appointment)}
-                    {appointment.patient?.user?.username || "Unknown Patient"}
+                    {/* {console.log(appointment)} */}
+                    {appointment.patient?.user?.fullname ||
+                      appointment.patient?.user?.username ||
+                      "Unknown Patient"}
                   </h3>
 
                   {appointment.reason && (

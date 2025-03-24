@@ -119,27 +119,15 @@ const Login = () => {
 
     if (!validateForm()) return;
 
-    // Handle forgot password flow
-    if (forgotPasswordMode) {
-      await handleForgotPassword();
-      return;
-    }
-
     setLoading(true);
     setLoginError("");
 
     try {
-      // Create request body with email and password if provided
       const requestBody = {
         email: formData.email,
+        password: formData.password,
       };
 
-      // Only include password if it has been entered
-      if (formData.password) {
-        requestBody.password = formData.password;
-      }
-
-      console.log("Login request:", API.USERS.LOGIN);
       const response = await fetch(API.USERS.LOGIN, {
         method: "POST",
         headers: {
@@ -167,13 +155,12 @@ const Login = () => {
         localStorage.removeItem("rememberedUser");
       }
 
-      // Store tokens and user role
-      localStorage.setItem("token", data.accessToken);
-      localStorage.setItem("refreshToken", data.refreshToken);
+      // Store token and user role
+      localStorage.setItem("token", data.token);
 
       try {
         // Decode JWT to get user role
-        const userRole = JSON.parse(atob(data.accessToken.split(".")[1])).role;
+        const userRole = JSON.parse(atob(data.token.split(".")[1])).role;
         localStorage.setItem("userType", userRole);
       } catch (error) {
         console.error("Error decoding token:", error);
@@ -182,7 +169,8 @@ const Login = () => {
       // Redirect based on user role
       navigate("/redirect");
     } catch (error) {
-      setLoginError(error.message || "An error occurred during login");
+      console.error("Login error:", error);
+      setLoginError(error.message || "Login failed. Please try again.");
     } finally {
       setLoading(false);
     }

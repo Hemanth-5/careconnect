@@ -17,7 +17,7 @@
 .search-box {
   display: flex;
   align-items: center;
-  background-color: white;
+  background-color: var(--doctor-bg-card);
   border-radius: var(--border-radius);
   padding: var(--spacing-2) var(--spacing-4);
   box-shadow: var(--shadow-sm);
@@ -40,7 +40,7 @@
 .prescriptions-table {
   width: 100%;
   border-collapse: collapse;
-  background-color: white;
+  background-color: var(--doctor-bg-card);
   border-radius: var(--border-radius-lg);
   overflow: hidden;
   box-shadow: var(--shadow-sm);
@@ -96,7 +96,7 @@
 .no-prescriptions {
   text-align: center;
   padding: var(--spacing-8);
-  background-color: white;
+  background-color: var(--doctor-bg-card);
   border-radius: var(--border-radius-lg);
   box-shadow: var(--shadow-sm);
 }
@@ -175,7 +175,7 @@
 .remove-medication {
   background: none;
   border: none;
-  color: var(--danger);
+  color: var(--doctor-danger);
   cursor: pointer;
   font-size: var(--font-size-md);
   padding: var(--spacing-1);
@@ -184,7 +184,7 @@
 }
 
 .remove-medication:hover {
-  background-color: rgba(var(--danger-rgb), 0.1);
+  background-color: rgba(var(--doctor-danger-rgb), 0.1);
 }
 
 .medication-form {
@@ -232,7 +232,7 @@
   background-color: var(--gray-50);
   border-radius: var(--border-radius);
   padding: var(--spacing-3);
-  border-left: 4px solid var(--primary);
+  border-left: 4px solid var(--doctor-primary);
 }
 
 .medication-detail h4 {

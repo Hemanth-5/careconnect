@@ -28,7 +28,7 @@
 .notification-item {
   display: flex;
   align-items: flex-start;
-  background-color: white;
+  background-color: var(--doctor-bg-card);
   border-radius: var(--border-radius-lg);
   padding: var(--spacing-4);
   box-shadow: var(--shadow-sm);
@@ -37,19 +37,19 @@
 }
 
 .notification-item.unread {
-  background-color: rgba(var(--primary-rgb), 0.05);
-  border-left: 4px solid var(--primary);
+  background-color: rgba(var(--doctor-primary-rgb), 0.05);
+  border-left: 4px solid var(--doctor-primary);
 }
 
 .notification-icon {
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  background-color: var(--primary-light);
+  background-color: var(--doctor-primary-light);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--primary);
+  color: var(--doctor-primary);
   font-size: var(--font-size-lg);
   flex-shrink: 0;
 }
@@ -81,14 +81,14 @@
 }
 
 .mark-read-btn:hover {
-  background-color: var(--primary-light);
-  color: var(--primary);
+  background-color: var(--doctor-primary-light);
+  color: var(--doctor-primary);
 }
 
 .no-notifications {
   text-align: center;
   padding: var(--spacing-8);
-  background-color: white;
+  background-color: var(--doctor-bg-card);
   border-radius: var(--border-radius-lg);
   box-shadow: var(--shadow-sm);
   color: var(--gray-600);

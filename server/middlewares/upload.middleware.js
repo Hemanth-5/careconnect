@@ -1,25 +1,58 @@
 import multer from "multer";
+import path from "path";
+import fs from "fs";
 
-// Set up multer with memory storage
-const storage = multer.memoryStorage();
+// Create uploads directory if it doesn't exist
+const uploadDir = path.join(process.cwd(), "uploads");
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir, { recursive: true });
+}
 
-// File filter to only allow certain image types
+// Configure storage
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, uploadDir);
+  },
+  filename: function (req, file, cb) {
+    // Create unique filename
+    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
+    const extension = path.extname(file.originalname);
+    cb(null, file.fieldname + "-" + uniqueSuffix + extension);
+  },
+});
+
+// File filter to restrict file types
 const fileFilter = (req, file, cb) => {
-  // Accept only image files
-  if (file.mimetype.startsWith("image/")) {
+  // Accept only common document and image types
+  const allowedTypes = [
+    "image/jpeg",
+    "image/png",
+    "image/gif",
+    "application/pdf",
+    "application/msword",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    "application/vnd.ms-excel",
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    "text/plain",
+  ];
+
+  if (allowedTypes.includes(file.mimetype)) {
     cb(null, true);
   } else {
-    cb(new Error("Only image files are allowed!"), false);
+    cb(
+      new Error("Invalid file type. Only documents and images are allowed."),
+      false
+    );
   }
 };
 
-// Create the multer upload middleware
+// Create multer middleware
 export const upload = multer({
   storage: storage,
-  limits: {
-    fileSize: 5 * 1024 * 1024, // 5MB max file size
-  },
   fileFilter: fileFilter,
+  limits: {
+    fileSize: 10 * 1024 * 1024, // 10MB limit
+  },
 });
 
 // Export a function to handle upload errors
@@ -28,7 +61,7 @@ export const handleUploadErrors = (err, req, res, next) => {
     // A Multer error occurred when uploading
     if (err.code === "LIMIT_FILE_SIZE") {
       return res.status(400).json({
-        message: "File too large. Maximum size is 5MB.",
+        message: "File too large. Maximum size is 10MB.",
       });
     }
     return res.status(400).json({

@@ -10,7 +10,7 @@
 }
 
 .stat-card {
-  background-color: white;
+  background-color: var(--doctor-bg-card);
   border-radius: var(--border-radius-lg);
   padding: var(--spacing-5);
   box-shadow: var(--shadow-sm);
@@ -37,19 +37,19 @@
 }
 
 .stat-card:nth-child(1) .stat-icon {
-  background-color: var(--primary);
+  background-color: var(--doctor-primary);
 }
 
 .stat-card:nth-child(2) .stat-icon {
-  background-color: var(--info);
+  background-color: var(--doctor-info);
 }
 
 .stat-card:nth-child(3) .stat-icon {
-  background-color: var(--warning);
+  background-color: var(--doctor-warning);
 }
 
 .stat-card:nth-child(4) .stat-icon {
-  background-color: var(--success);
+  background-color: var(--doctor-success);
 }
 
 .stat-content {
@@ -77,7 +77,7 @@
 }
 
 .dashboard-card {
-  background-color: white;
+  background-color: var(--doctor-bg-card);
   border-radius: var(--border-radius-lg);
   box-shadow: var(--shadow-sm);
   overflow: hidden;
@@ -111,7 +111,7 @@
 .today-count h3 {
   font-size: 3rem;
   font-weight: 700;
-  color: var(--primary);
+  color: var(--doctor-primary);
   margin-bottom: var(--spacing-2);
 }
 
@@ -149,7 +149,7 @@
   align-items: center;
   padding: var(--spacing-3);
   border-radius: var(--border-radius);
-  border-left: 4px solid var(--primary);
+  border-left: 4px solid var(--doctor-primary);
   background-color: var(--gray-50);
   transition: transform 0.2s;
 }
@@ -179,25 +179,25 @@
 }
 
 .status-pending {
-  background-color: rgba(var(--warning-rgb), 0.1);
-  color: var(--warning);
+  background-color: rgba(var(--doctor-warning-rgb), 0.1);
+  color: var(--doctor-warning);
 }
 
 .status-confirmed,
 .status-scheduled {
-  background-color: rgba(var(--info-rgb), 0.1);
-  color: var(--info);
+  background-color: rgba(var(--doctor-info-rgb), 0.1);
+  color: var(--doctor-info);
 }
 
 .status-completed {
-  background-color: rgba(var(--success-rgb), 0.1);
-  color: var(--success);
+  background-color: rgba(var(--doctor-success-rgb), 0.1);
+  color: var(--doctor-success);
 }
 
 .status-cancelled,
 .status-no-show {
-  background-color: rgba(var(--danger-rgb), 0.1);
-  color: var(--danger);
+  background-color: rgba(var(--doctor-danger-rgb), 0.1);
+  color: var(--doctor-danger);
 }
 
 .no-data {

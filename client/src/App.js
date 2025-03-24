@@ -31,15 +31,24 @@ import DoctorMedicalRecords from "./pages/DoctorPages/MedicalRecords";
 import DoctorReports from "./pages/DoctorPages/Reports";
 import DoctorNotifications from "./pages/DoctorPages/Notifications";
 
-// Import Patient Layout & Pages (placeholder for now)
-import PatientLayout from "./layout/PatientLayout";
+// Import Patient Layout & Pages
+import PatientLayout from "./containers/PatientLayout";
 import PatientDashboard from "./pages/PatientPages/Dashboard";
+import PatientAppointments from "./pages/PatientPages/Appointments";
+import PatientPrescriptions from "./pages/PatientPages/Prescriptions";
+import PatientMedicalRecords from "./pages/PatientPages/MedicalRecords";
+import PatientProfile from "./pages/PatientPages/Profile";
+import PatientNotifications from "./pages/PatientPages/Notifications";
+// import PatientMessages from "./pages/PatientPages/Messages"; // To be implemented
 
 // Import the ResetPassword component
 import ResetPassword from "./pages/ResetPassword";
 import NotFound from "./pages/NotFound";
 
 import "./assets/styles/global.css";
+
+// Import the AuthProvider
+import { AuthProvider } from "./contexts/AuthContext";
 
 // Wrapper for the AuthCheck functionality
 const AuthCheckWrapper = ({ redirectTo, children }) => {
@@ -49,7 +58,6 @@ const AuthCheckWrapper = ({ redirectTo, children }) => {
 
 // Create a component to check auth state with access to location
 const AuthCheck = ({ children, redirectTo }) => {
-  const token = localStorage.getItem("token");
   const [isAuthenticated, setIsAuthenticated] = useState(null);
   const location = useLocation();
 
@@ -59,8 +67,10 @@ const AuthCheck = ({ children, redirectTo }) => {
       return;
     }
 
+    // Simple token check without tokenUtils
+    const token = localStorage.getItem("token");
     setIsAuthenticated(!!token);
-  }, [location, token]);
+  }, [location]);
 
   // Wait until auth state is checked
   if (isAuthenticated === null) {
@@ -154,77 +164,85 @@ const App = () => {
   }
 
   return (
-    <Router>
-      <Routes>
-        {/* Public routes */}
-        <Route path="/login" element={<Login />} />
-        <Route path="/unauthorized" element={<Unauthorized />} />
-        <Route path="/reset-password/:token" element={<ResetPassword />} />
+    <AuthProvider>
+      <Router>
+        <Routes>
+          {/* Public routes */}
+          <Route path="/login" element={<Login />} />
+          <Route path="/unauthorized" element={<Unauthorized />} />
+          <Route path="/reset-password/:token" element={<ResetPassword />} />
 
-        {/* Default route */}
-        <Route path="/" element={<Home />} />
+          {/* Default route */}
+          <Route path="/" element={<Home />} />
 
-        {/* Role-based redirect */}
-        <Route path="/redirect" element={<RedirectBasedOnRole />} />
+          {/* Role-based redirect */}
+          <Route path="/redirect" element={<RedirectBasedOnRole />} />
 
-        {/* Admin routes */}
-        <Route
-          path="/admin"
-          element={
-            <AuthCheckWrapper redirectTo="/login">
-              <AdminLayout />
-            </AuthCheckWrapper>
-          }
-        >
-          <Route path="dashboard" element={<AdminDashboard />} />
-          <Route path="users" element={<UserManagement />} />
+          {/* Admin routes */}
           <Route
-            path="specializations"
-            element={<SpecializationManagement />}
-          />
-          <Route path="doctors" element={<DoctorsList />} />
-          <Route path="patients" element={<PatientsList />} />
-          <Route path="appointments" element={<AppointmentManagement />} />
-          <Route path="analytics" element={<AnalyticsDashboard />} />
-          <Route index element={<Navigate to="/admin/dashboard" replace />} />
-        </Route>
+            path="/admin"
+            element={
+              <AuthCheckWrapper redirectTo="/login">
+                <AdminLayout />
+              </AuthCheckWrapper>
+            }
+          >
+            <Route path="dashboard" element={<AdminDashboard />} />
+            <Route path="users" element={<UserManagement />} />
+            <Route
+              path="specializations"
+              element={<SpecializationManagement />}
+            />
+            <Route path="doctors" element={<DoctorsList />} />
+            <Route path="patients" element={<PatientsList />} />
+            <Route path="appointments" element={<AppointmentManagement />} />
+            <Route path="analytics" element={<AnalyticsDashboard />} />
+            <Route index element={<Navigate to="/admin/dashboard" replace />} />
+          </Route>
 
-        {/* Doctor routes */}
-        <Route
-          path="/doctor"
-          element={
-            <AuthCheckWrapper redirectTo="/login">
-              <DoctorLayout />
-            </AuthCheckWrapper>
-          }
-        >
-          <Route index element={<DoctorDashboard />} />
-          <Route path="profile" element={<DoctorProfile />} />
-          <Route path="appointments" element={<DoctorAppointments />} />
-          <Route path="patients" element={<DoctorPatients />} />
-          <Route path="prescriptions" element={<DoctorPrescriptions />} />
-          <Route path="medical-records" element={<DoctorMedicalRecords />} />
-          <Route path="reports" element={<DoctorReports />} />
-          <Route path="notifications" element={<DoctorNotifications />} />
-        </Route>
+          {/* Doctor routes */}
+          <Route
+            path="/doctor"
+            element={
+              <AuthCheckWrapper redirectTo="/login">
+                <DoctorLayout />
+              </AuthCheckWrapper>
+            }
+          >
+            <Route index element={<DoctorDashboard />} />
+            <Route path="profile" element={<DoctorProfile />} />
+            <Route path="appointments" element={<DoctorAppointments />} />
+            <Route path="patients" element={<DoctorPatients />} />
+            <Route path="prescriptions" element={<DoctorPrescriptions />} />
+            <Route path="medical-records" element={<DoctorMedicalRecords />} />
+            <Route path="reports" element={<DoctorReports />} />
+            <Route path="notifications" element={<DoctorNotifications />} />
+          </Route>
 
-        {/* Patient routes - using placeholders for now */}
-        <Route
-          path="/patient"
-          element={
-            <AuthCheckWrapper redirectTo="/login">
-              <PatientLayout />
-            </AuthCheckWrapper>
-          }
-        >
-          <Route index element={<PatientDashboard />} />
-          {/* Add more patient routes here as they're developed */}
-        </Route>
+          {/* Patient routes */}
+          <Route
+            path="/patient"
+            element={
+              <AuthCheckWrapper redirectTo="/login">
+                <PatientLayout />
+              </AuthCheckWrapper>
+            }
+          >
+            <Route index element={<PatientDashboard />} />
+            <Route path="appointments" element={<PatientAppointments />} />
+            <Route path="prescriptions" element={<PatientPrescriptions />} />
+            <Route path="medical-records" element={<PatientMedicalRecords />} />
+            <Route path="profile" element={<PatientProfile />} />
+            <Route path="notifications" element={<PatientNotifications />} />
+            {/* <Route path="messages" element={<PatientMessages />} /> */}{" "}
+            {/* To be implemented */}
+          </Route>
 
-        {/* 404 route */}
-        <Route path="*" element={<NotFound />} />
-      </Routes>
-    </Router>
+          {/* 404 route */}
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </Router>
+    </AuthProvider>
   );
 };
 

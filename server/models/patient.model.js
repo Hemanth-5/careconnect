@@ -58,6 +58,13 @@ const patientSchema = new mongoose.Schema(
     // Added medications and conditions for more detailed medical history
     currentMedications: [{ type: String }],
     chronicConditions: [{ type: String }],
+    // Check if the medicalRecords field is properly defined in your schema
+    medicalRecords: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "PatientRecord",
+      },
+    ],
   },
   { timestamps: true }
 );

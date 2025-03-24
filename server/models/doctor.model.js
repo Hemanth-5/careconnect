@@ -79,6 +79,13 @@ const doctorSchema = new mongoose.Schema(
     bio: { type: String },
     // Added specializationIds to handle the case in DoctorsList.js
     specializationIds: [{ type: mongoose.Schema.Types.ObjectId }],
+    // Check if the records field is properly defined in your schema
+    records: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "PatientRecord",
+      },
+    ],
   },
   { timestamps: true }
 );

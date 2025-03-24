@@ -1,8 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Link, useLocation, Outlet, useNavigate } from "react-router-dom";
-import axios from "axios";
 import "./DoctorLayout.css";
-import { API } from "../constants/api"; // Import API constants instead of the userAPI
+import userAPI from "../api/user"; // Import userAPI instead of using axios directly
 
 const DoctorLayout = () => {
   const location = useLocation();
@@ -23,22 +22,16 @@ const DoctorLayout = () => {
   const fileInputRef = useRef(null);
 
   useEffect(() => {
-    // Fetch user profile data
+    // Fetch user profile data using userAPI
     const fetchUserProfile = async () => {
       try {
         setIsLoading(true);
-        const token = localStorage.getItem("token");
-
-        const response = await axios.get(API.USERS.ME, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
+        const response = await userAPI.getUserProfile();
 
         if (response && response.data) {
           setDoctorData({
             username: response.data.username || "Doctor",
-            name: response.data.fullname || "", // Match the field name in the user model
+            name: response.data.fullname || "",
             profilePicture: response.data.profilePicture || null,
           });
         }
@@ -51,7 +44,7 @@ const DoctorLayout = () => {
             const tokenData = JSON.parse(atob(token.split(".")[1]));
             setDoctorData({
               username: tokenData.username || "Doctor",
-              name: tokenData.fullname || "", // Match the field name in the user model
+              name: tokenData.fullname || "",
               profilePicture: tokenData.profilePicture || null,
             });
           } catch (e) {
@@ -109,20 +102,13 @@ const DoctorLayout = () => {
 
     try {
       setIsUploading(true);
+
+      // Create form data for file upload
       const formData = new FormData();
       formData.append("image", selectedImage);
 
-      const token = localStorage.getItem("token");
-      const response = await axios.put(
-        API.USERS.UPDATE_PROFILE_PICTURE,
-        formData,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "multipart/form-data",
-          },
-        }
-      );
+      // Use userAPI to update profile picture
+      const response = await userAPI.updateProfilePicture(formData);
 
       if (response && response.data && response.data.profilePicture) {
         setDoctorData((prev) => ({
@@ -146,11 +132,12 @@ const DoctorLayout = () => {
     <div
       className={`doctor-layout ${sidebarCollapsed ? "sidebar-collapsed" : ""}`}
     >
+      {/* Sidebar */}
       <aside className="doctor-sidebar">
         <div className="sidebar-header">
           <h2 className="logo">
-            <i className="fas fa-stethoscope"></i>
-            <span className="sidebar-text">Doctor Portal</span>
+            {/* <i className="fas fa-stethoscope"></i> */}
+            <span className="sidebar-text">Care Connect</span>
           </h2>
           <button className="sidebar-toggle" onClick={toggleSidebar}>
             <i
@@ -159,31 +146,6 @@ const DoctorLayout = () => {
               }`}
             ></i>
           </button>
-        </div>
-
-        {/* User profile section */}
-        <div className="doctor-profile-section">
-          <div
-            className="doctor-avatar"
-            onClick={handleProfileClick}
-            title="Click to change profile picture"
-          >
-            {doctorData.profilePicture ? (
-              <img
-                src={doctorData.profilePicture}
-                alt={doctorData.username}
-                className="doctor-avatar-img"
-              />
-            ) : (
-              <i className="fas fa-user-circle"></i>
-            )}
-          </div>
-          <div className="doctor-info">
-            <h3 className="doctor-name sidebar-text">{doctorData.name}</h3>
-            <p className="doctor-username sidebar-text">
-              {doctorData.username}
-            </p>
-          </div>
         </div>
 
         <nav className="sidebar-nav">
@@ -274,11 +236,43 @@ const DoctorLayout = () => {
           </button>
         </div>
       </aside>
+
+      {/* Main content */}
       <main className="doctor-main-content">
-        <Outlet />
+        {/* Add header like AdminLayout */}
+        <header className="doctor-header">
+          <div className="doctor-header-container">
+            <h2 className="doctor-title">Doctor Portal</h2>
+            <div className="doctor-user-info">
+              <span className="doctor-user-name">
+                {doctorData.name || doctorData.username}
+              </span>
+              <div
+                className="doctor-user-avatar"
+                onClick={handleProfileClick}
+                style={{ cursor: "pointer" }}
+                title="Click to change profile picture"
+              >
+                {doctorData.profilePicture ? (
+                  <img
+                    src={doctorData.profilePicture}
+                    alt={doctorData.username}
+                    className="doctor-user-avatar-img"
+                  />
+                ) : (
+                  <i className="fas fa-user-circle"></i>
+                )}
+              </div>
+            </div>
+          </div>
+        </header>
+
+        <div className="doctor-content-body">
+          <Outlet />
+        </div>
       </main>
 
-      {/* Profile Picture Modal */}
+      {/* Profile Picture Modal - updated to match AdminLayout */}
       {showProfileModal && (
         <div className="profile-modal-overlay">
           <div className="profile-modal">

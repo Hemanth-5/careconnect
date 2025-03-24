@@ -1,0 +1,62 @@
+.notification-item-card {
+  display: flex;
+  align-items: flex-start;
+  padding: var(--spacing-3);
+  border-radius: var(--border-radius);
+  background-color: var(--white);
+  margin-bottom: var(--spacing-3);
+  border: 1px solid var(--gray-200);
+  gap: var(--spacing-3);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.notification-item-card:last-child {
+  margin-bottom: 0;
+}
+
+.notification-item-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-sm);
+}
+
+.notification-item-card.unread {
+  border-left: 3px solid var(--patient-primary);
+  background-color: var(--patient-bg-light);
+}
+
+.notification-icon {
+  width: 40px;
+  height: 40px;
+  background-color: var(--white);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: var(--patient-primary);
+  font-size: 1rem;
+  border: 1px solid rgba(var(--patient-primary-rgb), 0.2);
+}
+
+.notification-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.notification-message {
+  margin: 0 0 var(--spacing-1);
+  color: var(--gray-800);
+  line-height: 1.4;
+  font-size: var(--font-size-sm);
+}
+
+.notification-item-card.unread .notification-message {
+  font-weight: 500;
+  color: var(--gray-900);
+}
+
+.notification-time {
+  margin: 0;
+  font-size: var(--font-size-xs);
+  color: var(--gray-500);
+}

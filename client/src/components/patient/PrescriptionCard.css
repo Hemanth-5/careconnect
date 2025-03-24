@@ -1,0 +1,110 @@
+.prescription-card-item {
+  display: flex;
+  align-items: center;
+  padding: var(--spacing-3);
+  border-radius: var(--border-radius);
+  background-color: var(--white);
+  margin-bottom: var(--spacing-3);
+  border: 1px solid var(--gray-200);
+  gap: var(--spacing-3);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.prescription-card-item:last-child {
+  margin-bottom: 0;
+}
+
+.prescription-card-item:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-sm);
+}
+
+.prescription-icon {
+  width: 50px;
+  height: 50px;
+  background-color: var(--patient-bg-light);
+  border-radius: var(--border-radius);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: var(--patient-primary);
+  font-size: 1.5rem;
+}
+
+.prescription-details {
+  flex: 1;
+  min-width: 0;
+}
+
+.prescription-details h4 {
+  margin: 0 0 var(--spacing-1);
+  font-size: var(--font-size-md);
+  color: var(--gray-800);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.prescription-info {
+  display: flex;
+  gap: var(--spacing-3);
+  font-size: var(--font-size-sm);
+  color: var(--gray-600);
+}
+
+.prescription-doctor,
+.prescription-date {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-1);
+}
+
+.prescription-doctor i,
+.prescription-date i {
+  color: var(--patient-primary);
+  font-size: 12px;
+}
+
+.prescription-status {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: var(--spacing-1);
+}
+
+.status-badge {
+  padding: var(--spacing-1) var(--spacing-2);
+  border-radius: var(--border-radius-full);
+  font-size: var(--font-size-xs);
+  font-weight: 500;
+  text-transform: capitalize;
+}
+
+.status-active {
+  background-color: rgba(var(--success-rgb), 0.1);
+  color: var(--success);
+}
+
+.status-expired,
+.status-completed {
+  background-color: rgba(var(--gray-rgb), 0.1);
+  color: var(--gray-700);
+}
+
+.view-details-link {
+  font-size: var(--font-size-xs);
+  color: var(--patient-primary);
+  text-decoration: none;
+}
+
+.view-details-link:hover {
+  text-decoration: underline;
+}
+
+@media (max-width: 768px) {
+  .prescription-info {
+    flex-direction: column;
+    gap: var(--spacing-1);
+  }
+}

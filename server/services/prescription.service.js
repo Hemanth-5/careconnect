@@ -1,9 +1,30 @@
 import Prescription from "../models/prescription.model.js";
 
+// Get prescriptions by doctor
+const getDoctorPrescriptions = async (doctorId) => {
+  try {
+    return await Prescription.find({ doctor: doctorId }).populate({
+      path: "patient",
+      populate: {
+        path: "user",
+        select: "username fullName",
+      },
+    });
+  } catch (error) {
+    throw new Error("Error fetching prescriptions: " + error.message);
+  }
+};
+
 // Get prescription by prescription id
 const getPrescription = async (prescriptionId) => {
   try {
-    return await Prescription.findById(prescriptionId);
+    return await Prescription.findById(prescriptionId).populate({
+      path: "patient",
+      populate: {
+        path: "user",
+        select: "username fullName",
+      },
+    });
   } catch (error) {
     throw new Error("Error fetching prescription: " + error.message);
   }
@@ -32,6 +53,7 @@ const updatePrescription = async (prescriptionId, updatedData) => {
 };
 
 const PrescriptionService = {
+  getDoctorPrescriptions,
   getPrescription,
   createPrescription,
   updatePrescription,

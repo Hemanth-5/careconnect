@@ -54,73 +54,77 @@
   --transition-fast: 150ms;
   --transition-normal: 300ms;
   --transition-slow: 500ms;
-}
 
-/* Admin Theme */
-.admin-theme {
-  --primary: #3f51b5;
-  --primary-light: #757de8;
-  --primary-dark: #002984;
-  --secondary: #ff4081;
-  --secondary-light: #ff79b0;
-  --secondary-dark: #c60055;
-  --accent: #7c4dff;
-  --success: #4caf50;
-  --info: #2196f3;
-  --warning: #ff9800;
-  --danger: #f44336;
-
-  --bg-primary: #f5f6fa;
-  --bg-sidebar: #1a237e;
-  --text-sidebar: #ffffff;
-  --bg-card: #ffffff;
-
+  /* Common Layout Variables */
   --header-height: 60px;
   --sidebar-width: 240px;
-}
 
-/* Doctor Theme */
-.doctor-theme {
-  --primary: #009688;
-  --primary-light: #52c7b8;
-  --primary-dark: #00675b;
-  --secondary: #ffc107;
-  --secondary-light: #fff350;
-  --secondary-dark: #c79100;
-  --accent: #00bcd4;
-  --success: #4caf50;
-  --info: #03a9f4;
-  --warning: #ff9800;
-  --danger: #f44336;
+  /* Admin Theme Variables */
+  --admin-primary: #3f51b5;
+  --admin-primary-rgb: 63, 81, 181;
+  --admin-primary-light: #757de8;
+  --admin-primary-dark: #002984;
+  --admin-secondary: #ff4081;
+  --admin-secondary-rgb: 255, 64, 129;
+  --admin-secondary-light: #ff79b0;
+  --admin-secondary-dark: #c60055;
+  --admin-accent: #7c4dff;
+  --admin-success: #4caf50;
+  --admin-success-rgb: 76, 175, 80;
+  --admin-info: #2196f3;
+  --admin-info-rgb: 33, 150, 243;
+  --admin-warning: #ff9800;
+  --admin-warning-rgb: 255, 152, 0;
+  --admin-danger: #f44336;
+  --admin-danger-rgb: 244, 67, 54;
+  --admin-bg-primary: #f5f6fa;
+  --admin-bg-sidebar: #1a237e;
+  --admin-text-sidebar: #ffffff;
+  --admin-bg-card: #ffffff;
 
-  --bg-primary: #f0f7f5;
-  --bg-sidebar: #004d40;
-  --text-sidebar: #ffffff;
-  --bg-card: #ffffff;
+  /* Doctor Theme Variables */
+  --doctor-primary: #009688;
+  --doctor-primary-rgb: 0, 150, 136;
+  --doctor-primary-light: #52c7b8;
+  --doctor-primary-dark: #00675b;
+  --doctor-secondary: #ffc107;
+  --doctor-secondary-rgb: 255, 193, 7;
+  --doctor-secondary-light: #fff350;
+  --doctor-secondary-dark: #c79100;
+  --doctor-accent: #00bcd4;
+  --doctor-success: #4caf50;
+  --doctor-success-rgb: 76, 175, 80;
+  --doctor-info: #03a9f4;
+  --doctor-info-rgb: 3, 169, 244;
+  --doctor-warning: #ff9800;
+  --doctor-warning-rgb: 255, 152, 0;
+  --doctor-danger: #f44336;
+  --doctor-danger-rgb: 244, 67, 54;
+  --doctor-bg-primary: #f0f7f5;
+  --doctor-bg-sidebar: #004d40;
+  --doctor-text-sidebar: #ffffff;
+  --doctor-bg-card: #ffffff;
 
-  --header-height: 60px;
-  --sidebar-width: 240px;
-}
-
-/* Patient Theme */
-.patient-theme {
-  --primary: #2196f3;
-  --primary-light: #6ec6ff;
-  --primary-dark: #0069c0;
-  --secondary: #ff5722;
-  --secondary-light: #ff8a50;
-  --secondary-dark: #c41c00;
-  --accent: #673ab7;
-  --success: #8bc34a;
-  --info: #03a9f4;
-  --warning: #ffc107;
-  --danger: #f44336;
-
-  --bg-primary: #f4f9fe;
-  --bg-sidebar: #01579b;
-  --text-sidebar: #ffffff;
-  --bg-card: #ffffff;
-
-  --header-height: 60px;
-  --sidebar-width: 240px;
+  /* Patient Theme Variables */
+  --patient-primary: #2196f3;
+  --patient-primary-rgb: 33, 150, 243;
+  --patient-primary-light: #6ec6ff;
+  --patient-primary-dark: #0069c0;
+  --patient-secondary: #ff5722;
+  --patient-secondary-rgb: 255, 87, 34;
+  --patient-secondary-light: #ff8a50;
+  --patient-secondary-dark: #c41c00;
+  --patient-accent: #673ab7;
+  --patient-success: #8bc34a;
+  --patient-success-rgb: 139, 195, 74;
+  --patient-info: #03a9f4;
+  --patient-info-rgb: 3, 169, 244;
+  --patient-warning: #ffc107;
+  --patient-warning-rgb: 255, 193, 7;
+  --patient-danger: #f44336;
+  --patient-danger-rgb: 244, 67, 54;
+  --patient-bg-primary: #f4f9fe;
+  --patient-bg-sidebar: #01579b;
+  --patient-text-sidebar: #ffffff;
+  --patient-bg-card: #ffffff;
 }

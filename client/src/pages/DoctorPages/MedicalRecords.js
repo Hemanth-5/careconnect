@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import doctorAPI from "../../api/doctor";
 import Button from "../../components/common/Button";
 import Spinner from "../../components/common/Spinner";
@@ -8,7 +8,6 @@ import "./MedicalRecords.css";
 
 const MedicalRecords = () => {
   const location = useLocation();
-  // const navigate = useNavigate(); // Removed unused variable
   const [records, setRecords] = useState([]);
   const [myPatients, setMyPatients] = useState([]);
   const [allPatients, setAllPatients] = useState([]);
@@ -21,17 +20,27 @@ const MedicalRecords = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [patientFilter, setPatientFilter] = useState("");
   const [uploading, setUploading] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [selectedPatient, setSelectedPatient] = useState(null);
+  const [showModal, setShowModal] = useState(false); // Add this missing state variable
 
-  // Form state for creating/editing records
+  // Form state aligned with server PatientRecord model
   const [formData, setFormData] = useState({
     patient: "",
-    recordType: "examination",
-    title: "",
-    description: "",
-    findings: "",
-    treatment: "",
-    date: new Date().toISOString().split("T")[0],
-    attachments: [],
+    records: [
+      {
+        recordType: "examination",
+        diagnosis: "",
+        title: "",
+        description: "",
+        treatmentProgress: "",
+        findings: "",
+        treatment: "",
+        notes: "",
+        date: new Date().toISOString().split("T")[0],
+        attachments: [],
+      },
+    ],
   });
 
   // Record types for dropdown
@@ -88,30 +97,42 @@ const MedicalRecords = () => {
 
   const handleOpenNewRecord = (patientId = "") => {
     setSelectedRecord(null);
+    // Reset form data to align with server PatientRecord model
     setFormData({
       patient: patientId,
-      recordType: "examination",
-      title: "",
-      description: "",
-      findings: "",
-      treatment: "",
-      date: new Date().toISOString().split("T")[0],
-      attachments: [],
+      records: [
+        {
+          recordType: "examination",
+          diagnosis: "",
+          title: "",
+          description: "",
+          treatmentProgress: "",
+          notes: "",
+          date: new Date().toISOString().split("T")[0],
+          attachments: [],
+        },
+      ],
     });
     setShowRecordModal(true);
   };
 
   const handleOpenEditRecord = (record) => {
     setSelectedRecord(record);
+    // Format for editing to match PatientRecord model
     setFormData({
       patient: record.patient?._id || "",
-      recordType: record.recordType || "examination",
-      title: record.title || "",
-      description: record.description || "",
-      findings: record.findings || "",
-      treatment: record.treatment || "",
-      date: new Date(record.date).toISOString().split("T")[0],
-      attachments: record.attachments || [],
+      records: [
+        {
+          recordType: record.recordType || "examination",
+          diagnosis: record.diagnosis || "",
+          title: record.title || "",
+          description: record.description || "",
+          treatmentProgress: record.treatmentProgress || "",
+          notes: record.notes || "",
+          date: new Date(record.date || Date.now()).toISOString().split("T")[0],
+          attachments: record.attachments || [],
+        },
+      ],
     });
     setShowRecordModal(true);
   };
@@ -123,124 +144,143 @@ const MedicalRecords = () => {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData({
-      ...formData,
-      [name]: value,
-    });
+    // Handle nested records array
+    if (name.includes("records.")) {
+      const fieldName = name.split(".")[1];
+      const updatedRecords = [...formData.records];
+      updatedRecords[0][fieldName] = value;
+
+      setFormData({
+        ...formData,
+        records: updatedRecords,
+      });
+    } else {
+      setFormData({
+        ...formData,
+        [name]: value,
+      });
+    }
   };
 
   const handleFileChange = (e) => {
     const files = Array.from(e.target.files);
+    const updatedRecords = [...formData.records];
+    updatedRecords[0].attachments = [
+      ...(updatedRecords[0].attachments || []),
+      ...files,
+    ];
+
     setFormData({
       ...formData,
-      attachments: [...formData.attachments, ...files],
+      records: updatedRecords,
     });
   };
 
   const handleRemoveAttachment = (index) => {
-    const updatedAttachments = [...formData.attachments];
+    const updatedRecords = [...formData.records];
+    const updatedAttachments = [...updatedRecords[0].attachments];
     updatedAttachments.splice(index, 1);
+    updatedRecords[0].attachments = updatedAttachments;
+
     setFormData({
       ...formData,
-      attachments: updatedAttachments,
+      records: updatedRecords,
     });
+  };
+
+  const validateForm = () => {
+    // Basic validation
+    if (!selectedPatient) {
+      setError("Please select a patient");
+      return false;
+    }
+
+    if (!formData.title.trim()) {
+      setError("Record title is required");
+      return false;
+    }
+
+    if (!formData.description.trim()) {
+      setError("Description is required");
+      return false;
+    }
+
+    return true;
+  };
+
+  const closeModal = () => {
+    setShowModal(false);
+    // Reset form data and selected patient
+    setFormData({
+      recordType: "examination",
+      title: "",
+      date: new Date().toISOString().split("T")[0],
+      description: "",
+      diagnosis: "",
+      treatmentProgress: "",
+      notes: "",
+    });
+    setSelectedPatient(null);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    if (!validateForm()) {
+      return;
+    }
+
     try {
-      setLoading(true);
-      setError(null);
+      setSaving(true);
 
-      // Create FormData for file uploads if we have any
-      const hasNewFiles = formData.attachments.some(
-        (att) => att instanceof File
-      );
-
-      // Base record data without attachments
+      // Prepare the data for the API
       const recordData = {
-        patient: formData.patient,
-        recordType: formData.recordType,
-        title: formData.title,
-        description: formData.description,
-        findings: formData.findings,
-        treatment: formData.treatment,
-        date: formData.date,
+        patient: selectedPatient._id,
+        records: [
+          {
+            recordType: formData.recordType,
+            title: formData.title,
+            date: formData.date,
+            description: formData.description,
+            diagnosis: formData.diagnosis,
+            treatmentProgress: formData.treatmentProgress,
+            notes: formData.notes,
+            // Include attachments if you have them
+          },
+        ],
       };
 
-      let response;
+      console.log("Submitting record:", recordData); // Add this for debugging
 
-      if (selectedRecord) {
-        // Update existing record
-        response = await doctorAPI.updateMedicalRecord(
-          selectedRecord._id,
-          recordData
-        );
+      // Call the API to save the record
+      const response = await doctorAPI.createPatientRecord(recordData);
 
-        // Upload any new attachments
-        if (hasNewFiles) {
-          setUploading(true);
-          const newFiles = formData.attachments.filter(
-            (att) => att instanceof File
-          );
+      // On success
+      closeModal();
+      fetchRecords();
+      setSuccess("Medical record created successfully");
 
-          for (const file of newFiles) {
-            const attachmentFormData = new FormData();
-            attachmentFormData.append("file", file);
-
-            await doctorAPI.uploadMedicalRecordAttachment(
-              selectedRecord._id,
-              attachmentFormData
-            );
-          }
-          setUploading(false);
-        }
-
-        setSuccess("Medical record updated successfully!");
-      } else {
-        // Create new record
-        response = await doctorAPI.createMedicalRecord(recordData);
-
-        // Upload attachments to the new record if we have any
-        if (hasNewFiles && response.data && response.data._id) {
-          setUploading(true);
-          const newFiles = formData.attachments.filter(
-            (att) => att instanceof File
-          );
-
-          for (const file of newFiles) {
-            const attachmentFormData = new FormData();
-            attachmentFormData.append("file", file);
-
-            await doctorAPI.uploadMedicalRecordAttachment(
-              response.data._id,
-              attachmentFormData
-            );
-          }
-          setUploading(false);
-        }
-
-        setSuccess("Medical record created successfully!");
-      }
-
-      // Refresh records
-      await fetchRecords();
-
-      // Close modal
-      setShowRecordModal(false);
+      // Reset form
+      setFormData({
+        recordType: "examination",
+        title: "",
+        date: new Date().toISOString().split("T")[0],
+        description: "",
+        diagnosis: "",
+        treatmentProgress: "",
+        notes: "",
+      });
 
       // Clear success message after 3 seconds
       setTimeout(() => setSuccess(null), 3000);
     } catch (err) {
       console.error("Error saving medical record:", err);
       setError(
-        selectedRecord
-          ? "Failed to update medical record. Please try again."
-          : "Failed to create medical record. Please try again."
+        err.response?.data?.message ||
+          "Failed to save medical record. Please try again."
       );
     } finally {
-      setLoading(false);
+      setSaving(false);
     }
   };
 
@@ -458,8 +498,8 @@ const MedicalRecords = () => {
                 <label htmlFor="recordType">Record Type</label>
                 <select
                   id="recordType"
-                  name="recordType"
-                  value={formData.recordType}
+                  name="records.recordType"
+                  value={formData.records[0].recordType}
                   onChange={handleInputChange}
                   required
                 >
@@ -476,8 +516,8 @@ const MedicalRecords = () => {
                 <input
                   type="date"
                   id="date"
-                  name="date"
-                  value={formData.date}
+                  name="records.date"
+                  value={formData.records[0].date}
                   onChange={handleInputChange}
                   required
                 />
@@ -489,8 +529,8 @@ const MedicalRecords = () => {
               <input
                 type="text"
                 id="title"
-                name="title"
-                value={formData.title}
+                name="records.title"
+                value={formData.records[0].title}
                 onChange={handleInputChange}
                 placeholder="e.g., Annual Physical Examination"
                 required
@@ -501,8 +541,8 @@ const MedicalRecords = () => {
               <label htmlFor="description">Description</label>
               <textarea
                 id="description"
-                name="description"
-                value={formData.description}
+                name="records.description"
+                value={formData.records[0].description}
                 onChange={handleInputChange}
                 placeholder="Describe the reason for the visit or examination"
                 rows="3"
@@ -511,25 +551,37 @@ const MedicalRecords = () => {
             </div>
 
             <div className="form-group">
-              <label htmlFor="findings">Findings</label>
+              <label htmlFor="diagnosis">Diagnosis</label>
               <textarea
-                id="findings"
-                name="findings"
-                value={formData.findings}
+                id="diagnosis"
+                name="records.diagnosis"
+                value={formData.records[0].diagnosis}
                 onChange={handleInputChange}
-                placeholder="Document any clinical findings or observations"
+                placeholder="Enter diagnosis if applicable"
                 rows="3"
               ></textarea>
             </div>
 
             <div className="form-group">
-              <label htmlFor="treatment">Treatment & Recommendations</label>
+              <label htmlFor="treatmentProgress">Treatment Progress</label>
               <textarea
-                id="treatment"
-                name="treatment"
-                value={formData.treatment}
+                id="treatmentProgress"
+                name="records.treatmentProgress"
+                value={formData.records[0].treatmentProgress}
                 onChange={handleInputChange}
-                placeholder="Document the treatment plan and recommendations"
+                placeholder="Document the treatment progress"
+                rows="3"
+              ></textarea>
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="notes">Additional Notes</label>
+              <textarea
+                id="notes"
+                name="records.notes"
+                value={formData.records[0].notes}
+                onChange={handleInputChange}
+                placeholder="Any additional notes"
                 rows="3"
               ></textarea>
             </div>
@@ -554,9 +606,9 @@ const MedicalRecords = () => {
                 </Button>
               </div>
 
-              {formData.attachments.length > 0 && (
+              {formData.records[0].attachments.length > 0 && (
                 <div className="attachments-list">
-                  {formData.attachments.map((attachment, index) => (
+                  {formData.records[0].attachments.map((attachment, index) => (
                     <div key={index} className="attachment-item">
                       <span className="attachment-name">
                         {attachment instanceof File

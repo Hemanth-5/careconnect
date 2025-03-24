@@ -14,7 +14,7 @@
 
 .placeholder-icon {
   font-size: 4rem;
-  color: var(--green-primary);
+  color: var(--patient-primary);
   margin-bottom: var(--spacing-4);
 }
 
@@ -40,4 +40,223 @@
 .placeholder-message ul li {
   margin-bottom: var(--spacing-2);
   font-size: var(--font-size-md);
+}
+
+.dashboard-welcome {
+  margin-bottom: var(--spacing-4);
+}
+
+.dashboard-date {
+  color: var(--gray-600);
+  margin-top: var(--spacing-1);
+}
+
+/* Stats container */
+.dashboard-stats-container {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--spacing-4);
+  margin-bottom: var(--spacing-6);
+}
+
+/* Main content layout */
+.dashboard-main-content {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--spacing-4);
+}
+
+.dashboard-column {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-4);
+}
+
+/* Card styles */
+.dashboard-card {
+  background-color: var(--white);
+  border-radius: var(--border-radius-lg);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+  height: fit-content;
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--spacing-4);
+  border-bottom: 1px solid var(--gray-200);
+  background-color: var(--gray-50);
+}
+
+.card-header h2 {
+  margin: 0;
+  font-size: var(--font-size-lg);
+  color: var(--gray-800);
+}
+
+.view-all {
+  color: var(--patient-primary);
+  text-decoration: none;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-1);
+  font-size: var(--font-size-sm);
+}
+
+.view-all:hover {
+  text-decoration: underline;
+}
+
+.card-content {
+  padding: var(--spacing-4);
+}
+
+/* Empty list message */
+.empty-list-message {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-6);
+  text-align: center;
+  color: var(--gray-500);
+}
+
+.empty-list-message i {
+  font-size: 2rem;
+  margin-bottom: var(--spacing-2);
+  color: var(--gray-400);
+}
+
+.empty-list-message p {
+  margin-bottom: var(--spacing-3);
+}
+
+/* Profile summary card */
+.profile-summary {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-4);
+}
+
+.profile-avatar {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  overflow: hidden;
+  background-color: var(--gray-100);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.profile-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.avatar-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--gray-200);
+}
+
+.avatar-placeholder i {
+  font-size: 2rem;
+  color: var(--gray-400);
+}
+
+.profile-details {
+  flex: 1;
+}
+
+.profile-details h3 {
+  margin: 0 0 var(--spacing-2);
+  color: var(--gray-800);
+}
+
+.profile-info-list {
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+}
+
+.profile-info-list li {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  margin-bottom: var(--spacing-1);
+  color: var(--gray-600);
+  font-size: var(--font-size-sm);
+}
+
+.profile-info-list li i {
+  width: 16px;
+  color: var(--patient-primary);
+}
+
+/* Quick actions grid */
+.quick-actions-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--spacing-3);
+}
+
+.quick-action-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--patient-bg-light);
+  border-radius: var(--border-radius);
+  padding: var(--spacing-3);
+  text-decoration: none;
+  color: var(--gray-700);
+  transition: transform 0.2s, background-color 0.2s;
+}
+
+.quick-action-item:hover {
+  transform: translateY(-2px);
+  background-color: rgba(var(--patient-primary-rgb), 0.1);
+}
+
+.quick-action-item i {
+  font-size: 1.5rem;
+  margin-bottom: var(--spacing-2);
+  color: var(--patient-primary);
+}
+
+/* Responsive styles */
+@media (max-width: 1200px) {
+  .dashboard-stats-container {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 992px) {
+  .dashboard-main-content {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .dashboard-stats-container {
+    grid-template-columns: 1fr;
+  }
+
+  .profile-summary {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .quick-actions-grid {
+    grid-template-columns: 1fr;
+  }
 }

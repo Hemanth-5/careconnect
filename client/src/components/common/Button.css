@@ -20,7 +20,17 @@
 
 .btn:focus {
   outline: none;
-  box-shadow: 0 0 0 3px rgba(var(--primary-rgb), 0.25);
+  box-shadow: 0 0 0 3px
+    rgba(
+      var(
+        --primary-rgb,
+        var(
+          --doctor-primary-rgb,
+          var(--patient-primary-rgb, var(--admin-primary-rgb))
+        )
+      ),
+      0.25
+    );
 }
 
 .btn:disabled {
@@ -44,13 +54,32 @@
 }
 
 .btn-primary {
-  background-color: var(--primary);
-  border-color: var(--primary);
+  background-color: var(
+    --primary,
+    var(--doctor-primary, var(--patient-primary, var(--admin-primary)))
+  );
+  border-color: var(
+    --primary,
+    var(--doctor-primary, var(--patient-primary, var(--admin-primary)))
+  );
+  color: var(--white);
 }
 
 .btn-primary:hover:not(:disabled) {
-  background-color: var(--primary-dark);
-  border-color: var(--primary-dark);
+  background-color: var(
+    --primary-dark,
+    var(
+      --doctor-primary-dark,
+      var(--patient-primary-dark, var(--admin-primary-dark))
+    )
+  );
+  border-color: var(
+    --primary-dark,
+    var(
+      --doctor-primary-dark,
+      var(--patient-primary-dark, var(--admin-primary-dark))
+    )
+  );
 }
 
 .btn-secondary {
@@ -77,15 +106,27 @@
 }
 
 .btn-outline-primary {
-  color: var(--primary);
+  color: var(
+    --primary,
+    var(--doctor-primary, var(--patient-primary, var(--admin-primary)))
+  );
   background-color: transparent;
-  border-color: var(--primary);
+  border-color: var(
+    --primary,
+    var(--doctor-primary, var(--patient-primary, var(--admin-primary)))
+  );
 }
 
 .btn-outline-primary:hover:not(:disabled) {
   color: var(--white);
-  background-color: var(--primary);
-  border-color: var(--primary);
+  background-color: var(
+    --primary,
+    var(--doctor-primary, var(--patient-primary, var(--admin-primary)))
+  );
+  border-color: var(
+    --primary,
+    var(--doctor-primary, var(--patient-primary, var(--admin-primary)))
+  );
 }
 
 .btn-link {

@@ -2,28 +2,41 @@ import mongoose from "mongoose";
 
 const notificationSchema = new mongoose.Schema(
   {
-    user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
-    type: {
-      type: String,
-      enum: ["appointment", "prescription", "message", "report"],
+    recipient: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
       required: true,
     },
-    message: { type: String, required: true },
-    read: { type: Boolean, default: false },
-    metadata: {
-      appointmentId: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Appointment",
-      },
-      prescriptionId: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Prescription",
-      },
-      reportId: { type: mongoose.Schema.Types.ObjectId, ref: "MedicalReport" },
+    type: {
+      type: String,
+      enum: ["appointment", "prescription", "message", "report", "system"],
+      default: "system",
     },
-    dateSent: { type: Date, default: Date.now },
+    message: {
+      type: String,
+      required: true,
+    },
+    isRead: {
+      type: Boolean,
+      default: false,
+    },
+    relatedId: {
+      type: mongoose.Schema.Types.ObjectId,
+      // This could reference different models depending on the notification type
+    },
+    createdAt: {
+      type: Date,
+      default: Date.now,
+    },
   },
   { timestamps: true }
 );
 
-export default mongoose.model("Notification", notificationSchema);
+// Create indexes for efficient queries
+notificationSchema.index({ recipient: 1, isRead: 1 });
+notificationSchema.index({ createdAt: -1 });
+notificationSchema.index({ type: 1 });
+
+const Notification = mongoose.model("Notification", notificationSchema);
+
+export default Notification;
