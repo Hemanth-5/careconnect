@@ -28,7 +28,7 @@ const Unauthorized = () => {
           administrator if you believe this is a mistake.
         </p>
         <div className="unauthorized-actions">
-          <Button variant="primary" onClick={() => navigate(-1)}>
+          <Button variant="secondary" onClick={() => navigate(-1)}>
             Go Back
           </Button>
           <Button variant="outline-primary" onClick={handleLogout}>

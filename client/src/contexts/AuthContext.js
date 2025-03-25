@@ -1,4 +1,10 @@
-import React, { createContext, useState, useContext, useEffect } from "react";
+import React, {
+  createContext,
+  useState,
+  useContext,
+  useEffect,
+  useRef,
+} from "react";
 import axios from "axios";
 import { API } from "../constants/api";
 
@@ -15,6 +21,55 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const tokenCheckInterval = useRef(null);
+
+  // Function to check token expiry and handle logout
+  const checkTokenExpiry = () => {
+    const expiry = localStorage.getItem("expiry");
+
+    if (expiry) {
+      const expiryDate = new Date(parseInt(expiry));
+      const now = new Date();
+
+      // If token has expired
+      if (now > expiryDate) {
+        // Clear user data
+        localStorage.removeItem("token");
+        localStorage.removeItem("userType");
+        localStorage.removeItem("expiry");
+        setUser(null);
+
+        // Clear interval to prevent further checks after logout
+        if (tokenCheckInterval.current) {
+          clearInterval(tokenCheckInterval.current);
+          tokenCheckInterval.current = null;
+        }
+
+        // Alert user and redirect to login page
+        alert("Your session has expired. Please log in again.");
+        window.location.href = "/login"; // Use window.location instead of navigate
+        return false;
+      }
+    }
+    // console.log("Token valid!");
+    return true;
+  };
+
+  // Setup token expiry check interval
+  useEffect(() => {
+    // Initial check
+    checkTokenExpiry();
+
+    // Set up interval to check every 30 seconds
+    tokenCheckInterval.current = setInterval(checkTokenExpiry, 10000);
+
+    // Cleanup interval on unmount
+    return () => {
+      if (tokenCheckInterval.current) {
+        clearInterval(tokenCheckInterval.current);
+      }
+    };
+  }, []);
 
   // Check if user is authenticated on initial load
   useEffect(() => {
@@ -37,6 +92,7 @@ export const AuthProvider = ({ children }) => {
           if (error.response && error.response.status === 401) {
             localStorage.removeItem("token");
             localStorage.removeItem("userType");
+            localStorage.removeItem("expiry");
           }
 
           setError("Authentication failed. Please log in again.");
@@ -60,8 +116,14 @@ export const AuthProvider = ({ children }) => {
       // Save token and user type to local storage
       localStorage.setItem("token", response.data.token);
       localStorage.setItem("userType", response.data.user.role);
+      localStorage.setItem("expiry", response.data.expiry);
 
       setUser(response.data.user);
+
+      // Start token expiry check after successful login
+      if (!tokenCheckInterval.current) {
+        tokenCheckInterval.current = setInterval(checkTokenExpiry, 30000);
+      }
 
       return response.data;
     } catch (error) {
@@ -79,12 +141,19 @@ export const AuthProvider = ({ children }) => {
   const logout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("userType");
+    localStorage.removeItem("expiry");
     setUser(null);
+
+    // Clear interval when user logs out
+    if (tokenCheckInterval.current) {
+      clearInterval(tokenCheckInterval.current);
+      tokenCheckInterval.current = null;
+    }
   };
 
   // Check if user is authenticated
   const isAuthenticated = () => {
-    return !!localStorage.getItem("token");
+    return checkTokenExpiry();
   };
 
   // Update user profile

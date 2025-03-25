@@ -18,7 +18,7 @@ const NotFound = () => {
 
         <div className="not-found-actions">
           <Link to="/">
-            <Button variant="primary">
+            <Button variant="outline-primary">
               <i className="fas fa-home"></i> Go to Home
             </Button>
           </Link>

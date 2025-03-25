@@ -1,0 +1,22 @@
+[33m257a071[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m)[m HEAD@{0}: commit: Restored files to previous commit state
+[33m2166b24[m[33m ([m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m HEAD@{1}: commit: Enhance application functionality and styling; add new dependencies, update user and doctor models, improve input theming, and refine password reset routes
+[33meac9820[m HEAD@{2}: commit: Add patient dashboard layout and modal component; implement doctor appointments fetching
+[33m1168ede[m HEAD@{3}: commit: Center profile preview in User Management page
+[33ma8f6da4[m HEAD@{4}: commit: Add profile picture upload functionality and related styles
+[33mc0d4f8c[m HEAD@{5}: commit: Completed Admin Portal with password reset
+[33m6af8201[m HEAD@{6}: commit: Admin Portal Over
+[33m7a60be4[m HEAD@{7}: commit: backend completed overall without notifications
+[33ma7524f3[m HEAD@{8}: commit: patient records and medical reports over
+[33m26fe77e[m HEAD@{9}: commit: completed doctor and patient routes in admin
+[33mfc2fa69[m HEAD@{10}: commit: specializations verifed
+[33m104b31a[m HEAD@{11}: commit: Add admin routes and controllers for managing specializations, doctors, and patients
+[33m0cbf26c[m HEAD@{12}: commit: Add doctor profile retrieval and update functionality; comment out appointment scheduling route in patient controller
+[33m6b6f185[m HEAD@{13}: commit: prescription controllers verified
+[33m59919c0[m HEAD@{14}: commit: appointment verified in doctors
+[33m5cd3078[m HEAD@{15}: commit: verified user and admin routes
+[33mfbb0604[m HEAD@{16}: commit: Remove outdated test files and add new admin components with styling
+[33ma32e7d6[m HEAD@{17}: commit: Add initial test files and basic structure for client and server components
+[33m4fb90ec[m HEAD@{18}: commit: Remove server directory and associated models, update README for new project direction
+[33m8b47e50[m HEAD@{19}: commit: Refactor models to use ES6 import/export syntax and update package.json to set module type
+[33me194d86[m HEAD@{20}: commit: Add server structure with models and configuration
+[33m66d2ec1[m HEAD@{21}: clone: from https://github.com/Hemanth-5/careconnect.git

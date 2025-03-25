@@ -108,7 +108,7 @@ export const resetPassword = async (req, res) => {
     }
 
     // Hash the new password
-    const saltRounds = parseInt(process.env.BCRYPT_SALT) || 11;
+    const saltRounds = parseInt(process.env.BCRYPT_SALT) || 10;
     const hashedPassword = await bcrypt.hash(newPassword, saltRounds);
 
     // Update user password and clear reset token

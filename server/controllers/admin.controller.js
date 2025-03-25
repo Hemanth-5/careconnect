@@ -1,10 +1,13 @@
 import bcrypt from "bcryptjs";
-import jwt from "jsonwebtoken";
+// import jwt from "jsonwebtoken";
 import User from "../models/user.model.js";
 import Doctor from "../models/doctor.model.js";
 import Patient from "../models/patient.model.js";
 import Specialization from "../models/specialization.model.js";
 import generateUsername from "../utils/generateUsername.js";
+import dotenv from "dotenv";
+
+dotenv.config();
 
 // Register a new admin user
 export const registerAdmin = async (req, res) => {
@@ -19,7 +22,8 @@ export const registerAdmin = async (req, res) => {
       return res.status(400).json({ message: "Email already registered." });
     }
 
-    const hashedPassword = await bcrypt.hash(password, 10); // Use a numeric salt rounds value
+    const saltRounds = parseInt(process.env.BCRYPT_SALT) || 10;
+    const hashedPassword = await bcrypt.hash(password, saltRounds); // Use a numeric salt rounds value
 
     const newUser = new User({
       username,
@@ -51,7 +55,8 @@ export const registerUser = async (req, res) => {
       return res.status(400).json({ message: "Email already registered." });
     }
 
-    const hashedPassword = await bcrypt.hash(password, 10); // Use a numeric salt rounds value
+    const saltRounds = parseInt(process.env.BCRYPT_SALT) || 10;
+    const hashedPassword = await bcrypt.hash(password, saltRounds); // Use a numeric salt rounds value
 
     const newUser = new User({
       username,
@@ -92,9 +97,19 @@ export const updateUser = async (req, res) => {
 
     const updatedData = req.body;
 
-    const user = await User.findByIdAndUpdate(userId, updatedData, {
-      new: true,
-    });
+    let hashedPassword = updatedData.password;
+    if (hashedPassword) {
+      const saltRounds = parseInt(process.env.BCRYPT_SALT) || 10;
+      hashedPassword = await bcrypt.hash(hashedPassword, saltRounds);
+    }
+
+    const user = await User.findByIdAndUpdate(
+      userId,
+      { ...updatedData, password: hashedPassword },
+      {
+        new: true,
+      }
+    );
 
     if (!user) {
       return res.status(404).json({ message: "User not found." });
@@ -229,7 +244,10 @@ export const deleteSpecialization = async (req, res) => {
 // Get all doctors
 export const getDoctors = async (req, res) => {
   try {
-    const doctors = await Doctor.find().populate("user");
+    // Populate their specialization also
+    const doctors = await Doctor.find()
+      .populate("user")
+      .populate("specializations");
     res.json(doctors);
   } catch (error) {
     res.status(500).json({ message: "Error fetching doctors.", error });

@@ -38,8 +38,8 @@
 
 .profile-picture,
 .profile-picture-placeholder {
-  width: 120px;
-  height: 120px;
+  width: 20px;
+  height: 20px;
   border-radius: 50%;
   object-fit: cover;
   box-shadow: var(--shadow-sm);
@@ -404,7 +404,7 @@ address {
 .profile-picture {
   border-radius: 50%;
   overflow: hidden;
-  border: 3px solid var(--doctor-primary);
+  /* border: 3px solid var(--doctor-primary); */
   box-shadow: var(--shadow-md);
   flex-shrink: 0;
 }

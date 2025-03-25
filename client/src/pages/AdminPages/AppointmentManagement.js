@@ -275,7 +275,11 @@ const AppointmentManagement = () => {
             </div>
 
             <div className="filter-actions">
-              <Button type="submit" variant="primary" disabled={loading}>
+              <Button
+                type="submit"
+                variant="outline-primary"
+                disabled={loading}
+              >
                 Apply Filters
               </Button>
               <Button
@@ -301,7 +305,6 @@ const AppointmentManagement = () => {
           <table className="appointments-table">
             <thead>
               <tr>
-                <th>ID</th>
                 <th>Patient</th>
                 <th>Doctor</th>
                 <th>Date & Time</th>
@@ -313,16 +316,16 @@ const AppointmentManagement = () => {
               {appointments.length > 0 ? (
                 appointments.map((appointment) => (
                   <tr key={appointment._id}>
-                    <td>{appointment._id.substring(0, 8)}...</td>
+                    {/* <td>{appointment._id.substring(0, 8)}...</td> */}
                     <td>
                       {appointment.patient?.user?.fullname ||
                         appointment.patient?.user?.username ||
-                        "Unknown"}
+                        "Unnamed"}
                     </td>
                     <td>
                       {appointment.doctor?.user?.fullname ||
                         appointment.doctor?.user?.username ||
-                        "Unknown"}
+                        "Unnamed"}
                     </td>
                     <td>{formatDate(appointment.appointmentDate)}</td>
                     <td>

@@ -108,9 +108,11 @@ const PatientsList = () => {
       <div className="page-header">
         <h1 className="page-title">Patients</h1>
         <Button
-          variant="outline-primary"
-          onClick={fetchPatients}
-          disabled={loading}
+          variant="secondary"
+          onClick={() => {
+            setSearchTerm("");
+          }}
+          className="refresh-button"
         >
           <i className="fas fa-sync-alt"></i> Refresh
         </Button>

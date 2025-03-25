@@ -203,7 +203,7 @@ const ResetPassword = () => {
 
             <Button
               type="submit"
-              variant="primary"
+              variant="outline-primary"
               fullWidth
               disabled={loading}
               loading={loading}

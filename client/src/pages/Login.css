@@ -87,6 +87,37 @@
   color: var(--gray-500);
 }
 
+.password-input-container {
+  position: relative;
+}
+
+.password-toggle-btn {
+  position: absolute;
+  right: 12px;
+  top: 45px;
+  background: none;
+  border: transparent;
+  cursor: pointer;
+  /* color: var(--gray-500); */
+  padding: 6px;
+  /* border-radius: 50%; */
+  box-shadow: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition-fast) ease;
+}
+
+.password-toggle-btn:hover {
+  color: var(--primary);
+  background-color: rgba(var(--primary-rgb), 0.1);
+}
+
+.password-toggle-btn:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(var(--primary-rgb), 0.3);
+}
+
 /* Responsive adjustments */
 @media (max-width: 576px) {
   .login-card {

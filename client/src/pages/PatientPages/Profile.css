@@ -33,11 +33,11 @@
 
 .profile-picture,
 .profile-picture-placeholder {
-  width: 120px;
-  height: 120px;
+  width: 35px;
+  height: 35px;
   border-radius: 50%;
   object-fit: cover;
-  box-shadow: var(--shadow-sm);
+  /* box-shadow: var(--shadow-sm); */
 }
 
 .profile-picture-placeholder {

@@ -353,7 +353,7 @@ const UserManagement = () => {
         setUsers(updatedUsers);
 
         // Update user via API
-        const response = await adminAPI.updateUser(selectedUser._id, userData);
+        await adminAPI.updateUser(selectedUser._id, userData);
         // console.log("User updated:", response.data);
 
         // Update role-specific data based on the selected user's role
@@ -772,7 +772,7 @@ const UserManagement = () => {
             <i className="fas fa-sync-alt"></i> Refresh
           </Button>
           <Button
-            variant="primary"
+            variant="outline-primary"
             onClick={handleOpenAddUserModal}
             disabled={loading}
           >
@@ -830,19 +830,19 @@ const UserManagement = () => {
                   <tr key={user._id}>
                     <td>
                       <div className="user-avatar">
-                        {user.profilePicture ? (
-                          <img
-                            src={user.profilePicture}
-                            alt={`${user.fullname || "User"} profile`}
-                            className="profile-picture"
-                          />
-                        ) : (
+                        {/* {user.profilePicture ? ( */}
+                        <img
+                          src={user.profilePicture}
+                          alt={`${user.fullname || "User"} profile`}
+                          className="profile-picture"
+                        />
+                        {/* ) : (
                           <div className="profile-placeholder">
                             {(user.fullname || user.username || "U")
                               .charAt(0)
                               .toUpperCase()}
                           </div>
-                        )}
+                        )} */}
                       </div>
                     </td>
                     <td>{user.username || "N/A"}</td>
@@ -950,6 +950,7 @@ const UserManagement = () => {
                     />
                   </div> */}
 
+                  {/* This email should be either diabled or not, based on add use or update user */}
                   <div className="form-group">
                     <label htmlFor="email">Email</label>
                     <input
@@ -959,6 +960,7 @@ const UserManagement = () => {
                       value={formData.email}
                       onChange={handleInputChange}
                       required
+                      disabled={selectedUser}
                     />
                   </div>
                 </div>
@@ -1121,7 +1123,7 @@ const UserManagement = () => {
                   </Button>
                   <Button
                     type="submit"
-                    variant="primary"
+                    variant="outline-primary"
                     disabled={loading}
                     loading={loading}
                   >

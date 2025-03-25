@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import adminAPI from "../../api/admin";
+import Spinner from "../../components/common/Spinner"; // Import the updated spinner
 import "./Dashboard.css";
 
 const AdminDashboard = () => {
@@ -58,11 +59,7 @@ const AdminDashboard = () => {
 
       {loading ? (
         <div className="dashboard-loading">
-          <div className="spinner">
-            <div className="spinner-border" role="status">
-              <span className="visually-hidden">Loading...</span>
-            </div>
-          </div>
+          <Spinner center size="large" />
         </div>
       ) : (
         <>

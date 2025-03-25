@@ -262,7 +262,7 @@ button {
   white-space: nowrap;
   vertical-align: middle;
   user-select: none;
-  border: 1px solid transparent;
+  /* border: 1px solid transparent; */
   padding: var(--spacing-2) var(--spacing-4);
   font-size: var(--font-size-md);
   line-height: 1.5;

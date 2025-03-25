@@ -179,7 +179,7 @@ const DoctorsList = () => {
                   <p className="doctor-contact">
                     {user.email || "No email provided"}
                   </p>
-                  {doctor.experience && (
+                  {/* {doctor.experience && (
                     <p className="doctor-experience">
                       <i className="fas fa-briefcase"></i> {doctor.experience}{" "}
                       years
@@ -190,12 +190,16 @@ const DoctorsList = () => {
                       <i className="fas fa-dollar-sign"></i> $
                       {doctor.consultationFee}
                     </p>
-                  )}
+                  )} */}
                   <Button
                     variant="outline-primary"
                     onClick={() => handleViewDetails(doctor)}
                     fullWidth
                   >
+                    <i
+                      className="fas fa-eye"
+                      style={{ marginRight: "8px" }}
+                    ></i>{" "}
                     View Details
                   </Button>
                 </div>
@@ -223,13 +227,14 @@ const DoctorsList = () => {
         <div className="modal-overlay">
           <div className="modal doctor-details-modal">
             <div className="modal-header">
-              <h2>Doctor Details</h2>
+              <h2>Doctor Profile</h2>
               <button className="close-btn" onClick={handleCloseDetails}>
                 <i className="fas fa-times"></i>
               </button>
             </div>
             <div className="modal-body">
               <div className="doctor-profile">
+                {/* Profile Header Section */}
                 <div className="doctor-profile-header">
                   <div className="doctor-profile-avatar">
                     {viewDetails.user?.profilePicture ? (
@@ -251,89 +256,171 @@ const DoctorsList = () => {
                     <p className="doctor-profile-email">
                       {viewDetails.user?.email || "No email"}
                     </p>
-                    <div className="doctor-profile-specializations">
-                      {viewDetails.specializations &&
-                        viewDetails.specializations.map((spec) => (
-                          <span key={spec._id} className="specialization-badge">
-                            {spec.name}
+
+                    {/* Specializations Badges */}
+                    {viewDetails.specializations &&
+                      viewDetails.specializations.length > 0 && (
+                        <div className="doctor-profile-specializations">
+                          {viewDetails.specializations.map((spec) => (
+                            <span
+                              key={spec._id}
+                              className="specialization-badge"
+                            >
+                              {spec.name}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+
+                    {/* Quick Stats */}
+                    {/* <div className="profile-quick-stats">
+                      {viewDetails.experience && (
+                        <div className="stat-item">
+                          <i className="fas fa-briefcase"></i>
+                          <span>{viewDetails.experience} years experience</span>
+                        </div>
+                      )}
+                      {viewDetails.consultationFee && (
+                        <div className="stat-item">
+                          <i className="fas fa-dollar-sign"></i>
+                          <span>
+                            ${viewDetails.consultationFee} consultation fee
                           </span>
-                        ))}
+                        </div>
+                      )}
+                    </div> */}
+                  </div>
+                </div>
+
+                {/* Contact Information Section */}
+                <div className="doctor-profile-section">
+                  <h4>Contact Information</h4>
+                  <div className="profile-section-grid">
+                    <div className="profile-info-item">
+                      <div className="info-icon">
+                        <i className="fas fa-phone"></i>
+                      </div>
+                      <div className="info-content">
+                        <span className="info-label">Phone</span>
+                        <span className="info-value">
+                          {viewDetails.user?.contact?.phone || "Not provided"}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="profile-info-item">
+                      <div className="info-icon">
+                        <i className="fas fa-envelope"></i>
+                      </div>
+                      <div className="info-content">
+                        <span className="info-label">Email</span>
+                        <span className="info-value">
+                          {viewDetails.user?.email || "Not provided"}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="profile-info-item">
+                      <div className="info-icon">
+                        <i className="fas fa-map-marker-alt"></i>
+                      </div>
+                      <div className="info-content">
+                        <span className="info-label">Address</span>
+                        <span className="info-value">
+                          {viewDetails.user?.contact?.address || "Not provided"}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="profile-info-item">
+                      <div className="info-icon">
+                        <i className="fas fa-city"></i>
+                      </div>
+                      <div className="info-content">
+                        <span className="info-label">City/State</span>
+                        <span className="info-value">
+                          {[
+                            viewDetails.user?.contact?.city,
+                            viewDetails.user?.contact?.state,
+                          ]
+                            .filter(Boolean)
+                            .join(", ") || "Not provided"}
+                        </span>
+                      </div>
                     </div>
                   </div>
                 </div>
 
-                <div className="doctor-profile-section">
-                  <h4>Contact Information</h4>
-                  <p>
-                    <strong>Phone:</strong>{" "}
-                    {viewDetails.user?.contact?.phone || "Not provided"}
-                  </p>
-                  <p>
-                    <strong>Address:</strong>{" "}
-                    {viewDetails.user?.contact?.address || "Not provided"}
-                  </p>
-                  {viewDetails.user?.contact?.city && (
-                    <p>
-                      <strong>City:</strong> {viewDetails.user.contact.city}
-                    </p>
-                  )}
-                  {viewDetails.user?.contact?.state && (
-                    <p>
-                      <strong>State:</strong> {viewDetails.user.contact.state}
-                    </p>
-                  )}
-                  {viewDetails.user?.contact?.zipCode && (
-                    <p>
-                      <strong>Zip Code:</strong>{" "}
-                      {viewDetails.user.contact.zipCode}
-                    </p>
-                  )}
-                  {viewDetails.user?.contact?.country && (
-                    <p>
-                      <strong>Country:</strong>{" "}
-                      {viewDetails.user.contact.country}
-                    </p>
-                  )}
-                </div>
-
+                {/* Professional Details Section */}
                 <div className="doctor-profile-section">
                   <h4>Professional Details</h4>
-                  <p>
-                    <strong>Experience:</strong>{" "}
-                    {viewDetails.experience
-                      ? `${viewDetails.experience} years`
-                      : "Not specified"}
-                  </p>
-                  <p>
-                    <strong>Education:</strong>{" "}
-                    {viewDetails.education || "Not specified"}
-                  </p>
-                  <p>
-                    <strong>License Number:</strong>{" "}
-                    {viewDetails.license?.number || "Not provided"}
-                  </p>
-                  {viewDetails.license?.expirationDate && (
-                    <p>
-                      <strong>License Expiration:</strong>{" "}
-                      {new Date(
-                        viewDetails.license.expirationDate
-                      ).toLocaleDateString()}
-                    </p>
-                  )}
-                  {viewDetails.consultationFee && (
-                    <p>
-                      <strong>Consultation Fee:</strong> $
-                      {viewDetails.consultationFee}
-                    </p>
-                  )}
+                  <div className="profile-section-grid">
+                    <div className="profile-info-item">
+                      <div className="info-icon">
+                        <i className="fas fa-graduation-cap"></i>
+                      </div>
+                      <div className="info-content">
+                        <span className="info-label">Education</span>
+                        <span className="info-value">
+                          {viewDetails.education || "Not specified"}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="profile-info-item">
+                      <div className="info-icon">
+                        <i className="fas fa-id-card"></i>
+                      </div>
+                      <div className="info-content">
+                        <span className="info-label">License Number</span>
+                        <span className="info-value">
+                          {viewDetails.license?.number || "Not provided"}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="profile-info-item">
+                      <div className="info-icon">
+                        <i className="fas fa-calendar-check"></i>
+                      </div>
+                      <div className="info-content">
+                        <span className="info-label">License Expiration</span>
+                        <span className="info-value">
+                          {viewDetails.license?.expirationDate
+                            ? new Date(
+                                viewDetails.license.expirationDate
+                              ).toLocaleDateString()
+                            : "Not specified"}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="profile-info-item">
+                      <div className="info-icon">
+                        <i className="fas fa-briefcase"></i>
+                      </div>
+                      <div className="info-content">
+                        <span className="info-label">Experience</span>
+                        <span className="info-value">
+                          {viewDetails.experience
+                            ? `${viewDetails.experience} years`
+                            : "Not specified"}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
                   {viewDetails.bio && (
-                    <div>
-                      <strong>Bio:</strong>
+                    <div className="doctor-bio-container">
+                      <h5>
+                        <i className="fas fa-quote-left"></i> Professional Bio
+                      </h5>
                       <p className="doctor-bio">{viewDetails.bio}</p>
                     </div>
                   )}
                 </div>
 
+                {/* Working Hours Section */}
                 <div className="doctor-profile-section">
                   <h4>Working Hours</h4>
                   {viewDetails.availability &&
@@ -341,8 +428,10 @@ const DoctorsList = () => {
                     <div className="working-hours">
                       {viewDetails.availability.map((slot, index) => (
                         <div key={index} className="working-hours-row">
-                          <span>{slot.day || "Day not specified"}</span>
-                          <span>
+                          <span className="day-label">
+                            {slot.day || "Day not specified"}
+                          </span>
+                          <span className="time-range">
                             {slot.startTime || "--"} - {slot.endTime || "--"}
                           </span>
                           <span
@@ -356,10 +445,14 @@ const DoctorsList = () => {
                       ))}
                     </div>
                   ) : (
-                    <p>No working hours specified</p>
+                    <div className="no-data-message">
+                      <i className="fas fa-calendar-times"></i>
+                      <p>No working hours specified</p>
+                    </div>
                   )}
                 </div>
 
+                {/* Ratings & Reviews Section */}
                 {viewDetails.ratings && viewDetails.ratings.count > 0 && (
                   <div className="doctor-profile-section">
                     <h4>Ratings & Reviews</h4>
@@ -381,7 +474,10 @@ const DoctorsList = () => {
                           ))}
                         </div>
                         <span className="rating-count">
-                          Based on {viewDetails.ratings.count} reviews
+                          Based on {viewDetails.ratings.count}{" "}
+                          {viewDetails.ratings.count === 1
+                            ? "review"
+                            : "reviews"}
                         </span>
                       </div>
                     </div>
@@ -389,26 +485,45 @@ const DoctorsList = () => {
                     {viewDetails.reviews && viewDetails.reviews.length > 0 && (
                       <div className="reviews-list">
                         <h5>Recent Reviews</h5>
-                        {viewDetails.reviews
-                          .slice(0, 3)
-                          .map((review, index) => (
-                            <div key={index} className="review-item">
-                              <div className="review-rating">
-                                {Array.from({ length: 5 }).map((_, i) => (
-                                  <i
-                                    key={i}
-                                    className={`fas fa-star ${
-                                      i < review.rating ? "filled" : ""
-                                    }`}
-                                  ></i>
-                                ))}
+                        <div className="reviews-grid">
+                          {viewDetails.reviews
+                            .slice(0, 3)
+                            .map((review, index) => (
+                              <div key={index} className="review-item">
+                                <div className="review-header">
+                                  <div className="review-rating">
+                                    {Array.from({ length: 5 }).map((_, i) => (
+                                      <i
+                                        key={i}
+                                        className={`fas fa-star ${
+                                          i < review.rating ? "filled" : ""
+                                        }`}
+                                      ></i>
+                                    ))}
+                                  </div>
+                                  <p className="review-date">
+                                    {new Date(review.date).toLocaleDateString()}
+                                  </p>
+                                </div>
+                                <p className="review-comment">
+                                  {review.comment}
+                                </p>
+                                {review.patientName && (
+                                  <p className="review-author">
+                                    - {review.patientName}
+                                  </p>
+                                )}
                               </div>
-                              <p className="review-comment">{review.comment}</p>
-                              <p className="review-date">
-                                {new Date(review.date).toLocaleDateString()}
-                              </p>
-                            </div>
-                          ))}
+                            ))}
+                        </div>
+                        {viewDetails.reviews.length > 3 && (
+                          <div className="more-reviews">
+                            <span>
+                              {viewDetails.reviews.length - 3} more reviews
+                              available
+                            </span>
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>

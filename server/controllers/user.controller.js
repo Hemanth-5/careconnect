@@ -29,7 +29,7 @@ export const registerUser = async (req, res) => {
     }
 
     // Hash password
-    const saltRounds = parseInt(process.env.BCRYPT_SALT) || 11; // Ensure it's a number
+    const saltRounds = parseInt(process.env.BCRYPT_SALT) || 10; // Ensure it's a number
     const hashedPassword = await bcrypt.hash(password, saltRounds);
 
     // Create new user
@@ -65,12 +65,15 @@ export const loginUser = async (req, res) => {
       return res.status(400).json({ message: "Invalid credentials." });
     }
 
-    // Generate JWT token
+    // Generate JWT token (for now 1 min)
     const token = jwt.sign(
       { userId: user._id, role: user.role },
       process.env.JWT_SECRET,
-      { expiresIn: "24h" }
+      { expiresIn: "1h" }
     );
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const expiry = decoded.exp * 1000; // Convert to milliseconds
 
     // Update last login
     user.lastLogin = new Date();
@@ -80,7 +83,7 @@ export const loginUser = async (req, res) => {
     const userObj = user.toObject();
     delete userObj.password;
 
-    res.json({ token, user: userObj });
+    res.json({ token, user: userObj, expiry });
   } catch (error) {
     res
       .status(500)
@@ -142,7 +145,7 @@ export const changePassword = async (req, res) => {
     }
 
     // Hash the new password
-    const saltRounds = parseInt(process.env.BCRYPT_SALT) || 11;
+    const saltRounds = parseInt(process.env.BCRYPT_SALT) || 10;
     const hashedPassword = await bcrypt.hash(newPassword, saltRounds);
 
     user.password = hashedPassword;
@@ -164,6 +167,8 @@ export const updateProfilePicture = async (req, res) => {
       return res.status(400).json({ message: "No image provided" });
     }
 
+    // console.log(req);
+
     const user = await User.findById(userId);
     if (!user) {
       return res.status(404).json({ message: "User not found" });
@@ -177,11 +182,8 @@ export const updateProfilePicture = async (req, res) => {
     // Upload the new image
     let uploadResult;
     if (req.file) {
-      // If it's a file upload through multer with memoryStorage
-      const base64String = `data:${
-        req.file.mimetype
-      };base64,${req.file.buffer.toString("base64")}`;
-      uploadResult = await uploadImage(base64String);
+      // If it's a file upload through multer with diskStorage
+      uploadResult = await uploadImage(req.file.path);
     } else if (req.body.image) {
       // If it's a base64 string
       uploadResult = await uploadImage(req.body.image);

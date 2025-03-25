@@ -16,8 +16,10 @@ const Spinner = ({ size = "medium", center = false }) => {
 
   return (
     <div className={spinnerClasses}>
-      <div className="spinner-ring"></div>
-      <span className="spinner-text">Loading</span>
+      <div className="spinner-icon">
+        <i className="fas fa-sync-alt"></i>
+      </div>
+      {/* <span className="spinner-text">Loading</span> */}
     </div>
   );
 };

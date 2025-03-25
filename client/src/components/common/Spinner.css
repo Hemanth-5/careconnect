@@ -26,10 +26,29 @@
   animation: spin 1s ease-in-out infinite;
 }
 
+.spinner-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  animation: spin 1s linear infinite;
+}
+
+.spinner-icon i {
+  /* Use contextual variables with fallbacks for better theming */
+  color: var(
+    --primary,
+    var(--doctor-primary, var(--patient-primary, var(--admin-primary)))
+  );
+}
+
 .spinner-sm .spinner-ring {
   width: 20px;
   height: 20px;
   border-width: 2px;
+}
+
+.spinner-sm .spinner-icon {
+  font-size: 1rem;
 }
 
 .spinner-md .spinner-ring {
@@ -38,10 +57,18 @@
   border-width: 3px;
 }
 
+.spinner-md .spinner-icon {
+  font-size: 1.5rem;
+}
+
 .spinner-lg .spinner-ring {
   width: 50px;
   height: 50px;
   border-width: 4px;
+}
+
+.spinner-lg .spinner-icon {
+  font-size: 2.5rem;
 }
 
 .spinner-text {

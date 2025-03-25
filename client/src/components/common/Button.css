@@ -105,6 +105,17 @@
   border-color: var(--danger);
 }
 
+.btn-outline-danger {
+  color: var(--danger);
+  background-color: transparent;
+  border-color: var(--danger);
+
+  &:hover:not(:disabled) {
+    color: var(--white);
+    background-color: var(--danger);
+  }
+}
+
 .btn-outline-primary {
   color: var(
     --primary,
@@ -119,14 +130,8 @@
 
 .btn-outline-primary:hover:not(:disabled) {
   color: var(--white);
-  background-color: var(
-    --primary,
-    var(--doctor-primary, var(--patient-primary, var(--admin-primary)))
-  );
-  border-color: var(
-    --primary,
-    var(--doctor-primary, var(--patient-primary, var(--admin-primary)))
-  );
+  background-color: var(--gray-700);
+  border-color: var(--gray-700);
 }
 
 .btn-link {

@@ -7,22 +7,41 @@
   justify-content: space-between;
   align-items: center;
   margin-bottom: var(--spacing-6);
+  border-bottom: 1px solid var(--gray-200);
+  padding-bottom: var(--spacing-4);
+}
+
+.page-title {
+  font-size: var(--font-size-3xl);
+  font-weight: 700;
+  color: var(--gray-900);
+  margin: 0;
 }
 
 .page-actions {
   display: flex;
-  gap: 10px;
+  gap: var(--spacing-3);
   align-items: center;
 }
 
 .refresh-button {
   display: flex;
   align-items: center;
-  gap: 5px;
+  gap: var(--spacing-2);
+  transition: all var(--transition-fast) ease;
 }
 
-.refresh-button i {
-  font-size: 14px;
+.refresh-button:hover i {
+  animation: rotate 1s ease;
+}
+
+@keyframes rotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .loading-container {
@@ -35,32 +54,73 @@
 .specializations-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: var(--spacing-4);
+  gap: var(--spacing-6);
 }
 
 .specialization-card {
-  background-color: white;
+  background-color: var(--admin-bg-card);
   border-radius: var(--border-radius-lg);
-  padding: var(--spacing-4);
+  padding: var(--spacing-5);
   box-shadow: var(--shadow-md);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition: all var(--transition-normal) ease;
+  border-top: 4px solid transparent;
+  position: relative;
+  overflow: hidden;
+}
+
+.specialization-card:before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 4px;
+  background: linear-gradient(
+    to right,
+    var(--admin-primary),
+    var(--admin-secondary)
+  );
+  opacity: 0.5;
+  transition: opacity var(--transition-normal) ease;
 }
 
 .specialization-card:hover {
-  transform: translateY(-3px);
+  transform: translateY(-5px);
   box-shadow: var(--shadow-lg);
+}
+
+.specialization-card:hover:before {
+  opacity: 1;
 }
 
 .specialization-card h3 {
   color: var(--admin-primary-dark);
   margin-bottom: var(--spacing-2);
   font-size: var(--font-size-lg);
+  position: relative;
+  display: inline-block;
+}
+
+.specialization-card h3:after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: -2px;
+  width: 0;
+  height: 2px;
+  background-color: var(--admin-primary);
+  transition: width var(--transition-normal) ease;
+}
+
+.specialization-card:hover h3:after {
+  width: 100%;
 }
 
 .specialization-card p {
   color: var(--gray-600);
   margin-bottom: var(--spacing-4);
-  min-height: 3em; /* Keep some minimum height for description */
+  min-height: 3em;
+  line-height: 1.5;
 }
 
 .specialization-card-actions {
@@ -73,10 +133,20 @@
   grid-column: 1 / -1;
   text-align: center;
   padding: var(--spacing-8);
-  background-color: white;
+  background-color: var(--admin-bg-card);
   border-radius: var(--border-radius-lg);
   box-shadow: var(--shadow-md);
   color: var(--gray-600);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-4);
+}
+
+.no-specializations i {
+  font-size: 3rem;
+  color: var(--gray-400);
+  margin-bottom: var(--spacing-2);
 }
 
 /* Modal styles */
@@ -92,13 +162,14 @@
   align-items: center;
   z-index: 1000;
   animation: fadeIn 0.2s ease;
+  backdrop-filter: blur(2px);
 }
 
 .modal {
-  background-color: white;
+  background-color: var(--admin-bg-card);
   border-radius: var(--border-radius-lg);
   width: 100%;
-  max-width: 500px;
+  /* max-width: 500px; */
   box-shadow: var(--shadow-lg);
   animation: slideIn 0.3s ease;
 }
@@ -109,6 +180,17 @@
   align-items: center;
   padding: var(--spacing-4) var(--spacing-6);
   border-bottom: 1px solid var(--gray-200);
+  position: relative;
+}
+
+.modal-header:after {
+  content: "";
+  position: absolute;
+  bottom: -1px;
+  left: var(--spacing-6);
+  width: 50px;
+  height: 3px;
+  background-color: var(--admin-primary);
 }
 
 .modal-header h2 {
@@ -123,11 +205,18 @@
   font-size: var(--font-size-xl);
   color: var(--gray-500);
   cursor: pointer;
-  transition: color 0.2s ease;
+  transition: all var(--transition-fast) ease;
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .close-btn:hover {
-  color: var(--gray-700);
+  background-color: rgba(var(--admin-danger-rgb), 0.1);
+  color: var(--admin-danger);
 }
 
 .modal-body {
@@ -153,12 +242,13 @@
   border: 1px solid var(--gray-300);
   border-radius: var(--border-radius);
   font-size: var(--font-size-md);
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  transition: all var(--transition-fast) ease;
 }
 
 .form-group textarea {
   resize: vertical;
-  min-height: 100px;
+  min-height: 120px;
+  line-height: 1.5;
 }
 
 .form-group input:focus,
@@ -176,8 +266,33 @@
   margin-top: var(--spacing-6);
 }
 
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
 @media (max-width: 768px) {
   .specializations-grid {
     grid-template-columns: 1fr;
+  }
+
+  .modal {
+    width: 95%;
+    max-width: none;
   }
 }

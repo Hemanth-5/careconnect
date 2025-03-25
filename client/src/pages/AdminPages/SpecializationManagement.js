@@ -139,7 +139,7 @@ const SpecializationManagement = () => {
             <i className="fas fa-sync-alt"></i> Refresh
           </Button>
           <Button
-            variant="primary"
+            variant="outline-primary"
             onClick={() => handleOpenModal()}
             disabled={loading}
           >

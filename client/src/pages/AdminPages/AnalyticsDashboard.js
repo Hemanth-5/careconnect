@@ -160,7 +160,7 @@ const AnalyticsDashboard = () => {
             </div>
           </div>
           <Button
-            variant="primary"
+            variant="outline-primary"
             onClick={applyCustomDateRange}
             disabled={
               !customDateRange.startDate || !customDateRange.endDate || loading

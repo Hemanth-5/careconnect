@@ -21,6 +21,7 @@ const Login = () => {
   const [rememberMe, setRememberMe] = useState(false);
   const [forgotPasswordMode, setForgotPasswordMode] = useState(false);
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+  const [showPassword, setShowPassword] = useState(false);
 
   // Check if user is already logged in or has remembered credentials
   useEffect(() => {
@@ -40,13 +41,13 @@ const Login = () => {
           } else {
             // Token expired, clear it
             localStorage.removeItem("token");
-            localStorage.removeItem("refreshToken");
+            // localStorage.removeItem("refreshToken");
             localStorage.removeItem("userType");
           }
         } catch (e) {
           // Invalid token format, clear it
           localStorage.removeItem("token");
-          localStorage.removeItem("refreshToken");
+          // localStorage.removeItem("refreshToken");
           localStorage.removeItem("userType");
         }
       }
@@ -86,6 +87,10 @@ const Login = () => {
     if (loginError) {
       setLoginError("");
     }
+  };
+
+  const togglePasswordVisibility = () => {
+    setShowPassword(!showPassword);
   };
 
   const validateForm = () => {
@@ -157,6 +162,7 @@ const Login = () => {
 
       // Store token and user role
       localStorage.setItem("token", data.token);
+      localStorage.setItem("expiry", data.expiry);
 
       try {
         // Decode JWT to get user role
@@ -249,15 +255,28 @@ const Login = () => {
             />
 
             {!forgotPasswordMode && (
-              <Input
-                label="Password (if applicable)"
-                type="password"
-                id="password"
-                placeholder="Enter your password if required"
-                value={formData.password}
-                onChange={handleChange}
-                error={errors.password}
-              />
+              <div className="password-input-container">
+                <Input
+                  label="Password (if applicable)"
+                  type={showPassword ? "text" : "password"}
+                  id="password"
+                  placeholder="Enter your password if required"
+                  value={formData.password}
+                  onChange={handleChange}
+                  error={errors.password}
+                />
+                <button
+                  type="button"
+                  className="password-toggle-btn"
+                  onClick={togglePasswordVisibility}
+                >
+                  {showPassword ? (
+                    <i className="fas fa-eye-slash"></i>
+                  ) : (
+                    <i className="fas fa-eye"></i>
+                  )}
+                </button>
+              </div>
             )}
 
             <div className="login-options">
@@ -282,10 +301,11 @@ const Login = () => {
 
             <Button
               type="submit"
-              variant="primary"
+              variant="outline-primary"
               fullWidth
               disabled={loading}
               loading={loading}
+              onClick={forgotPasswordMode ? handleForgotPassword : null}
             >
               {forgotPasswordMode ? "Send Reset Link" : "Sign In"}
             </Button>

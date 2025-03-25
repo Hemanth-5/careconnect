@@ -1,6 +1,9 @@
 import mongoose from "mongoose";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
+import path from "path";
+
+const defaultProfilePicture = "../assets/default-profile.jpg";
 
 const contactSchema = new mongoose.Schema({
   phone: { type: String },
@@ -46,7 +49,7 @@ const userSchema = new mongoose.Schema(
     },
     dateOfBirth: { type: Date },
     age: { type: Number },
-    profilePicture: { type: String },
+    profilePicture: { type: String, default: defaultProfilePicture },
     profilePicturePublicId: { type: String },
     contact: contactSchema,
     isActive: { type: Boolean, default: true },
