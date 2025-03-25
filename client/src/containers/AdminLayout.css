@@ -335,7 +335,7 @@
   overflow: hidden;
 }
 
-.profile-modal-header {
+.admin.profile-modal-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -343,7 +343,8 @@
   border-bottom: 1px solid #eee;
 }
 
-.profile-modal-header h3 {
+.admin.profile-modal-header h3 {
+  color: var(--admin-primary);
   margin: 0;
   font-size: 18px;
 }
@@ -360,14 +361,15 @@
   padding: 20px;
 }
 
-.profile-preview {
+.admin.profile-preview {
   display: flex;
   justify-content: center;
   align-items: center;
   margin-bottom: 20px;
-  height: 200px;
+  /* height: 200px; */
   background-color: #f5f5f5;
   border-radius: 4px;
+  border: none;
   overflow: hidden;
 }
 
@@ -410,9 +412,18 @@
   color: #333;
 }
 
-.upload-button {
-  background-color: #007bff;
+.admin.upload-button {
+  background-color: var(--admin-primary);
   color: white;
+
+  &:disabled {
+    background-color: #ccc;
+    color: #666;
+  }
+
+  &:hover {
+    background-color: var(--admin-primary-dark);
+  }
 }
 
 .upload-button:disabled,

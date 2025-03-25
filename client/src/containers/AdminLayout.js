@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Outlet, NavLink, useNavigate } from "react-router-dom";
 import "./AdminLayout.css";
+import Popup from "../components/common/Popup";
 
 import userAPI from "../api/user";
 
@@ -14,12 +15,33 @@ const AdminLayout = () => {
   });
   const [isLoading, setIsLoading] = useState(true);
 
+  const [popup, setPopup] = useState({
+    show: false,
+    message: "",
+    title: "",
+    type: "info",
+  });
+
   // New state variables for profile picture editing
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [selectedImage, setSelectedImage] = useState(null);
   const [previewUrl, setPreviewUrl] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef(null);
+
+  const showPopup = (type, message, title = "") => {
+    setPopup({
+      show: true,
+      type,
+      message,
+      title,
+    });
+  };
+
+  // Hide popup method
+  const hidePopup = () => {
+    setPopup((prev) => ({ ...prev, show: false }));
+  };
 
   useEffect(() => {
     // Fetch user profile data using the API instead of parsing token
@@ -133,14 +155,16 @@ const AdminLayout = () => {
         }));
 
         // Display success message
-        alert("Profile picture updated successfully!");
+        // alert("Profile picture updated successfully!");
+        showPopup("success", "Profile picture updated successfully!");
       }
 
       // Close the modal
       handleCloseModal();
     } catch (error) {
-      console.error("Error uploading profile picture:", error);
-      alert("Failed to upload profile picture. Please try again.");
+      // console.error("Error uploading profile picture:", error);
+      // alert("Failed to upload profile picture. Please try again.");
+      showPopup("error", "Failed to upload profile picture. Please try again.");
     } finally {
       setIsUploading(false);
     }
@@ -279,14 +303,14 @@ const AdminLayout = () => {
       {showProfileModal && (
         <div className="profile-modal-overlay">
           <div className="profile-modal">
-            <div className="profile-modal-header">
+            <div className="admin profile-modal-header">
               <h3>Update Profile Picture</h3>
               <button className="close-button" onClick={handleCloseModal}>
                 <i className="fas fa-times"></i>
               </button>
             </div>
             <div className="profile-modal-body">
-              <div className="profile-preview">
+              <div className="admin profile-preview">
                 {previewUrl ? (
                   <img
                     src={previewUrl}
@@ -322,7 +346,7 @@ const AdminLayout = () => {
                   Select Image
                 </button>
                 <button
-                  className="upload-button"
+                  className="admin upload-button"
                   onClick={handleUploadProfilePicture}
                   disabled={!selectedImage || isUploading}
                 >
@@ -333,6 +357,17 @@ const AdminLayout = () => {
           </div>
         </div>
       )}
+      {/* Add Popup component for notifications */}
+      <Popup
+        type={popup.type}
+        title={popup.title}
+        message={popup.message}
+        isVisible={popup.show}
+        onClose={hidePopup}
+        position="top-right"
+        autoClose={true}
+        duration={5000}
+      />
     </div>
   );
 };
