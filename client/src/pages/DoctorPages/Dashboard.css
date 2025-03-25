@@ -9,7 +9,8 @@
   margin-bottom: var(--spacing-6);
 }
 
-.stat-card {
+.doctor.stat-card {
+  border-top: 4px solid var(--doctor-primary-light);
   background-color: var(--doctor-bg-card);
   border-radius: var(--border-radius-lg);
   padding: var(--spacing-5);
@@ -260,7 +261,7 @@
 }
 
 .patient-info {
-  flex: 1;
+  /* flex: 1; */
 }
 
 .patient-info h4 {

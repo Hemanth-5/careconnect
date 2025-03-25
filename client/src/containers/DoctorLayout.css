@@ -11,6 +11,8 @@
   transition: width 0.3s ease;
   height: 100vh;
   position: sticky;
+  display: flex;
+  flex-direction: column;
   top: 0;
   overflow-y: auto;
   box-shadow: var(--shadow-md);
@@ -77,7 +79,7 @@
   position: relative;
 }
 
-.sidebar-nav li.active::before {
+.doctor-layout .sidebar-nav li.active::before {
   content: "";
   position: absolute;
   left: 0;

@@ -55,7 +55,7 @@ export const API = {
     GET_MY_PATIENTS: `${BASE_URL}/doctors/patients`,
     GET_PATIENT_BY_ID: (patientId) =>
       `${BASE_URL}/doctors/patients/${patientId}`,
-    GET_ALL_PATIENTS: `${BASE_URL}/doctors/patients`,
+    GET_ALL_PATIENTS: `${BASE_URL}/doctors/all-patients`,
     GET_PRESCRIPTIONS: `${BASE_URL}/doctors/prescriptions`,
     CREATE_PRESCRIPTION: `${BASE_URL}/doctors/prescriptions`,
     UPDATE_PRESCRIPTION: (prescriptionId) =>

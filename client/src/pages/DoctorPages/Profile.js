@@ -3,6 +3,7 @@ import doctorAPI from "../../api/doctor";
 import Button from "../../components/common/Button";
 import Spinner from "../../components/common/Spinner";
 import Modal from "../../components/common/Modal";
+import Popup from "../../components/common/Popup";
 import "./Profile.css";
 
 const Profile = () => {
@@ -26,6 +27,13 @@ const Profile = () => {
     bio: "",
   });
 
+  const [popup, setPopup] = useState({
+    show: false,
+    message: "",
+    title: "",
+    type: "info",
+  });
+
   const [professionalInfo, setProfessionalInfo] = useState({
     license: {
       number: "",
@@ -44,29 +52,48 @@ const Profile = () => {
 
   // Form state for availability
   const [availability, setAvailability] = useState([
-    { day: "Monday", startTime: "09:00", endTime: "17:00", isAvailable: true },
-    { day: "Tuesday", startTime: "09:00", endTime: "17:00", isAvailable: true },
+    { day: "Monday", startTime: "00:00", endTime: "00:00", isAvailable: false },
+    {
+      day: "Tuesday",
+      startTime: "00:00",
+      endTime: "00:00",
+      isAvailable: false,
+    },
     {
       day: "Wednesday",
-      startTime: "09:00",
-      endTime: "17:00",
-      isAvailable: true,
+      startTime: "00:00",
+      endTime: "00:00",
+      isAvailable: false,
     },
     {
       day: "Thursday",
-      startTime: "09:00",
-      endTime: "17:00",
-      isAvailable: true,
-    },
-    { day: "Friday", startTime: "09:00", endTime: "17:00", isAvailable: true },
-    {
-      day: "Saturday",
-      startTime: "09:00",
-      endTime: "13:00",
+      startTime: "00:00",
+      endTime: "00:00",
       isAvailable: false,
     },
-    { day: "Sunday", startTime: "09:00", endTime: "13:00", isAvailable: false },
+    { day: "Friday", startTime: "00:00", endTime: "00:00", isAvailable: false },
+    {
+      day: "Saturday",
+      startTime: "00:00",
+      endTime: "00:00",
+      isAvailable: false,
+    },
+    { day: "Sunday", startTime: "00:00", endTime: "00:00", isAvailable: false },
   ]);
+
+  const showPopup = (type, message, title = "") => {
+    setPopup({
+      show: true,
+      type,
+      message,
+      title,
+    });
+  };
+
+  // Hide popup method
+  const hidePopup = () => {
+    setPopup((prev) => ({ ...prev, show: false }));
+  };
 
   useEffect(() => {
     fetchProfile();
@@ -152,7 +179,8 @@ const Profile = () => {
       setError(null);
     } catch (err) {
       console.error("Error fetching profile:", err);
-      setError("Failed to load profile. Please try again later.");
+      // setError("Failed to load profile. Please try again later.");
+      showPopup("error", "Failed to load profile. Please try again later.");
     } finally {
       setLoading(false);
     }
@@ -162,22 +190,21 @@ const Profile = () => {
     try {
       // This would come from an API call in a real implementation
       // For demo purposes, we'll use a static list if the API isn't ready
-      // const response = await adminAPI.getSpecializations();
-      // setAllSpecializations(response.data);
-
+      const response = await doctorAPI.getSpecializations();
+      setAllSpecializations(response.data);
       // Mock data
-      setAllSpecializations([
-        { _id: "1", name: "Cardiology" },
-        { _id: "2", name: "Dermatology" },
-        { _id: "3", name: "Neurology" },
-        { _id: "4", name: "Orthopedics" },
-        { _id: "5", name: "Pediatrics" },
-        { _id: "6", name: "Psychiatry" },
-        { _id: "7", name: "Radiology" },
-        { _id: "8", name: "Surgery" },
-        { _id: "9", name: "Urology" },
-        { _id: "10", name: "Family Medicine" },
-      ]);
+      // setAllSpecializations([
+      //   { _id: "1", name: "Cardiology" },
+      //   { _id: "2", name: "Dermatology" },
+      //   { _id: "3", name: "Neurology" },
+      //   { _id: "4", name: "Orthopedics" },
+      //   { _id: "5", name: "Pediatrics" },
+      //   { _id: "6", name: "Psychiatry" },
+      //   { _id: "7", name: "Radiology" },
+      //   { _id: "8", name: "Surgery" },
+      //   { _id: "9", name: "Urology" },
+      //   { _id: "10", name: "Family Medicine" },
+      // ]);
     } catch (err) {
       console.error("Error fetching specializations:", err);
     }
@@ -248,6 +275,7 @@ const Profile = () => {
         (id) => !selectedSpecializations.includes(id)
       );
 
+      console.log(toAdd);
       if (toAdd.length > 0) {
         await doctorAPI.assignSpecializations(toAdd);
       }
@@ -258,13 +286,15 @@ const Profile = () => {
 
       setShowSpecializationsModal(false);
       fetchProfile(); // Refresh data
-      setSuccess("Specializations updated successfully!");
+      // setSuccess("Specializations updated successfully!");
+      showPopup("success", "Specializations updated successfully!");
 
       // Clear success message after 3 seconds
-      setTimeout(() => setSuccess(null), 3000);
+      // setTimeout(() => setSuccess(null), 3000);
     } catch (err) {
       console.error("Error updating specializations:", err);
-      setError("Failed to update specializations. Please try again.");
+      // setError("Failed to update specializations. Please try again.");
+      showPopup("error", "Failed to update specializations. Please try again.");
     } finally {
       setSaving(false);
     }
@@ -321,15 +351,21 @@ const Profile = () => {
       const response = await doctorAPI.updateProfile(updatedProfile);
 
       if (response && response.data) {
-        setSuccess("Profile updated successfully!");
+        // setSuccess("Profile updated successfully!");
+        showPopup("success", "Profile updated successfully!");
         setProfile(response.data);
 
         // Clear success message after 3 seconds
-        setTimeout(() => setSuccess(null), 3000);
+        // setTimeout(() => setSuccess(null), 3000);
       }
     } catch (err) {
       console.error("Error updating profile:", err);
-      setError(
+      // setError(
+      //   err.response?.data?.message ||
+      //     "Failed to update profile. Please try again."
+      // );
+      showPopup(
+        "error",
         err.response?.data?.message ||
           "Failed to update profile. Please try again."
       );
@@ -380,13 +416,13 @@ const Profile = () => {
               </div>
             )}
 
-            <Button
+            {/* <Button
               variant="outline-secondary"
               size="sm"
               className="change-picture-btn"
             >
               <i className="fas fa-camera"></i> Change Photo
-            </Button>
+            </Button> */}
           </div>
 
           <div className="profile-info-summary">
@@ -752,7 +788,7 @@ const Profile = () => {
             <div className="form-actions">
               <Button
                 type="submit"
-                variant="primary"
+                variant="outline-primary"
                 loading={saving}
                 disabled={saving}
               >
@@ -807,6 +843,17 @@ const Profile = () => {
           </div>
         </Modal>
       )}
+      {/* Add Popup component for notifications */}
+      <Popup
+        type={popup.type}
+        title={popup.title}
+        message={popup.message}
+        isVisible={popup.show}
+        onClose={hidePopup}
+        position="top-right"
+        autoClose={true}
+        duration={5000}
+      />
     </div>
   );
 };

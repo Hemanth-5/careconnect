@@ -17,7 +17,11 @@ const medicalReportSchema = new mongoose.Schema(
       url: { type: String },
       size: { type: Number },
     },
-    status: { type: String, enum: ["approved", "pending"], default: "pending" },
+    status: {
+      type: String,
+      enum: ["completed", "pending", "processing", "failed"],
+      default: "pending",
+    },
     comments: { type: String },
   },
   { timestamps: true }

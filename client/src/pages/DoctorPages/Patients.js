@@ -4,6 +4,7 @@ import doctorAPI from "../../api/doctor";
 import Button from "../../components/common/Button";
 import Spinner from "../../components/common/Spinner";
 import Modal from "../../components/common/Modal";
+import Popup from "../../components/common/Popup";
 import "./Patients.css";
 
 const Patients = () => {
@@ -15,6 +16,27 @@ const Patients = () => {
   const [showPatientModal, setShowPatientModal] = useState(false);
   const [showMedicalHistoryModal, setShowMedicalHistoryModal] = useState(false);
   const [medicalHistory, setMedicalHistory] = useState({});
+  const [popup, setPopup] = useState({
+    show: false,
+    message: "",
+    title: "",
+    type: "info",
+  });
+
+  // Show popup helper
+  const showPopup = (type, message, title = "") => {
+    setPopup({
+      show: true,
+      type,
+      message,
+      title,
+    });
+  };
+
+  // Hide popup method
+  const hidePopup = () => {
+    setPopup((prev) => ({ ...prev, show: false }));
+  };
 
   useEffect(() => {
     fetchPatients();
@@ -28,7 +50,7 @@ const Patients = () => {
       setError(null);
     } catch (err) {
       console.error("Error fetching patients:", err);
-      setError("Failed to load patients. Please try again.");
+      showPopup("error", "Failed to load patients. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -105,18 +127,18 @@ const Patients = () => {
     <div className="doctor-patients">
       <div className="patients-header">
         <h1 className="page-title">My Patients</h1>
-        <div className="search-box">
-          <i className="fas fa-search"></i>
-          <input
-            type="text"
-            placeholder="Search patients..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
+        <div className="search-container">
+          <div className="search-box">
+            <i className="fas fa-search"></i>
+            <input
+              type="text"
+              placeholder="Search patients by name, email, or phone..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
         </div>
       </div>
-
-      {error && <div className="alert alert-danger">{error}</div>}
 
       {loading ? (
         <div className="loading-container">
@@ -144,6 +166,7 @@ const Patients = () => {
                       <h3 className="patient-name">{user.fullname || "N/A"}</h3>
                       {user.dateOfBirth && (
                         <p className="patient-age">
+                          <i className="fas fa-birthday-cake"></i>
                           {calculateAge(user.dateOfBirth)} years
                         </p>
                       )}
@@ -155,7 +178,9 @@ const Patients = () => {
                       </div>
                       <div className="patient-detail">
                         <i className="fas fa-phone"></i>
-                        <span>{user.contact?.phone || "No phone provided"}</span>
+                        <span>
+                          {user.contact?.phone || "No phone provided"}
+                        </span>
                       </div>
                       <div className="patient-detail">
                         <i className="fas fa-calendar"></i>
@@ -166,19 +191,25 @@ const Patients = () => {
                             : "Never"}
                         </span>
                       </div>
+                      {patient.totalVisits > 0 && (
+                        <div className="patient-detail">
+                          <i className="fas fa-clipboard-list"></i>
+                          <span>Total visits: {patient.totalVisits}</span>
+                        </div>
+                      )}
                     </div>
                     <div className="patient-actions">
                       <Button
                         variant="outline-primary"
                         onClick={() => handleViewPatient(patient)}
                       >
-                        View Details
+                        <i className="fas fa-user-md"></i> View Details
                       </Button>
                       <Button
                         variant="outline-secondary"
                         onClick={() => handleViewMedicalHistory(patient)}
                       >
-                        Medical History
+                        <i className="fas fa-notes-medical"></i> Medical History
                       </Button>
                     </div>
                   </div>
@@ -189,15 +220,18 @@ const Patients = () => {
             <div className="no-patients">
               <i className="fas fa-users-slash"></i>
               <p>No patients found matching your search criteria.</p>
-              {searchTerm ? (
-                <Button variant="primary" onClick={() => setSearchTerm("")}>
-                  Clear Search
+              {/* {searchTerm ? (
+                <Button
+                  variant="outline-primary"
+                  onClick={() => setSearchTerm("")}
+                >
+                  <i className="fas fa-times"></i> Clear Search
                 </Button>
               ) : (
                 <Button variant="primary" onClick={fetchPatients}>
-                  Refresh
+                  <i className="fas fa-sync-alt"></i> Refresh
                 </Button>
-              )}
+              )} */}
             </div>
           )}
         </>
@@ -223,13 +257,28 @@ const Patients = () => {
                 )}
               </div>
               <div className="profile-info">
-                <h2>{selectedPatient.user?.fullname || "N/A"}</h2>
-                <p className="text-muted">ID: {selectedPatient._id}</p>
+                <h2>
+                  {selectedPatient.user?.fullname ||
+                    selectedPatient.user?.username ||
+                    "N/A"}
+                </h2>
+                <p className="text-muted">
+                  <i className="fas fa-id-card"></i> Patient ID:{" "}
+                  {selectedPatient._id}
+                </p>
+                {selectedPatient.user?.dateOfBirth && (
+                  <p className="patient-age">
+                    <i className="fas fa-birthday-cake"></i>{" "}
+                    {calculateAge(selectedPatient.user.dateOfBirth)} years old
+                  </p>
+                )}
               </div>
             </div>
 
             <div className="profile-section">
-              <h3>Personal Information</h3>
+              <h3>
+                <i className="fas fa-user-circle"></i> Personal Information
+              </h3>
               <div className="profile-details">
                 <div className="detail-item">
                   <span className="detail-label">Email:</span>
@@ -252,16 +301,6 @@ const Patients = () => {
                   </span>
                 </div>
                 <div className="detail-item">
-                  <span className="detail-label">Age:</span>
-                  <span className="detail-value">
-                    {selectedPatient.user?.dateOfBirth
-                      ? `${calculateAge(
-                          selectedPatient.user.dateOfBirth
-                        )} years`
-                      : "Not provided"}
-                  </span>
-                </div>
-                <div className="detail-item">
                   <span className="detail-label">Gender:</span>
                   <span className="detail-value">
                     {selectedPatient.user?.gender || "Not specified"}
@@ -276,20 +315,16 @@ const Patients = () => {
                 <div className="detail-item">
                   <span className="detail-label">Address:</span>
                   <span className="detail-value">
-                    {selectedPatient.user?.contact?.address
-                      ? `${selectedPatient.user.contact.address}, ${
-                          selectedPatient.user.contact.city || ""
-                        } ${selectedPatient.user.contact.state || ""} ${
-                          selectedPatient.user.contact.zipCode || ""
-                        }`
-                      : "Not provided"}
+                    {selectedPatient.user?.contact?.address || "Not provided"}
                   </span>
                 </div>
               </div>
             </div>
 
             <div className="profile-section">
-              <h3>Patient History</h3>
+              <h3>
+                <i className="fas fa-history"></i> Patient History
+              </h3>
               <div className="profile-details">
                 <div className="detail-item">
                   <span className="detail-label">First Visit:</span>
@@ -324,7 +359,8 @@ const Patients = () => {
                         handleViewMedicalHistory(selectedPatient);
                       }}
                     >
-                      View Medical History
+                      <i className="fas fa-notes-medical"></i> View Medical
+                      History
                     </Button>
                   </span>
                 </div>
@@ -333,22 +369,22 @@ const Patients = () => {
 
             <div className="profile-actions">
               <Link
-                to={`/doctor/appointments/new?patient=${selectedPatient._id}`}
-                className="btn btn-primary"
+                to={`/doctor/appointments?patient=${selectedPatient._id}`}
+                className="btn btn-outline-primary"
               >
-                Schedule Appointment
+                <i className="fas fa-calendar-plus"></i> Schedule Appointment
               </Link>
               <Link
-                to={`/doctor/prescriptions/new?patient=${selectedPatient._id}`}
+                to={`/doctor/prescriptions?patient=${selectedPatient._id}`}
                 className="btn btn-secondary"
               >
-                Create Prescription
+                <i className="fas fa-prescription"></i> Create Prescription
               </Link>
               <Link
-                to={`/doctor/medical-records/new?patient=${selectedPatient._id}`}
+                to={`/doctor/medical-records?patient=${selectedPatient._id}`}
                 className="btn btn-info"
               >
-                Add Medical Record
+                <i className="fas fa-file-medical"></i> Add Medical Record
               </Link>
             </div>
           </div>
@@ -364,14 +400,18 @@ const Patients = () => {
           <div className="medical-history">
             <div className="patient-name-header">
               <h3>
+                <i className="fas fa-user-injured"></i>
                 {selectedPatient.user?.fullname || "Unknown Patient"}'s Medical
                 History
               </h3>
             </div>
 
             <div className="medical-history-section">
-              <h4>Allergies</h4>
-              {medicalHistory.allergies && medicalHistory.allergies.length > 0 ? (
+              <h4>
+                <i className="fas fa-allergies"></i> Allergies
+              </h4>
+              {medicalHistory.allergies &&
+              medicalHistory.allergies.length > 0 ? (
                 <ul className="medical-list">
                   {medicalHistory.allergies.map((allergy, index) => (
                     <li key={index}>{allergy}</li>
@@ -383,7 +423,9 @@ const Patients = () => {
             </div>
 
             <div className="medical-history-section">
-              <h4>Chronic Conditions</h4>
+              <h4>
+                <i className="fas fa-heartbeat"></i> Chronic Conditions
+              </h4>
               {medicalHistory.chronicConditions &&
               medicalHistory.chronicConditions.length > 0 ? (
                 <ul className="medical-list">
@@ -397,13 +439,17 @@ const Patients = () => {
             </div>
 
             <div className="medical-history-section">
-              <h4>Current Medications</h4>
+              <h4>
+                <i className="fas fa-pills"></i> Current Medications
+              </h4>
               {medicalHistory.currentMedications &&
               medicalHistory.currentMedications.length > 0 ? (
                 <ul className="medical-list">
-                  {medicalHistory.currentMedications.map((medication, index) => (
-                    <li key={index}>{medication}</li>
-                  ))}
+                  {medicalHistory.currentMedications.map(
+                    (medication, index) => (
+                      <li key={index}>{medication}</li>
+                    )
+                  )}
                 </ul>
               ) : (
                 <p className="no-data">No current medications recorded</p>
@@ -411,7 +457,9 @@ const Patients = () => {
             </div>
 
             <div className="medical-history-section">
-              <h4>Past Surgeries</h4>
+              <h4>
+                <i className="fas fa-procedures"></i> Past Surgeries
+              </h4>
               {medicalHistory.pastSurgeries &&
               medicalHistory.pastSurgeries.length > 0 ? (
                 <ul className="medical-list">
@@ -425,7 +473,9 @@ const Patients = () => {
             </div>
 
             <div className="medical-history-section">
-              <h4>Family Medical History</h4>
+              <h4>
+                <i className="fas fa-dna"></i> Family Medical History
+              </h4>
               {medicalHistory.familyHistory ? (
                 <p>{medicalHistory.familyHistory}</p>
               ) : (
@@ -434,7 +484,9 @@ const Patients = () => {
             </div>
 
             <div className="medical-history-section">
-              <h4>Physical Information</h4>
+              <h4>
+                <i className="fas fa-weight"></i> Physical Information
+              </h4>
               <div className="medical-info-grid">
                 <div className="medical-info-item">
                   <span className="info-label">Blood Type:</span>
@@ -452,7 +504,9 @@ const Patients = () => {
             </div>
 
             <div className="medical-history-section">
-              <h4>Additional Notes</h4>
+              <h4>
+                <i className="fas fa-sticky-note"></i> Additional Notes
+              </h4>
               <p className="notes">{medicalHistory.notes}</p>
             </div>
 
@@ -464,20 +518,35 @@ const Patients = () => {
                   setShowPatientModal(true);
                 }}
               >
-                Back to Patient Details
+                <i className="fas fa-arrow-left"></i> Back to Patient Details
               </Button>
               <Button
-                variant="primary"
-                onClick={() =>
-                  alert("Edit functionality to be implemented soon.")
-                }
+                variant="outline-primary"
+                onClick={() => {
+                  showPopup(
+                    "info",
+                    "This functionality will be implemented soon."
+                  );
+                }}
               >
-                Update Medical History
+                <i className="fas fa-edit"></i> Update Medical History
               </Button>
             </div>
           </div>
         </Modal>
       )}
+
+      {/* Add Popup component for notifications */}
+      <Popup
+        type={popup.type}
+        title={popup.title}
+        message={popup.message}
+        isVisible={popup.show}
+        onClose={hidePopup}
+        position="top-right"
+        autoClose={true}
+        duration={5000}
+      />
     </div>
   );
 };

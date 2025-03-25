@@ -21,6 +21,8 @@ export const getDoctorPatientRecords = async (req, res) => {
     const records = await PatientRecordService.getDoctorPatientRecords(
       doctor._id
     );
+
+    console.log(records);
     res.status(200).json(records);
   } catch (error) {
     console.error("Error fetching patient records:", error);

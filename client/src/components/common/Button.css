@@ -116,6 +116,28 @@
   }
 }
 
+.btn-outline-success {
+  color: var(--success);
+  background-color: transparent;
+  border-color: var(--success);
+
+  &:hover:not(:disabled) {
+    color: var(--white);
+    background-color: var(--success);
+  }
+}
+
+.btn-outline-warning {
+  color: var(--warning);
+  background-color: transparent;
+  border-color: var(--warning);
+
+  &:hover:not(:disabled) {
+    color: var(--white);
+    background-color: var(--warning);
+  }
+}
+
 .btn-outline-primary {
   color: var(
     --primary,

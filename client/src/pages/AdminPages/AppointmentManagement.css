@@ -25,7 +25,7 @@
   padding: var(--spacing-4) var(--spacing-6);
   margin-bottom: var(--spacing-6);
   box-shadow: var(--shadow-sm);
-  border-left: 4px solid var(--admin-secondary);
+  /* border-left: 4px solid var(--admin-secondary); */
   transition: box-shadow var(--transition-normal) ease;
 }
 
@@ -287,7 +287,7 @@
 /* Special styling for appointment info section */
 .appointment-info {
   grid-column: 1 / -1;
-  border-top: 4px solid var(--admin-secondary);
+  /* border-top: 4px solid var(--admin-secondary); */
 }
 
 .appointment-info::before {
@@ -550,7 +550,7 @@
 }
 
 .appointment-info {
-  border-top: 4px solid var(--admin-secondary);
+  /* border-top: 4px solid var(--admin-secondary); */
 }
 
 .patient-info {

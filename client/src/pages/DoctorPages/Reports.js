@@ -3,6 +3,7 @@ import doctorAPI from "../../api/doctor";
 import Button from "../../components/common/Button";
 import Spinner from "../../components/common/Spinner";
 import Modal from "../../components/common/Modal";
+import Popup from "../../components/common/Popup";
 import "./Reports.css";
 
 const Reports = () => {
@@ -13,11 +14,33 @@ const Reports = () => {
   const [showGenerateModal, setShowGenerateModal] = useState(false);
   const [showReportDetailsModal, setShowReportDetailsModal] = useState(false);
   const [selectedReport, setSelectedReport] = useState(null);
-  const [success, setSuccess] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [typeFilter, setTypeFilter] = useState("");
   const [dateSort, setDateSort] = useState("desc");
+
+  // Popup notification state
+  const [popup, setPopup] = useState({
+    show: false,
+    message: "",
+    title: "",
+    type: "info",
+  });
+
+  // Show popup helper
+  const showPopup = (type, message, title = "") => {
+    setPopup({
+      show: true,
+      type,
+      message,
+      title,
+    });
+  };
+
+  // Hide popup method
+  const hidePopup = () => {
+    setPopup((prev) => ({ ...prev, show: false }));
+  };
 
   // Report generation form state - aligned with MedicalReport model
   const [formData, setFormData] = useState({
@@ -49,7 +72,7 @@ const Reports = () => {
       }
     } catch (err) {
       console.error("Error fetching reports:", err);
-      setError("Failed to load reports. Please try again.");
+      showPopup("error", "Failed to load reports. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -63,13 +86,34 @@ const Reports = () => {
       }
     } catch (err) {
       console.error("Error fetching patients:", err);
+      showPopup("error", "Failed to load patient list.");
     }
   };
 
-  const handleGenerateReport = async () => {
+  const handleGenerateReport = async (e) => {
+    e.preventDefault();
+
+    // Validate date range if custom
+    if (formData.dateRange === "custom") {
+      if (!formData.customStartDate || !formData.customEndDate) {
+        showPopup(
+          "error",
+          "Please specify both start and end dates for custom range."
+        );
+        return;
+      }
+
+      const startDate = new Date(formData.customStartDate);
+      const endDate = new Date(formData.customEndDate);
+
+      if (startDate > endDate) {
+        showPopup("error", "Start date cannot be after end date.");
+        return;
+      }
+    }
+
     try {
       setIsGenerating(true);
-      setError(null);
 
       // Format data according to MedicalReport service
       const reportData = {
@@ -97,7 +141,7 @@ const Reports = () => {
       const response = await doctorAPI.createMedicalReport(reportData);
 
       if (response && response.data) {
-        setSuccess("Report generated successfully!");
+        showPopup("success", "Report generated successfully!");
 
         // Add the new report to the list
         setReports((prevReports) => [response.data, ...prevReports]);
@@ -105,17 +149,13 @@ const Reports = () => {
       }
     } catch (err) {
       console.error("Error generating report:", err);
-      setError(
+      showPopup(
+        "error",
         err.response?.data?.message ||
           "Failed to generate report. Please try again."
       );
     } finally {
       setIsGenerating(false);
-
-      // Clear success message after 3 seconds
-      if (success) {
-        setTimeout(() => setSuccess(null), 3000);
-      }
     }
   };
 
@@ -128,12 +168,12 @@ const Reports = () => {
       setLoading(true);
       await doctorAPI.deleteMedicalReport(reportId);
       setReports(reports.filter((report) => report._id !== reportId));
-      setSuccess("Report deleted successfully!");
+      showPopup("success", "Report deleted successfully!");
       setShowReportDetailsModal(false);
-      setTimeout(() => setSuccess(null), 3000);
     } catch (err) {
       console.error("Error deleting report:", err);
-      setError(
+      showPopup(
+        "error",
         err.response?.data?.message ||
           "Failed to delete report. Please try again."
       );
@@ -171,8 +211,20 @@ const Reports = () => {
     setShowReportDetailsModal(true);
   };
 
+  const downloadReport = (url, filename) => {
+    if (!url) return;
+
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = filename || "medical-report.pdf";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   // Format date for display
   const formatDate = (dateString) => {
+    if (!dateString) return "N/A";
     return new Date(dateString).toLocaleDateString("en-US", {
       year: "numeric",
       month: "short",
@@ -182,6 +234,7 @@ const Reports = () => {
 
   // Format time for display
   const formatTime = (dateString) => {
+    if (!dateString) return "N/A";
     return new Date(dateString).toLocaleTimeString("en-US", {
       hour: "2-digit",
       minute: "2-digit",
@@ -203,6 +256,22 @@ const Reports = () => {
         return "Patient Analytics";
       default:
         return "Medical Report";
+    }
+  };
+
+  // Get report status badge color
+  const getStatusClass = (status) => {
+    switch (status?.toLowerCase()) {
+      case "completed":
+        return "success";
+      case "pending":
+        return "warning";
+      case "processing":
+        return "info";
+      case "failed":
+        return "danger";
+      default:
+        return "secondary";
     }
   };
 
@@ -237,13 +306,10 @@ const Reports = () => {
     <div className="doctor-reports">
       <div className="reports-header">
         <h1 className="page-title">Medical Reports</h1>
-        <Button variant="primary" onClick={openGenerateModal}>
+        <Button variant="outline-primary" onClick={openGenerateModal}>
           <i className="fas fa-plus"></i> Generate New Report
         </Button>
       </div>
-
-      {error && <div className="alert alert-danger">{error}</div>}
-      {success && <div className="alert alert-success">{success}</div>}
 
       {loading && !reports.length ? (
         <div className="loading-container">
@@ -283,8 +349,9 @@ const Reports = () => {
               >
                 <option value="">All Statuses</option>
                 <option value="pending">Pending</option>
-                <option value="approved">Approved</option>
-                <option value="rejected">Rejected</option>
+                <option value="processing">Processing</option>
+                <option value="completed">Completed</option>
+                <option value="failed">Failed</option>
               </select>
 
               <select
@@ -319,8 +386,12 @@ const Reports = () => {
                         <i className="fas fa-calendar-alt"></i>
                         {formatDate(report.dateIssued || report.createdAt)}
                       </span>
-                      <span className={`status-badge status-${report.status}`}>
-                        {report.status}
+                      <span
+                        className={`status-badge status-${getStatusClass(
+                          report.status
+                        )}`}
+                      >
+                        {report.status || "Pending"}
                       </span>
                     </div>
                   </div>
@@ -337,7 +408,14 @@ const Reports = () => {
                         variant="outline-primary"
                         size="sm"
                         onClick={() =>
-                          window.open(report.document.url, "_blank")
+                          downloadReport(
+                            report.document.url,
+                            `${getReportTypeName(
+                              report.reportType
+                            )}-${formatDate(
+                              report.dateIssued || report.createdAt
+                            )}.pdf`
+                          )
                         }
                       >
                         <i className="fas fa-download"></i> Download
@@ -363,7 +441,7 @@ const Reports = () => {
                   setTypeFilter("");
                 }}
               >
-                Clear Filters
+                <i className="fas fa-times"></i> Clear Filters
               </Button>
             </div>
           )}
@@ -378,13 +456,22 @@ const Reports = () => {
             Generate medical reports for your patients to track and document
             their healthcare journey.
           </p>
-          <ul>
-            <li>Create patient summaries to review their health status</li>
-            <li>Generate prescription reports to track medication history</li>
-            <li>Produce appointment reports to analyze visit patterns</li>
+          <ul className="feature-list">
+            <li>
+              <i className="fas fa-chart-line"></i>
+              Create patient summaries to review their health status
+            </li>
+            <li>
+              <i className="fas fa-prescription"></i>
+              Generate prescription reports to track medication history
+            </li>
+            <li>
+              <i className="fas fa-calendar-check"></i>
+              Produce appointment reports to analyze visit patterns
+            </li>
           </ul>
-          <Button variant="primary" onClick={openGenerateModal}>
-            Generate Your First Report
+          <Button variant="outline-primary" onClick={openGenerateModal}>
+            <i className="fas fa-plus-circle"></i> Generate Your First Report
           </Button>
         </div>
       )}
@@ -394,8 +481,12 @@ const Reports = () => {
         <Modal
           title="Generate Medical Report"
           onClose={() => setShowGenerateModal(false)}
+          size="large"
         >
-          <div className="generate-report-form">
+          <form
+            onSubmit={handleGenerateReport}
+            className="generate-report-form"
+          >
             <div className="form-group">
               <label htmlFor="reportType">Report Type</label>
               <select
@@ -403,6 +494,7 @@ const Reports = () => {
                 name="reportType"
                 value={formData.reportType}
                 onChange={handleInputChange}
+                required
               >
                 <option value="patient-summary">Patient Summary</option>
                 <option value="appointments">Appointments Report</option>
@@ -410,6 +502,9 @@ const Reports = () => {
                 <option value="medical-records">Medical Records Report</option>
                 <option value="analytics">Patient Analytics</option>
               </select>
+              <small className="input-help">
+                Select the type of report you want to generate
+              </small>
             </div>
 
             <div className="form-group">
@@ -423,10 +518,15 @@ const Reports = () => {
                 <option value="">All Patients</option>
                 {patients.map((patient) => (
                   <option key={patient._id} value={patient._id}>
-                    {patient.user?.fullname || "Unknown Patient"}
+                    {patient.user?.fullname ||
+                      patient.user?.username ||
+                      "Unknown Patient"}
                   </option>
                 ))}
               </select>
+              <small className="input-help">
+                Leave blank to generate a report for all patients
+              </small>
             </div>
 
             <div className="form-group">
@@ -436,6 +536,7 @@ const Reports = () => {
                 name="dateRange"
                 value={formData.dateRange}
                 onChange={handleInputChange}
+                required
               >
                 <option value="week">Last Week</option>
                 <option value="month">Last Month</option>
@@ -456,6 +557,7 @@ const Reports = () => {
                     name="customStartDate"
                     value={formData.customStartDate}
                     onChange={handleInputChange}
+                    required={formData.dateRange === "custom"}
                   />
                 </div>
                 <div className="form-group">
@@ -466,6 +568,8 @@ const Reports = () => {
                     name="customEndDate"
                     value={formData.customEndDate}
                     onChange={handleInputChange}
+                    required={formData.dateRange === "custom"}
+                    min={formData.customStartDate}
                   />
                 </div>
               </div>
@@ -494,7 +598,9 @@ const Reports = () => {
                     checked={formData.includeAppointments}
                     onChange={handleInputChange}
                   />
-                  <label htmlFor="includeAppointments">Appointments</label>
+                  <label htmlFor="includeAppointments">
+                    <i className="fas fa-calendar-check"></i> Appointments
+                  </label>
                 </div>
                 <div className="checkbox-option">
                   <input
@@ -504,7 +610,9 @@ const Reports = () => {
                     checked={formData.includePrescriptions}
                     onChange={handleInputChange}
                   />
-                  <label htmlFor="includePrescriptions">Prescriptions</label>
+                  <label htmlFor="includePrescriptions">
+                    <i className="fas fa-prescription"></i> Prescriptions
+                  </label>
                 </div>
                 <div className="checkbox-option">
                   <input
@@ -514,9 +622,20 @@ const Reports = () => {
                     checked={formData.includeMedicalRecords}
                     onChange={handleInputChange}
                   />
-                  <label htmlFor="includeMedicalRecords">Medical Records</label>
+                  <label htmlFor="includeMedicalRecords">
+                    <i className="fas fa-file-medical"></i> Medical Records
+                  </label>
                 </div>
               </div>
+            </div>
+
+            <div className="form-note">
+              <i className="fas fa-info-circle"></i>
+              <p>
+                Generating a report may take a few moments depending on the
+                amount of data. You'll be notified once the report is ready for
+                download.
+              </p>
             </div>
 
             <div className="form-actions">
@@ -524,20 +643,20 @@ const Reports = () => {
                 type="button"
                 variant="secondary"
                 onClick={() => setShowGenerateModal(false)}
+                disabled={isGenerating}
               >
                 Cancel
               </Button>
               <Button
-                type="button"
-                variant="primary"
-                onClick={handleGenerateReport}
+                type="submit"
+                variant="outline-primary"
                 loading={isGenerating}
                 disabled={isGenerating}
               >
-                Generate Report
+                <i className="fas fa-cog"></i> Generate Report
               </Button>
             </div>
-          </div>
+          </form>
         </Modal>
       )}
 
@@ -553,9 +672,11 @@ const Reports = () => {
               <div className="report-title-section">
                 <h2>{getReportTypeName(selectedReport.reportType)}</h2>
                 <span
-                  className={`status-badge status-${selectedReport.status}`}
+                  className={`status-badge status-${getStatusClass(
+                    selectedReport.status
+                  )}`}
                 >
-                  {selectedReport.status}
+                  {selectedReport.status || "Pending"}
                 </span>
               </div>
               <div className="report-meta-info">
@@ -596,7 +717,9 @@ const Reports = () => {
 
             <div className="report-content-section">
               <div className="content-block">
-                <h3>Patient Information</h3>
+                <h3>
+                  <i className="fas fa-user-injured"></i> Patient Information
+                </h3>
                 <div className="info-row">
                   <span className="info-label">Name:</span>
                   <span className="info-value">
@@ -623,7 +746,9 @@ const Reports = () => {
               </div>
 
               <div className="content-block">
-                <h3>Report Details</h3>
+                <h3>
+                  <i className="fas fa-clipboard-list"></i> Report Details
+                </h3>
                 <div className="info-row">
                   <span className="info-label">Report Type:</span>
                   <span className="info-value">
@@ -654,18 +779,44 @@ const Reports = () => {
                     </span>
                   </div>
                 )}
+                <div className="info-row">
+                  <span className="info-label">Included Data:</span>
+                  <div className="included-data-tags">
+                    {selectedReport.metadata?.includeAppointments !== false && (
+                      <span className="included-data-tag">
+                        <i className="fas fa-calendar-check"></i> Appointments
+                      </span>
+                    )}
+                    {selectedReport.metadata?.includePrescriptions !==
+                      false && (
+                      <span className="included-data-tag">
+                        <i className="fas fa-prescription"></i> Prescriptions
+                      </span>
+                    )}
+                    {selectedReport.metadata?.includeMedicalRecords !==
+                      false && (
+                      <span className="included-data-tag">
+                        <i className="fas fa-file-medical"></i> Medical Records
+                      </span>
+                    )}
+                  </div>
+                </div>
               </div>
 
               {selectedReport.comments && (
                 <div className="content-block">
-                  <h3>Comments</h3>
+                  <h3>
+                    <i className="fas fa-comment-alt"></i> Comments
+                  </h3>
                   <p className="report-comments">{selectedReport.comments}</p>
                 </div>
               )}
 
               {selectedReport.document && (
                 <div className="content-block">
-                  <h3>Document</h3>
+                  <h3>
+                    <i className="fas fa-file-pdf"></i> Document
+                  </h3>
                   <div className="document-details">
                     <div className="document-icon">
                       <i className="fas fa-file-pdf"></i>
@@ -684,10 +835,18 @@ const Reports = () => {
                       </span>
                     </div>
                     <Button
-                      variant="primary"
+                      variant="outline-primary"
                       size="sm"
                       onClick={() =>
-                        window.open(selectedReport.document.url, "_blank")
+                        downloadReport(
+                          selectedReport.document.url,
+                          `${getReportTypeName(
+                            selectedReport.reportType
+                          )}-${formatDate(
+                            selectedReport.dateIssued ||
+                              selectedReport.createdAt
+                          )}.pdf`
+                        )
                       }
                     >
                       <i className="fas fa-download"></i> Download
@@ -695,21 +854,84 @@ const Reports = () => {
                   </div>
                 </div>
               )}
+
+              {selectedReport.status === "processing" && (
+                <div className="content-block processing-status">
+                  <div className="processing-indicator">
+                    <i className="fas fa-spinner fa-pulse"></i>
+                    <span>Report is being processed...</span>
+                  </div>
+                  <p>
+                    This may take a few moments. The report will be available
+                    for download once completed.
+                  </p>
+                </div>
+              )}
+
+              {selectedReport.status === "failed" && (
+                <div className="content-block error-status">
+                  <div className="error-indicator">
+                    <i className="fas fa-exclamation-circle"></i>
+                    <span>Report generation failed</span>
+                  </div>
+                  <p>
+                    There was an issue generating this report. Please try again
+                    or contact support if the problem persists.
+                  </p>
+                </div>
+              )}
             </div>
 
             <div className="modal-actions">
               {selectedReport.document?.url && (
                 <Button
-                  variant="primary"
+                  variant="outline-primary"
                   onClick={() =>
-                    window.open(selectedReport.document.url, "_blank")
+                    downloadReport(
+                      selectedReport.document.url,
+                      `${getReportTypeName(
+                        selectedReport.reportType
+                      )}-${formatDate(
+                        selectedReport.dateIssued || selectedReport.createdAt
+                      )}.pdf`
+                    )
                   }
                 >
                   <i className="fas fa-download"></i> Download Report
                 </Button>
               )}
+              {/* Regenerate option for failed reports */}
+              {selectedReport.status === "failed" && (
+                <Button
+                  variant="outline-warning"
+                  onClick={() => {
+                    setShowReportDetailsModal(false);
+                    // Pre-populate form with the same settings
+                    setFormData({
+                      associatedPatient:
+                        selectedReport.associatedPatient?._id || "",
+                      reportType:
+                        selectedReport.reportType || "patient-summary",
+                      comments: selectedReport.comments || "",
+                      dateRange: selectedReport.metadata?.dateRange || "month",
+                      customStartDate: selectedReport.metadata?.startDate || "",
+                      customEndDate: selectedReport.metadata?.endDate || "",
+                      includeAppointments:
+                        selectedReport.metadata?.includeAppointments !== false,
+                      includePrescriptions:
+                        selectedReport.metadata?.includePrescriptions !== false,
+                      includeMedicalRecords:
+                        selectedReport.metadata?.includeMedicalRecords !==
+                        false,
+                    });
+                    setShowGenerateModal(true);
+                  }}
+                >
+                  <i className="fas fa-sync"></i> Try Again
+                </Button>
+              )}
               <Button
-                variant="danger"
+                variant="outline-danger"
                 onClick={() => handleDeleteReport(selectedReport._id)}
               >
                 <i className="fas fa-trash"></i> Delete Report
@@ -724,6 +946,18 @@ const Reports = () => {
           </div>
         </Modal>
       )}
+
+      {/* Add Popup component for notifications */}
+      <Popup
+        type={popup.type}
+        title={popup.title}
+        message={popup.message}
+        isVisible={popup.show}
+        onClose={hidePopup}
+        position="top-right"
+        autoClose={true}
+        duration={5000}
+      />
     </div>
   );
 };

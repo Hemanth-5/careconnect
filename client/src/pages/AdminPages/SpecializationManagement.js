@@ -57,7 +57,7 @@ const SpecializationManagement = () => {
       setError(null);
     } catch (err) {
       console.error("Error fetching specializations:", err);
-      setError("Failed to load specializations. Please try again later.");
+      // setError("Failed to load specializations. Please try again later.");
       showPopup(
         "error",
         "Failed to load specializations. Please try again later.",

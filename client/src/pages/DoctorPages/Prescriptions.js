@@ -4,6 +4,7 @@ import doctorAPI from "../../api/doctor";
 import Button from "../../components/common/Button";
 import Spinner from "../../components/common/Spinner";
 import Modal from "../../components/common/Modal";
+import Popup from "../../components/common/Popup";
 import jsPDF from "jspdf";
 import { saveAs } from "file-saver";
 import "./Prescriptions.css";
@@ -36,6 +37,27 @@ const Prescriptions = () => {
     notes: "",
   });
 
+  const [popup, setPopup] = useState({
+    show: false,
+    message: "",
+    title: "",
+    type: "info",
+  });
+
+  const showPopup = (type, message, title = "") => {
+    setPopup({
+      show: true,
+      type,
+      message,
+      title,
+    });
+  };
+
+  // Hide popup method
+  const hidePopup = () => {
+    setPopup((prev) => ({ ...prev, show: false }));
+  };
+
   useEffect(() => {
     fetchPrescriptions();
     fetchPatients();
@@ -59,7 +81,8 @@ const Prescriptions = () => {
       setError(null);
     } catch (err) {
       console.error("Error fetching prescriptions:", err);
-      setError("Failed to load prescriptions. Please try again.");
+      // setError("Failed to load prescriptions. Please try again.");
+      showPopup("error", "Failed to load prescriptions. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -182,21 +205,27 @@ const Prescriptions = () => {
   const validateForm = () => {
     // Check patient selection
     if (!formData.patient) {
-      setError("Please select a patient");
+      // setError("Please select a patient");
+      showPopup("error", "Please select a patient");
       return false;
     }
 
     // Check medication entries
     for (const medication of formData.medications) {
       if (!medication.name || !medication.dosage) {
-        setError("Please provide name and dosage for all medications");
+        // setError("Please provide name and dosage for all medications");
+        showPopup(
+          "error",
+          "Please provide name and dosage for all medications"
+        );
         return false;
       }
     }
 
     // Check dates
     if (!formData.startDate) {
-      setError("Please provide a start date");
+      // setError("Please provide a start date");
+      showPopup("error", "Please provide a start date");
       return false;
     }
 
@@ -230,11 +259,13 @@ const Prescriptions = () => {
           selectedPrescription._id,
           prescriptionData
         );
-        setSuccess("Prescription updated successfully!");
+        // setSuccess("Prescription updated successfully!");
+        showPopup("success", "Prescription updated successfully!");
       } else {
         // Create new prescription
         response = await doctorAPI.createPrescription(prescriptionData);
-        setSuccess("Prescription created successfully!");
+        // setSuccess("Prescription created successfully!");
+        showPopup("success", "Prescription created successfully!");
       }
 
       // Refresh prescriptions
@@ -244,10 +275,17 @@ const Prescriptions = () => {
       setShowPrescriptionModal(false);
 
       // Clear success message after 3 seconds
-      setTimeout(() => setSuccess(null), 3000);
+      // setTimeout(() => setSuccess(null), 3000);
     } catch (err) {
       console.error("Error saving prescription:", err);
-      setError(
+      // setError(
+      //   err.response?.data?.message ||
+      //     (selectedPrescription
+      //       ? "Failed to update prescription. Please try again."
+      //       : "Failed to create prescription. Please try again.")
+      // );
+      showPopup(
+        "error",
         err.response?.data?.message ||
           (selectedPrescription
             ? "Failed to update prescription. Please try again."
@@ -389,7 +427,8 @@ const Prescriptions = () => {
       saveAs(pdfBlob, `prescription_${patientName}_${date}.pdf`);
     } catch (error) {
       console.error("Error generating PDF:", error);
-      setError("Failed to generate PDF. Please try again.");
+      // setError("Failed to generate PDF. Please try again.");
+      showPopup("error", "Failed to generate PDF. Please try again.");
     } finally {
       setActionLoading(false);
     }
@@ -452,7 +491,10 @@ const Prescriptions = () => {
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
-          <Button variant="primary" onClick={() => handleOpenNewPrescription()}>
+          <Button
+            variant="outline-primary"
+            onClick={() => handleOpenNewPrescription()}
+          >
             <i className="fas fa-plus"></i> New Prescription
           </Button>
         </div>
@@ -590,7 +632,7 @@ const Prescriptions = () => {
                   {searchTerm ? " matching your search criteria" : ""}.
                 </p>
                 <Button
-                  variant="primary"
+                  variant="outline-primary"
                   onClick={() => handleOpenNewPrescription()}
                 >
                   Create First Prescription
@@ -864,7 +906,7 @@ const Prescriptions = () => {
               </Button>
               <Button
                 type="submit"
-                variant="primary"
+                variant="outline-primary"
                 loading={actionLoading}
                 disabled={actionLoading}
               >
@@ -888,6 +930,7 @@ const Prescriptions = () => {
                 <h3>Patient</h3>
                 <p className="detail-value">
                   {selectedPrescription.patient?.user?.fullname ||
+                    selectedPrescription.patient?.user?.username ||
                     "Unknown Patient"}
                 </p>
               </div>
@@ -971,7 +1014,7 @@ const Prescriptions = () => {
 
             <div className="modal-actions">
               <Button
-                variant="primary"
+                variant="outline-primary"
                 onClick={() => {
                   setShowDetailsModal(false);
                   handleOpenEditPrescription(selectedPrescription);
@@ -991,6 +1034,16 @@ const Prescriptions = () => {
           </div>
         </Modal>
       )}
+      <Popup
+        type={popup.type}
+        title={popup.title}
+        message={popup.message}
+        isVisible={popup.show}
+        onClose={hidePopup}
+        position="top-right"
+        autoClose={true}
+        duration={5000}
+      />
     </div>
   );
 };

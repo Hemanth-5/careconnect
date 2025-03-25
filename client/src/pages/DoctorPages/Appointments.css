@@ -34,7 +34,7 @@
   background-color: var(--gray-100);
 }
 
-.filter-tab.active {
+.doctor-appointments .filter-tab.active {
   background-color: var(--doctor-primary);
   color: white;
 }

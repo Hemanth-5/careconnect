@@ -183,8 +183,10 @@ export const assignSpecializations = async (req, res) => {
     if (!doctor) {
       return res.status(404).json({ message: "Doctor not found" });
     }
+    // console.log(req.body);
 
-    const { specializations } = req.body;
+    const specializations = req.body;
+
     for (const specializationId of specializations) {
       const specialization = await Specialization.findById(specializationId);
       if (!specialization) {
@@ -220,7 +222,7 @@ export const removeSpecializations = async (req, res) => {
       return res.status(404).json({ message: "Doctor not found" });
     }
 
-    const { specializations } = req.body;
+    const specializations = req.body;
     for (const specializationId of specializations) {
       const specialization = await Specialization.findById(specializationId);
       if (!specialization) {
@@ -606,6 +608,7 @@ export const updatePrescription = async (req, res) => {
 export const createPatientRecord = async (req, res) => {
   try {
     const { patient, records } = req.body;
+    console.log(patient, records);
 
     // 1️⃣ Validate if patient exists
     const dbPatient = await Patient.findById(patient);
@@ -653,11 +656,15 @@ export const updatePatientRecord = async (req, res) => {
     const { recordId } = req.params;
     const updatedData = req.body;
 
+    // console.log(updatedData);
+
     // Validate if the patient record exists
     const updatedPatientRecord = await PatientRecordService.updatePatientRecord(
       recordId,
       updatedData
     );
+
+    console.log(updatedPatientRecord);
 
     if (!updatedPatientRecord) {
       return res.status(404).json({ message: "Patient record not found" });
@@ -674,10 +681,12 @@ export const createMedicalReport = async (req, res) => {
   try {
     const data = req.body;
 
-    // Validate patient
-    const patientExists = await Patient.findById(data.associatedPatient);
-    if (!patientExists) {
-      return res.status(404).json({ message: "Patient not found" });
+    // Validate patient if specified
+    if (data.associatedPatient) {
+      const patientExists = await Patient.findById(data.associatedPatient);
+      if (!patientExists) {
+        return res.status(404).json({ message: "Patient not found" });
+      }
     }
 
     // Validate doctor
@@ -690,24 +699,92 @@ export const createMedicalReport = async (req, res) => {
       return res.status(404).json({ message: "Doctor not found" });
     }
 
+    // Set initial status to "processing"
+    data.status = "processing";
+    data.issuedBy = doctorExists._id;
+    data.issuedByDoctor = doctorExists._id;
+
     // Create new medical report
     const newMedicalReport = await MedicalReportService.createMedicalReport(
       data
     );
-    // console.log(newMedicalReport);
 
     if (!newMedicalReport) {
-      return res.status(404).json({ message: "Error creating medical report" });
+      return res.status(500).json({ message: "Error creating medical report" });
     }
 
+    // Add report to doctor's issued reports
     doctorExists.issuedReports.push(newMedicalReport._id);
     await doctorExists.save();
 
-    res.status(201).json({ message: "Medical report created successfully" });
+    // Return report with processing status to client
+    res.status(201).json(newMedicalReport);
+
+    // Asynchronously generate the actual report content
+    // This would typically be handled by a background job or queue
+    setTimeout(async () => {
+      try {
+        // Simulate report generation
+        const reportData = {
+          status: Math.random() > 0.1 ? "completed" : "failed", // 10% chance of failure for testing
+          dateIssued: new Date(),
+          document:
+            Math.random() > 0.1
+              ? {
+                  url: `https://example.com/reports/${newMedicalReport._id}.pdf`,
+                  filename: `report-${newMedicalReport._id}.pdf`,
+                  size: Math.floor(Math.random() * 5 * 1024 * 1024), // Random size up to 5MB
+                }
+              : null,
+        };
+
+        // Update the report with the generated data
+        await MedicalReportService.updateMedicalReport(
+          newMedicalReport._id,
+          reportData
+        );
+
+        // In a real implementation, you would also send a notification to the user
+        // NotificationService.createNotification({
+        //   recipient: user._id,
+        //   type: 'report_ready',
+        //   title: 'Report Ready',
+        //   message: `Your ${getReportTypeName(data.reportType)} report is now ready for download.`,
+        //   url: `/doctor/reports?id=${newMedicalReport._id}`,
+        // });
+      } catch (error) {
+        console.error("Error generating report content:", error);
+        await MedicalReportService.updateMedicalReport(newMedicalReport._id, {
+          status: "failed",
+        });
+      }
+    }, 5000); // Simulate 5 seconds of processing time
   } catch (error) {
-    res.status(500).json({ message: "Error creating medical report", error });
+    console.error("Error creating medical report:", error);
+    res.status(500).json({
+      message: "Error creating medical report",
+      error: error.message,
+    });
   }
 };
+
+// Helper function to get friendly report type name
+function getReportTypeName(type) {
+  switch (type) {
+    case "patient-summary":
+      return "Patient Summary";
+    case "appointments":
+      return "Appointments Report";
+    case "prescriptions":
+      return "Prescriptions Report";
+    case "medical-records":
+      return "Medical Records Report";
+    case "analytics":
+      return "Patient Analytics";
+    default:
+      return "Medical Report";
+  }
+}
 
 // Update a medical report
 export const updateMedicalReport = async (req, res) => {
@@ -715,17 +792,54 @@ export const updateMedicalReport = async (req, res) => {
     const { reportId } = req.params;
     const updatedData = req.body;
 
+    // Validate the report exists and belongs to this doctor
+    const existingReport = await MedicalReportService.getReportById(reportId);
+    if (!existingReport) {
+      return res.status(404).json({ message: "Medical report not found" });
+    }
+
+    const user = await User.findById(req.user.userId);
+    const doctor = await Doctor.findOne({ user: user._id });
+
+    // Ensure doctor can only update their own reports
+    if (
+      !doctor ||
+      existingReport.issuedByDoctor.toString() !== doctor._id.toString()
+    ) {
+      return res
+        .status(403)
+        .json({ message: "Not authorized to update this report" });
+    }
+
+    // Don't allow changing certain fields once processing has started
+    if (
+      existingReport.status === "processing" &&
+      (updatedData.reportType || updatedData.associatedPatient)
+    ) {
+      return res.status(400).json({
+        message:
+          "Cannot modify report type or patient while report is processing",
+      });
+    }
+
     const updatedReport = await MedicalReportService.updateMedicalReport(
       reportId,
       updatedData
     );
+
     if (!updatedReport) {
-      return res.status(404).json({ message: "Medical report not found" });
+      return res
+        .status(404)
+        .json({ message: "Medical report could not be updated" });
     }
 
     res.json(updatedReport);
   } catch (error) {
-    res.status(500).json({ message: "Error updating medical report", error });
+    console.error("Error updating medical report:", error);
+    res.status(500).json({
+      message: "Error updating medical report",
+      error: error.message,
+    });
   }
 };
 
@@ -796,12 +910,59 @@ export const getReports = async (req, res) => {
 
     // Get reports using the medical report service
     const reports = await MedicalReportService.getDoctorReports(doctor._id);
-    res.status(200).json(reports);
+
+    // Populate patient and doctor information for each report
+    const populatedReports = await Promise.all(
+      reports.map(async (report) => {
+        let populatedReport = report.toObject();
+
+        // Populate associated patient details if exists
+        if (report.associatedPatient) {
+          try {
+            const patient = await Patient.findById(
+              report.associatedPatient
+            ).populate("user", ["fullname", "email", "profilePicture"]);
+
+            if (patient) {
+              populatedReport.associatedPatient = patient;
+            }
+          } catch (err) {
+            console.error(
+              `Error populating patient for report ${report._id}:`,
+              err
+            );
+          }
+        }
+
+        // Populate doctor details
+        if (report.issuedByDoctor) {
+          try {
+            const doctorRecord = await Doctor.findById(
+              report.issuedByDoctor
+            ).populate("user", ["fullname", "email", "profilePicture"]);
+
+            if (doctorRecord) {
+              populatedReport.issuedByDoctor = doctorRecord;
+            }
+          } catch (err) {
+            console.error(
+              `Error populating doctor for report ${report._id}:`,
+              err
+            );
+          }
+        }
+
+        return populatedReport;
+      })
+    );
+
+    res.status(200).json(populatedReports);
   } catch (error) {
     console.error("Error fetching reports:", error);
-    res
-      .status(500)
-      .json({ message: "Error fetching reports", error: error.message });
+    res.status(500).json({
+      message: "Error fetching reports",
+      error: error.message,
+    });
   }
 };
 
@@ -956,6 +1117,7 @@ export const getDoctorDashboard = async (req, res) => {
           "fullname",
           "email",
           "profilePicture",
+          "username",
         ]);
         return {
           ...apt.toObject(),

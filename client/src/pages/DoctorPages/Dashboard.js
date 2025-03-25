@@ -30,6 +30,8 @@ const Dashboard = () => {
       // Fetch dashboard data from API
       const dashboardResponse = await doctorAPI.getDashboardStats();
 
+      console.log(dashboardResponse.data);
+
       if (dashboardResponse && dashboardResponse.data) {
         setStats(
           dashboardResponse.data.stats || {
@@ -161,7 +163,7 @@ const Dashboard = () => {
       {error && <div className="alert alert-danger">{error}</div>}
 
       <div className="stats-grid">
-        <div className="stat-card">
+        <div className="doctor stat-card">
           <div className="stat-icon">
             <i className="fas fa-users"></i>
           </div>
@@ -171,7 +173,7 @@ const Dashboard = () => {
           </div>
         </div>
 
-        <div className="stat-card">
+        <div className="doctor stat-card">
           <div className="stat-icon">
             <i className="fas fa-calendar-check"></i>
           </div>
@@ -181,7 +183,7 @@ const Dashboard = () => {
           </div>
         </div>
 
-        <div className="stat-card">
+        <div className="doctor stat-card">
           <div className="stat-icon">
             <i className="fas fa-clock"></i>
           </div>
@@ -191,7 +193,7 @@ const Dashboard = () => {
           </div>
         </div>
 
-        <div className="stat-card">
+        <div className="doctor stat-card">
           <div className="stat-icon">
             <i className="fas fa-check-circle"></i>
           </div>
@@ -247,6 +249,7 @@ const Dashboard = () => {
                     <div className="appointment-details">
                       <h4>
                         {appointment.patient?.user?.fullname ||
+                          appointment.patient?.user?.username ||
                           "Unknown Patient"}
                       </h4>
                       <p className="appointment-date">
@@ -305,7 +308,11 @@ const Dashboard = () => {
                     )}
                   </div>
                   <div className="patient-info">
-                    <h4>{patient.user?.fullname || "Unknown Patient"}</h4>
+                    <h4>
+                      {patient.user?.fullname ||
+                        patient.user?.username ||
+                        "Unknown Patient"}
+                    </h4>
                     <p>{patient.user?.email || "No email provided"}</p>
                     <Link to={`/doctor/patients?id=${patient._id}`}>
                       <Button variant="outline-primary" size="sm">

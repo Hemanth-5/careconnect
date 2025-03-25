@@ -3,6 +3,7 @@ import doctorAPI from "../../api/doctor";
 import Button from "../../components/common/Button";
 import Spinner from "../../components/common/Spinner";
 import Modal from "../../components/common/Modal";
+import Popup from "../../components/common/Popup";
 import "./Appointments.css";
 
 const Appointments = () => {
@@ -16,6 +17,31 @@ const Appointments = () => {
   const [showAppointmentModal, setShowAppointmentModal] = useState(false);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [filter, setFilter] = useState("upcoming");
+
+  // Add state for delete confirmation modal
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleteId, setDeleteId] = useState(null);
+
+  const [popup, setPopup] = useState({
+    show: false,
+    message: "",
+    title: "",
+    type: "info",
+  });
+
+  const showPopup = (type, message, title = "") => {
+    setPopup({
+      show: true,
+      type,
+      message,
+      title,
+    });
+  };
+
+  // Hide popup method
+  const hidePopup = () => {
+    setPopup((prev) => ({ ...prev, show: false }));
+  };
 
   // Form state for creating/editing appointments
   const [formData, setFormData] = useState({
@@ -39,7 +65,8 @@ const Appointments = () => {
       setError(null);
     } catch (err) {
       console.error("Error fetching appointments:", err);
-      setError("Failed to load appointments. Please try again.");
+      // setError("Failed to load appointments. Please try again.");
+      showPopup("error", "Failed to load appointments. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -49,6 +76,7 @@ const Appointments = () => {
     try {
       // Fetch patients under doctor's care
       const myPatientsResponse = await doctorAPI.getMyPatients();
+
       setMyPatients(myPatientsResponse.data || []);
 
       // Fetch all patients in the database
@@ -56,7 +84,8 @@ const Appointments = () => {
       setAllPatients(allPatientsResponse.data || []);
     } catch (err) {
       console.error("Error fetching patients:", err);
-      setError("Failed to load patient data. Please try again.");
+      // setError("Failed to load patient data. Please try again.");
+      showPopup("error", "Failed to load patient data. Please try again.");
     }
   };
 
@@ -121,19 +150,19 @@ const Appointments = () => {
         status: formData.status,
       };
 
-      let response;
-
       if (selectedAppointment) {
         // Updating existing appointment
-        response = await doctorAPI.updateAppointment(
+        await doctorAPI.updateAppointment(
           selectedAppointment._id,
           appointmentData
         );
-        setSuccess("Appointment updated successfully!");
+        // setSuccess("Appointment updated successfully!");
+        showPopup("success", "Appointment updated successfully!");
       } else {
         // Creating new appointment
-        response = await doctorAPI.createAppointment(appointmentData);
-        setSuccess("Appointment created successfully!");
+        await doctorAPI.createAppointment(appointmentData);
+        // setSuccess("Appointment created successfully!");
+        showPopup("success", "Appointment created successfully!");
       }
 
       // Refresh appointments
@@ -146,7 +175,13 @@ const Appointments = () => {
       setTimeout(() => setSuccess(null), 3000);
     } catch (err) {
       console.error("Error saving appointment:", err);
-      setError(
+      // setError(
+      //   selectedAppointment
+      //     ? "Failed to update appointment. Please try again."
+      //     : "Failed to create appointment. Please try again."
+      // );
+      showPopup(
+        "error",
         selectedAppointment
           ? "Failed to update appointment. Please try again."
           : "Failed to create appointment. Please try again."
@@ -156,26 +191,39 @@ const Appointments = () => {
     }
   };
 
-  const handleDeleteAppointment = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this appointment?")) {
+  const handleDeleteClick = (id) => {
+    setDeleteId(id);
+    setShowDeleteModal(true);
+  };
+
+  const handleCancelDelete = () => {
+    setDeleteId(null);
+    setShowDeleteModal(false);
+  };
+
+  const handleDeleteAppointment = async () => {
+    if (!deleteId) {
       return;
     }
 
     try {
       setLoading(true);
-      await doctorAPI.deleteAppointment(id);
+      await doctorAPI.deleteAppointment(deleteId);
 
       // Filter out the deleted appointment
-      setAppointments(appointments.filter((apt) => apt._id !== id));
+      setAppointments(appointments.filter((apt) => apt._id !== deleteId));
 
-      setSuccess("Appointment deleted successfully!");
+      // setSuccess("Appointment deleted successfully!");
+      showPopup("success", "Appointment deleted successfully!");
       setShowDetailsModal(false);
+      setShowDeleteModal(false);
 
       // Clear success message after 3 seconds
-      setTimeout(() => setSuccess(null), 3000);
+      // setTimeout(() => setSuccess(null), 3000);
     } catch (err) {
       console.error("Error deleting appointment:", err);
-      setError("Failed to delete appointment. Please try again.");
+      // setError("Failed to delete appointment. Please try again.");
+      showPopup("error", "Failed to delete appointment. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -183,7 +231,16 @@ const Appointments = () => {
 
   const handleUpdateStatus = async (id, newStatus) => {
     try {
-      setLoading(true);
+      // If old status is completed or cancelled, it can't be changed
+      if (
+        ["completed", "cancelled", "no-show"].includes(
+          selectedAppointment.status
+        )
+      ) {
+        // setError("This appointment's status cannot be changed.");
+        showPopup("error", "This appointment's status cannot be changed.");
+        return;
+      }
 
       await doctorAPI.updateAppointment(id, { status: newStatus });
 
@@ -199,13 +256,18 @@ const Appointments = () => {
         setSelectedAppointment({ ...selectedAppointment, status: newStatus });
       }
 
-      setSuccess(`Appointment status updated to ${newStatus}`);
+      // setSuccess(`Appointment status updated to ${newStatus}`);
+      showPopup("success", `Appointment status updated to ${newStatus}`);
 
       // Clear success message after 3 seconds
-      setTimeout(() => setSuccess(null), 3000);
+      // setTimeout(() => setSuccess(null), 3000);
     } catch (err) {
       console.error("Error updating appointment status:", err);
-      setError("Failed to update appointment status. Please try again.");
+      // setError("Failed to update appointment status. Please try again.");
+      showPopup(
+        "error",
+        "Failed to update appointment status. Please try again."
+      );
     } finally {
       setLoading(false);
     }
@@ -287,7 +349,7 @@ const Appointments = () => {
     <div className="doctor-appointments">
       <div className="appointments-header">
         <h1 className="page-title">Appointments</h1>
-        <Button variant="primary" onClick={handleOpenNewAppointment}>
+        <Button variant="outline-primary" onClick={handleOpenNewAppointment}>
           <i className="fas fa-plus"></i> New Appointment
         </Button>
       </div>
@@ -430,7 +492,8 @@ const Appointments = () => {
                       <optgroup label="My Patients">
                         {myPatients.map((patient) => (
                           <option key={`my-${patient._id}`} value={patient._id}>
-                            {patient.user?.username || "Unknown"}
+                            {`${patient.user?.username} (${patient.user?.email})` ||
+                              "Unknown"}
                           </option>
                         ))}
                       </optgroup>
@@ -450,7 +513,8 @@ const Appointments = () => {
                             key={`other-${patient._id}`}
                             value={patient._id}
                           >
-                            {patient.user?.username || "Unknown"}
+                            {`${patient.user?.username} (${patient.user?.email})` ||
+                              "Unknown"}
                           </option>
                         ))}
                     </optgroup>
@@ -535,7 +599,7 @@ const Appointments = () => {
               </Button>
               <Button
                 type="submit"
-                variant="primary"
+                variant="outline-primary"
                 loading={loading}
                 disabled={loading}
               >
@@ -651,7 +715,7 @@ const Appointments = () => {
 
             <div className="modal-actions">
               <Button
-                variant="primary"
+                variant="outline-primary"
                 onClick={() => {
                   setShowDetailsModal(false);
                   handleOpenEditAppointment(selectedAppointment);
@@ -660,8 +724,8 @@ const Appointments = () => {
                 Edit Appointment
               </Button>
               <Button
-                variant="danger"
-                onClick={() => handleDeleteAppointment(selectedAppointment._id)}
+                variant="outline-danger"
+                onClick={() => handleDeleteClick(selectedAppointment._id)}
                 disabled={loading}
               >
                 Delete Appointment
@@ -670,6 +734,39 @@ const Appointments = () => {
           </div>
         </Modal>
       )}
+
+      {showDeleteModal && (
+        <Modal title="Confirm Delete" onClose={handleCancelDelete}>
+          <p>Are you sure you want to delete this appointment?</p>
+          <div className="modal-actions">
+            <Button
+              variant="outline-secondary"
+              onClick={handleCancelDelete}
+              disabled={loading}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="outline-danger"
+              onClick={() => handleDeleteAppointment()}
+              disabled={loading}
+            >
+              Delete
+            </Button>
+          </div>
+        </Modal>
+      )}
+
+      <Popup
+        type={popup.type}
+        title={popup.title}
+        message={popup.message}
+        isVisible={popup.show}
+        onClose={hidePopup}
+        position="top-right"
+        autoClose={true}
+        duration={5000}
+      />
     </div>
   );
 };

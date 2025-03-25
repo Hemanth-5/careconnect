@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { Link, useLocation, Outlet, useNavigate } from "react-router-dom";
 import "./DoctorLayout.css";
 import userAPI from "../api/user"; // Import userAPI instead of using axios directly
+import Popup from "../components/common/Popup";
 
 const DoctorLayout = () => {
   const location = useLocation();
@@ -14,12 +15,33 @@ const DoctorLayout = () => {
   });
   const [isLoading, setIsLoading] = useState(true);
 
+  const [popup, setPopup] = useState({
+    show: false,
+    type: "info",
+    message: "",
+    title: "",
+  });
+
   // Profile picture state variables
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [selectedImage, setSelectedImage] = useState(null);
   const [previewUrl, setPreviewUrl] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef(null);
+
+  const showPopup = (type, message, title = "") => {
+    setPopup({
+      show: true,
+      type,
+      message,
+      title,
+    });
+  };
+
+  // Hide popup method
+  const hidePopup = () => {
+    setPopup((prev) => ({ ...prev, show: false }));
+  };
 
   useEffect(() => {
     // Fetch user profile data using userAPI
@@ -116,13 +138,15 @@ const DoctorLayout = () => {
           profilePicture: response.data.profilePicture,
         }));
 
-        alert("Profile picture updated successfully!");
+        // alert("Profile picture updated successfully!");
+        showPopup("success", "Profile picture updated successfully!");
       }
 
       handleCloseModal();
     } catch (error) {
       console.error("Error uploading profile picture:", error);
-      alert("Failed to upload profile picture. Please try again.");
+      // alert("Failed to upload profile picture. Please try again.");
+      showPopup("error", "Failed to upload profile picture. Please try again.");
     } finally {
       setIsUploading(false);
     }
@@ -330,6 +354,17 @@ const DoctorLayout = () => {
           </div>
         </div>
       )}
+      {/* Add Popup component for notifications */}
+      <Popup
+        type={popup.type}
+        title={popup.title}
+        message={popup.message}
+        isVisible={popup.show}
+        onClose={hidePopup}
+        position="top-right"
+        autoClose={true}
+        duration={5000}
+      />
     </div>
   );
 };

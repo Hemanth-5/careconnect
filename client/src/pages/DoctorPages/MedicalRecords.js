@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useLocation } from "react-router-dom";
 import doctorAPI from "../../api/doctor";
 import Button from "../../components/common/Button";
 import Spinner from "../../components/common/Spinner";
 import Modal from "../../components/common/Modal";
+import Popup from "../../components/common/Popup";
 import "./MedicalRecords.css";
 
 const MedicalRecords = () => {
@@ -13,7 +14,6 @@ const MedicalRecords = () => {
   const [allPatients, setAllPatients] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [success, setSuccess] = useState(null);
   const [selectedRecord, setSelectedRecord] = useState(null);
   const [showRecordModal, setShowRecordModal] = useState(false);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
@@ -21,8 +21,20 @@ const MedicalRecords = () => {
   const [patientFilter, setPatientFilter] = useState("");
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [selectedPatient, setSelectedPatient] = useState(null);
-  const [showModal, setShowModal] = useState(false); // Add this missing state variable
+
+  // Added states for handling multiple patient records
+  const [patientRecords, setPatientRecords] = useState([]);
+  const [showPatientRecordsModal, setShowPatientRecordsModal] = useState(false);
+  const [selectedPatientId, setSelectedPatientId] = useState(null);
+  const [selectedPatientName, setSelectedPatientName] = useState("");
+
+  // Popup notification state
+  const [popup, setPopup] = useState({
+    show: false,
+    message: "",
+    title: "",
+    type: "info",
+  });
 
   // Form state aligned with server PatientRecord model
   const [formData, setFormData] = useState({
@@ -52,6 +64,21 @@ const MedicalRecords = () => {
     { value: "follow-up", label: "Follow-up Visit" },
   ];
 
+  // Show popup helper
+  const showPopup = (type, message, title = "") => {
+    setPopup({
+      show: true,
+      type,
+      message,
+      title,
+    });
+  };
+
+  // Hide popup method
+  const hidePopup = () => {
+    setPopup((prev) => ({ ...prev, show: false }));
+  };
+
   useEffect(() => {
     fetchRecords();
     fetchPatients();
@@ -70,12 +97,12 @@ const MedicalRecords = () => {
       setLoading(true);
       const response = await doctorAPI.getMedicalRecords();
       if (response && response.data) {
-        setRecords(response.data || []);
+        setRecords(response.data);
       }
       setError(null);
     } catch (err) {
       console.error("Error fetching medical records:", err);
-      setError("Failed to load medical records. Please try again.");
+      showPopup("error", "Failed to load medical records. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -92,7 +119,20 @@ const MedicalRecords = () => {
       setAllPatients(allPatientsResponse.data || []);
     } catch (err) {
       console.error("Error fetching patients:", err);
+      showPopup("error", "Failed to load patient list. Please try again.");
     }
+  };
+
+  const handleViewPatientRecords = (patientId, patientName) => {
+    setSelectedPatientId(patientId);
+    setSelectedPatientName(patientName);
+
+    // Filter records for this patient
+    const filteredRecords = records.filter(
+      (record) => record.patient?._id === patientId
+    );
+    setPatientRecords(filteredRecords);
+    setShowPatientRecordsModal(true);
   };
 
   const handleOpenNewRecord = (patientId = "") => {
@@ -107,6 +147,8 @@ const MedicalRecords = () => {
           title: "",
           description: "",
           treatmentProgress: "",
+          findings: "",
+          treatment: "",
           notes: "",
           date: new Date().toISOString().split("T")[0],
           attachments: [],
@@ -118,19 +160,28 @@ const MedicalRecords = () => {
 
   const handleOpenEditRecord = (record) => {
     setSelectedRecord(record);
-    // Format for editing to match PatientRecord model
+
+    // Format for editing to match PatientRecord model with proper nested fields
+    // Get the first record from the records array
+    const recordData =
+      record.records && record.records.length > 0 ? record.records[0] : {};
+
     setFormData({
       patient: record.patient?._id || "",
       records: [
         {
-          recordType: record.recordType || "examination",
-          diagnosis: record.diagnosis || "",
-          title: record.title || "",
-          description: record.description || "",
-          treatmentProgress: record.treatmentProgress || "",
-          notes: record.notes || "",
-          date: new Date(record.date || Date.now()).toISOString().split("T")[0],
-          attachments: record.attachments || [],
+          recordType: recordData.recordType || "examination",
+          diagnosis: recordData.diagnosis || "",
+          title: recordData.title || "",
+          description: recordData.description || "",
+          treatmentProgress: recordData.treatmentProgress || "",
+          findings: recordData.findings || "",
+          treatment: recordData.treatment || "",
+          notes: recordData.notes || "",
+          date: recordData.date
+            ? new Date(recordData.date).toISOString().split("T")[0]
+            : new Date().toISOString().split("T")[0],
+          attachments: recordData.attachments || [],
         },
       ],
     });
@@ -190,37 +241,22 @@ const MedicalRecords = () => {
 
   const validateForm = () => {
     // Basic validation
-    if (!selectedPatient) {
-      setError("Please select a patient");
+    if (!formData.patient) {
+      showPopup("error", "Please select a patient");
       return false;
     }
 
-    if (!formData.title.trim()) {
-      setError("Record title is required");
+    if (!formData.records[0].title.trim()) {
+      showPopup("error", "Record title is required");
       return false;
     }
 
-    if (!formData.description.trim()) {
-      setError("Description is required");
+    if (!formData.records[0].description.trim()) {
+      showPopup("error", "Description is required");
       return false;
     }
 
     return true;
-  };
-
-  const closeModal = () => {
-    setShowModal(false);
-    // Reset form data and selected patient
-    setFormData({
-      recordType: "examination",
-      title: "",
-      date: new Date().toISOString().split("T")[0],
-      description: "",
-      diagnosis: "",
-      treatmentProgress: "",
-      notes: "",
-    });
-    setSelectedPatient(null);
   };
 
   const handleSubmit = async (e) => {
@@ -235,47 +271,69 @@ const MedicalRecords = () => {
 
       // Prepare the data for the API
       const recordData = {
-        patient: selectedPatient._id,
+        patient: formData.patient,
         records: [
           {
-            recordType: formData.recordType,
-            title: formData.title,
-            date: formData.date,
-            description: formData.description,
-            diagnosis: formData.diagnosis,
-            treatmentProgress: formData.treatmentProgress,
-            notes: formData.notes,
-            // Include attachments if you have them
+            recordType: formData.records[0].recordType,
+            title: formData.records[0].title,
+            date: formData.records[0].date,
+            description: formData.records[0].description,
+            diagnosis: formData.records[0].diagnosis,
+            treatmentProgress: formData.records[0].treatmentProgress,
+            findings: formData.records[0].findings,
+            treatment: formData.records[0].treatment,
+            notes: formData.records[0].notes,
           },
         ],
       };
 
-      console.log("Submitting record:", recordData); // Add this for debugging
-
-      // Call the API to save the record
-      const response = await doctorAPI.createPatientRecord(recordData);
+      // If this is an edit, use update API, otherwise create new
+      let response;
+      if (selectedRecord) {
+        response = await doctorAPI.updatePatientRecord(
+          selectedRecord._id,
+          recordData
+        );
+        showPopup("success", "Medical record updated successfully");
+      } else {
+        response = await doctorAPI.createPatientRecord(recordData);
+        showPopup("success", "Medical record created successfully");
+      }
 
       // On success
-      closeModal();
-      fetchRecords();
-      setSuccess("Medical record created successfully");
+      setShowRecordModal(false);
+      fetchRecords(); // Refresh records list
 
       // Reset form
       setFormData({
-        recordType: "examination",
-        title: "",
-        date: new Date().toISOString().split("T")[0],
-        description: "",
-        diagnosis: "",
-        treatmentProgress: "",
-        notes: "",
+        patient: "",
+        records: [
+          {
+            recordType: "examination",
+            title: "",
+            date: new Date().toISOString().split("T")[0],
+            description: "",
+            diagnosis: "",
+            treatmentProgress: "",
+            findings: "",
+            treatment: "",
+            notes: "",
+            attachments: [],
+          },
+        ],
       });
 
-      // Clear success message after 3 seconds
-      setTimeout(() => setSuccess(null), 3000);
+      // If we're in the patient records modal, refresh that view too
+      if (showPatientRecordsModal && selectedPatientId) {
+        const updatedPatientRecords = records.filter(
+          (record) => record.patient?._id === selectedPatientId
+        );
+        setPatientRecords(updatedPatientRecords);
+      }
     } catch (err) {
       console.error("Error saving medical record:", err);
-      setError(
+      showPopup(
+        "error",
         err.response?.data?.message ||
           "Failed to save medical record. Please try again."
       );
@@ -286,6 +344,7 @@ const MedicalRecords = () => {
 
   // Format date for display
   const formatDate = (dateString) => {
+    if (!dateString) return "N/A";
     return new Date(dateString).toLocaleDateString("en-US", {
       year: "numeric",
       month: "short",
@@ -293,23 +352,75 @@ const MedicalRecords = () => {
     });
   };
 
-  // Function to get patient name by ID (currently unused but might be needed later)
-  // const getPatientName = (patientId) => {
-  //   const patient = allPatients.find((p) => p._id === patientId);
-  //   return patient?.user?.fullname || "Unknown Patient";
-  // };
+  // Get patient name by ID (for display purposes)
+  const getPatientName = (patientId) => {
+    const patient = allPatients.find((p) => p._id === patientId);
+    return patient?.user?.fullname || "Unknown Patient";
+  };
+
+  // Get record type label
+  const getRecordTypeLabel = (type) => {
+    if (!type && selectedRecord?.records && selectedRecord.records.length > 0) {
+      type = selectedRecord.records[0].recordType;
+    }
+    const recordType = recordTypes.find((item) => item.value === type);
+    return recordType ? recordType.label : "Examination";
+  };
+
+  // Helper function to get value from the first record in the records array
+  const getRecordValue = (record, fieldName, defaultValue = "N/A") => {
+    if (record?.records && record.records.length > 0) {
+      return record.records[0][fieldName] || defaultValue;
+    }
+    return defaultValue;
+  };
+
+  // Filter records to show unique patients with their most recent record
+  const uniquePatientRecords = useMemo(() => {
+    const patientMap = new Map();
+
+    records.forEach((record) => {
+      const patientId = record.patient?._id;
+      if (patientId) {
+        if (
+          !patientMap.has(patientId) ||
+          new Date(record.createdAt) >
+            new Date(patientMap.get(patientId).createdAt)
+        ) {
+          patientMap.set(patientId, record);
+        }
+      }
+    });
+
+    return Array.from(patientMap.values());
+  }, [records]);
+
+  // Filter unique patient records based on search and patient filter
+  const filteredUniqueRecords = uniquePatientRecords.filter((record) => {
+    const patientName = record.patient?.user?.fullname || "";
+    const recordTitle = getRecordValue(record, "title", "");
+    const recordDescription = getRecordValue(record, "description", "");
+
+    const matchesSearch =
+      !searchTerm ||
+      patientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      recordTitle.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      recordDescription.toLowerCase().includes(searchTerm.toLowerCase());
+
+    const matchesPatient =
+      !patientFilter || record.patient?._id === patientFilter;
+
+    return matchesSearch && matchesPatient;
+  });
 
   return (
     <div className="doctor-medical-records">
       <div className="records-header">
         <h1 className="page-title">Medical Records</h1>
-        <Button variant="primary" onClick={() => handleOpenNewRecord()}>
+        <Button variant="outline-primary" onClick={() => handleOpenNewRecord()}>
           <i className="fas fa-plus"></i> New Record
         </Button>
       </div>
-
-      {error && <div className="alert alert-danger">{error}</div>}
-      {success && <div className="alert alert-success">{success}</div>}
 
       {loading && !records.length ? (
         <div className="loading-container">
@@ -322,7 +433,7 @@ const MedicalRecords = () => {
               <i className="fas fa-search"></i>
               <input
                 type="text"
-                placeholder="Search records by title or description..."
+                placeholder="Search patient name, record title or description..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
@@ -338,7 +449,9 @@ const MedicalRecords = () => {
                 <option value="">All Patients</option>
                 {myPatients.map((patient) => (
                   <option key={patient._id} value={patient._id}>
-                    {patient.user?.fullname || "Unknown Patient"}
+                    {patient.user?.fullname ||
+                      patient.user?.username ||
+                      "Unknown Patient"}
                   </option>
                 ))}
               </select>
@@ -346,66 +459,105 @@ const MedicalRecords = () => {
           </div>
 
           <div className="records-list">
-            {records
-              .filter(
-                (record) =>
-                  (!patientFilter || record.patient?._id === patientFilter) &&
-                  (!searchTerm ||
-                    record.title
-                      ?.toLowerCase()
-                      .includes(searchTerm.toLowerCase()) ||
-                    record.description
-                      ?.toLowerCase()
-                      .includes(searchTerm.toLowerCase()))
-              )
-              .map((record) => (
-                <div key={record._id} className="record-card">
-                  <div className="record-card-header">
-                    <div className="record-title-section">
-                      <span className="record-type-badge">
-                        {recordTypes.find(
-                          (type) => type.value === record.recordType
-                        )?.label || "Examination"}
-                      </span>
-                      <h3 className="record-title">{record.title}</h3>
-                    </div>
-                    <div className="record-date">{formatDate(record.date)}</div>
-                  </div>
+            {filteredUniqueRecords.length > 0 ? (
+              filteredUniqueRecords.map((record) => {
+                const recordData =
+                  record.records && record.records.length > 0
+                    ? record.records[0]
+                    : {};
 
-                  <div className="record-content">
-                    <div className="record-patient">
-                      <i className="fas fa-user-injured"></i>
-                      {record.patient?.user?.fullname || "Unknown Patient"}
-                    </div>
+                // Count how many records this patient has
+                const recordCount = records.filter(
+                  (r) => r.patient?._id === record.patient?._id
+                ).length;
 
-                    <p className="record-description">{record.description}</p>
-
-                    {record.attachments && record.attachments.length > 0 && (
-                      <div className="record-attachments">
-                        <i className="fas fa-paperclip"></i>
-                        {record.attachments.length} attachment(s)
+                return (
+                  <div key={record._id} className="record-card">
+                    <div className="record-card-header">
+                      <div className="record-title-section">
+                        <span className="record-type-badge">
+                          {getRecordTypeLabel(recordData.recordType)}
+                        </span>
+                        <h3 className="record-title">
+                          {recordData.title || "Untitled Record"}
+                        </h3>
                       </div>
-                    )}
-                  </div>
+                      <div className="record-date">
+                        {formatDate(recordData.date || record.createdAt)}
+                      </div>
+                    </div>
 
-                  <div className="record-actions">
-                    <Button
-                      variant="outline-primary"
-                      size="sm"
-                      onClick={() => handleViewDetails(record)}
-                    >
-                      View Details
-                    </Button>
-                    <Button
-                      variant="outline-secondary"
-                      size="sm"
-                      onClick={() => handleOpenEditRecord(record)}
-                    >
-                      Edit
-                    </Button>
+                    <div className="record-content">
+                      <div className="record-patient">
+                        <i className="fas fa-user-injured"></i>
+                        {record.patient?.user?.fullname || "Unknown Patient"}
+                        {recordCount > 1 && (
+                          <span className="record-count">
+                            <span className="record-badge">
+                              {recordCount} records
+                            </span>
+                          </span>
+                        )}
+                      </div>
+
+                      <p className="record-description">
+                        {recordData.description || "No description provided"}
+                      </p>
+
+                      {recordCount > 1 && (
+                        <div className="view-all-records">
+                          <Button
+                            variant="text"
+                            size="sm"
+                            onClick={() =>
+                              handleViewPatientRecords(
+                                record.patient?._id,
+                                record.patient?.user?.fullname ||
+                                  "Unknown Patient"
+                              )
+                            }
+                          >
+                            <i className="fas fa-clipboard-list"></i> View all{" "}
+                            {recordCount} records
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="record-actions">
+                      <Button
+                        variant="outline-primary"
+                        size="sm"
+                        onClick={() => handleViewDetails(record)}
+                      >
+                        <i className="fas fa-eye"></i> View Details
+                      </Button>
+                      <Button
+                        variant="outline-secondary"
+                        size="sm"
+                        onClick={() => handleOpenNewRecord(record.patient?._id)}
+                      >
+                        <i className="fas fa-plus"></i> Add Record
+                      </Button>
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })
+            ) : (
+              <div className="no-records-found">
+                <i className="fas fa-search"></i>
+                <p>No records match your search criteria.</p>
+                <Button
+                  variant="outline-primary"
+                  onClick={() => {
+                    setSearchTerm("");
+                    setPatientFilter("");
+                  }}
+                >
+                  Clear Filters
+                </Button>
+              </div>
+            )}
           </div>
         </>
       ) : (
@@ -418,8 +570,11 @@ const MedicalRecords = () => {
             Start creating medical records for your patients to keep track of
             their health history.
           </p>
-          <Button variant="primary" onClick={() => handleOpenNewRecord()}>
-            Create First Record
+          <Button
+            variant="outline-primary"
+            onClick={() => handleOpenNewRecord()}
+          >
+            <i className="fas fa-plus-circle"></i> Create First Record
           </Button>
         </div>
       )}
@@ -433,7 +588,9 @@ const MedicalRecords = () => {
         >
           <form onSubmit={handleSubmit} className="record-form">
             <div className="form-group">
-              <label htmlFor="patient">Patient</label>
+              <label htmlFor="patient">
+                Patient <span className="required">*</span>
+              </label>
               <select
                 id="patient"
                 name="patient"
@@ -441,63 +598,58 @@ const MedicalRecords = () => {
                 onChange={handleInputChange}
                 required
                 disabled={selectedRecord}
+                className={!formData.patient ? "highlight-required" : ""}
               >
                 <option value="">Select a patient</option>
 
-                {/* For new records, show all patients */}
-                {!selectedRecord && allPatients.length > 0 && (
-                  <>
-                    {/* If we have patients under care, group them first */}
-                    {myPatients.length > 0 && (
-                      <optgroup label="My Patients">
-                        {myPatients.map((patient) => (
-                          <option key={`my-${patient._id}`} value={patient._id}>
-                            {patient.user?.fullname ||
-                              patient.user?.username ||
-                              "Unknown"}
-                          </option>
-                        ))}
-                      </optgroup>
-                    )}
-
-                    {/* Show other patients not under care */}
-                    <optgroup label="Other Patients">
-                      {allPatients
-                        .filter(
-                          (patient) =>
-                            !myPatients.some(
-                              (myPatient) => myPatient._id === patient._id
-                            )
-                        )
-                        .map((patient) => (
-                          <option
-                            key={`other-${patient._id}`}
-                            value={patient._id}
-                          >
-                            {patient.user?.fullname ||
-                              patient.user?.username ||
-                              "Unknown"}
-                          </option>
-                        ))}
-                    </optgroup>
-                  </>
+                {/* Group patients by "My Patients" and "Other Patients" */}
+                {myPatients.length > 0 && (
+                  <optgroup label="My Patients">
+                    {myPatients.map((patient) => (
+                      <option key={`my-${patient._id}`} value={patient._id}>
+                        {patient.user?.fullname ||
+                          patient.user?.username ||
+                          "Unknown Patient"}
+                      </option>
+                    ))}
+                  </optgroup>
                 )}
 
-                {/* For existing records, just show the current patient */}
-                {selectedRecord && (
-                  <option value={formData.patient}>
-                    {selectedRecord.patient?.user?.fullname ||
-                      "Unknown Patient"}
-                  </option>
+                {/* Show other patients not under care */}
+                {allPatients.length > 0 && (
+                  <optgroup label="Other Patients">
+                    {allPatients
+                      .filter(
+                        (patient) =>
+                          !myPatients.some(
+                            (myPatient) => myPatient._id === patient._id
+                          )
+                      )
+                      .map((patient) => (
+                        <option
+                          key={`other-${patient._id}`}
+                          value={patient._id}
+                        >
+                          {patient.user?.fullname ||
+                            patient.user?.username ||
+                            "Unknown Patient"}
+                        </option>
+                      ))}
+                  </optgroup>
                 )}
               </select>
+              {!formData.patient && (
+                <small className="form-tip">
+                  Please select a patient for this record
+                </small>
+              )}
             </div>
 
             <div className="form-row">
               <div className="form-group">
-                <label htmlFor="recordType">Record Type</label>
+                <label htmlFor="records.recordType">Record Type</label>
                 <select
-                  id="recordType"
+                  id="records.recordType"
                   name="records.recordType"
                   value={formData.records[0].recordType}
                   onChange={handleInputChange}
@@ -512,10 +664,10 @@ const MedicalRecords = () => {
               </div>
 
               <div className="form-group">
-                <label htmlFor="date">Date</label>
+                <label htmlFor="records.date">Date</label>
                 <input
                   type="date"
-                  id="date"
+                  id="records.date"
                   name="records.date"
                   value={formData.records[0].date}
                   onChange={handleInputChange}
@@ -525,35 +677,45 @@ const MedicalRecords = () => {
             </div>
 
             <div className="form-group">
-              <label htmlFor="title">Title</label>
+              <label htmlFor="records.title">
+                Title <span className="required">*</span>
+              </label>
               <input
                 type="text"
-                id="title"
+                id="records.title"
                 name="records.title"
                 value={formData.records[0].title}
                 onChange={handleInputChange}
                 placeholder="e.g., Annual Physical Examination"
                 required
+                className={
+                  !formData.records[0].title ? "highlight-required" : ""
+                }
               />
             </div>
 
             <div className="form-group">
-              <label htmlFor="description">Description</label>
+              <label htmlFor="records.description">
+                Description <span className="required">*</span>
+              </label>
               <textarea
-                id="description"
+                id="records.description"
                 name="records.description"
                 value={formData.records[0].description}
                 onChange={handleInputChange}
                 placeholder="Describe the reason for the visit or examination"
                 rows="3"
                 required
+                className={
+                  !formData.records[0].description ? "highlight-required" : ""
+                }
               ></textarea>
             </div>
 
             <div className="form-group">
-              <label htmlFor="diagnosis">Diagnosis</label>
+              <label htmlFor="records.diagnosis">Diagnosis</label>
               <textarea
-                id="diagnosis"
+                id="records.diagnosis"
                 name="records.diagnosis"
                 value={formData.records[0].diagnosis}
                 onChange={handleInputChange}
@@ -563,9 +725,35 @@ const MedicalRecords = () => {
             </div>
 
             <div className="form-group">
-              <label htmlFor="treatmentProgress">Treatment Progress</label>
+              <label htmlFor="records.findings">Findings</label>
               <textarea
-                id="treatmentProgress"
+                id="records.findings"
+                name="records.findings"
+                value={formData.records[0].findings}
+                onChange={handleInputChange}
+                placeholder="Document examination findings"
+                rows="3"
+              ></textarea>
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="records.treatment">Treatment Plan</label>
+              <textarea
+                id="records.treatment"
+                name="records.treatment"
+                value={formData.records[0].treatment}
+                onChange={handleInputChange}
+                placeholder="Recommended treatment plan"
+                rows="3"
+              ></textarea>
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="records.treatmentProgress">
+                Treatment Progress
+              </label>
+              <textarea
+                id="records.treatmentProgress"
                 name="records.treatmentProgress"
                 value={formData.records[0].treatmentProgress}
                 onChange={handleInputChange}
@@ -575,9 +763,9 @@ const MedicalRecords = () => {
             </div>
 
             <div className="form-group">
-              <label htmlFor="notes">Additional Notes</label>
+              <label htmlFor="records.notes">Additional Notes</label>
               <textarea
-                id="notes"
+                id="records.notes"
                 name="records.notes"
                 value={formData.records[0].notes}
                 onChange={handleInputChange}
@@ -635,14 +823,15 @@ const MedicalRecords = () => {
                 type="button"
                 variant="secondary"
                 onClick={() => setShowRecordModal(false)}
+                disabled={saving}
               >
                 Cancel
               </Button>
               <Button
                 type="submit"
-                variant="primary"
-                loading={loading || uploading}
-                disabled={loading || uploading}
+                variant="outline-primary"
+                loading={saving}
+                disabled={saving}
               >
                 {selectedRecord ? "Update" : "Create"} Record
               </Button>
@@ -658,69 +847,121 @@ const MedicalRecords = () => {
           onClose={() => setShowDetailsModal(false)}
         >
           <div className="record-details">
-            <div className="detail-header">
-              <div className="detail-type">
-                {recordTypes.find(
-                  (type) => type.value === selectedRecord.recordType
-                )?.label || "Examination"}
-              </div>
-              <div className="detail-date">
-                {formatDate(selectedRecord.date)}
-              </div>
-            </div>
+            {(() => {
+              // Get the first record from the records array
+              const recordData =
+                selectedRecord.records && selectedRecord.records.length > 0
+                  ? selectedRecord.records[0]
+                  : {};
 
-            <h2 className="detail-title">{selectedRecord.title}</h2>
-
-            <div className="detail-patient">
-              <strong>Patient:</strong>{" "}
-              {selectedRecord.patient?.user?.fullname || "Unknown Patient"}
-            </div>
-
-            <div className="detail-section">
-              <h3>Description</h3>
-              <p>{selectedRecord.description || "No description provided"}</p>
-            </div>
-
-            <div className="detail-section">
-              <h3>Findings</h3>
-              <p>{selectedRecord.findings || "No findings recorded"}</p>
-            </div>
-
-            <div className="detail-section">
-              <h3>Treatment & Recommendations</h3>
-              <p>{selectedRecord.treatment || "No treatment plan recorded"}</p>
-            </div>
-
-            {selectedRecord.attachments &&
-              selectedRecord.attachments.length > 0 && (
-                <div className="detail-section">
-                  <h3>Attachments</h3>
-                  <div className="detail-attachments">
-                    {selectedRecord.attachments.map((attachment, index) => (
-                      <div key={index} className="detail-attachment">
-                        <i className="fas fa-file"></i>
-                        <a
-                          href={attachment.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                        >
-                          {attachment.filename || `Attachment ${index + 1}`}
-                        </a>
-                      </div>
-                    ))}
+              return (
+                <>
+                  <div className="detail-header">
+                    <div className="detail-type">
+                      {getRecordTypeLabel(recordData.recordType)}
+                    </div>
+                    <div className="detail-date">
+                      {formatDate(recordData.date || selectedRecord.createdAt)}
+                    </div>
                   </div>
-                </div>
-              )}
+
+                  <h2 className="detail-title">
+                    {recordData.title || "Untitled Record"}
+                  </h2>
+
+                  <div className="detail-patient">
+                    <strong>Patient:</strong>{" "}
+                    {selectedRecord.patient?.user?.fullname ||
+                      "Unknown Patient"}
+                  </div>
+
+                  <div className="detail-doctor">
+                    <strong>Doctor:</strong>{" "}
+                    {selectedRecord.doctor?.user?.fullname || "Unknown Doctor"}
+                  </div>
+
+                  <div className="detail-section">
+                    <h3>
+                      <i className="fas fa-clipboard"></i> Description
+                    </h3>
+                    <p>{recordData.description || "No description provided"}</p>
+                  </div>
+
+                  <div className="detail-section">
+                    <h3>
+                      <i className="fas fa-stethoscope"></i> Diagnosis
+                    </h3>
+                    <p>{recordData.diagnosis || "No diagnosis recorded"}</p>
+                  </div>
+
+                  <div className="detail-section">
+                    <h3>
+                      <i className="fas fa-search"></i> Findings
+                    </h3>
+                    <p>{recordData.findings || "No findings recorded"}</p>
+                  </div>
+
+                  <div className="detail-section">
+                    <h3>
+                      <i className="fas fa-pills"></i> Treatment Plan
+                    </h3>
+                    <p>
+                      {recordData.treatment || "No treatment plan recorded"}
+                    </p>
+                  </div>
+
+                  <div className="detail-section">
+                    <h3>
+                      <i className="fas fa-chart-line"></i> Treatment Progress
+                    </h3>
+                    <p>
+                      {recordData.treatmentProgress || "No progress recorded"}
+                    </p>
+                  </div>
+
+                  <div className="detail-section">
+                    <h3>
+                      <i className="fas fa-sticky-note"></i> Additional Notes
+                    </h3>
+                    <p>{recordData.notes || "No additional notes recorded"}</p>
+                  </div>
+
+                  {recordData.attachments &&
+                    recordData.attachments.length > 0 && (
+                      <div className="detail-section">
+                        <h3>
+                          <i className="fas fa-paperclip"></i> Attachments
+                        </h3>
+                        <div className="detail-attachments">
+                          {recordData.attachments.map((attachment, index) => (
+                            <div key={index} className="detail-attachment">
+                              <i className="fas fa-file"></i>
+                              <a
+                                href={attachment.url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                              >
+                                {attachment.filename ||
+                                  `Attachment ${index + 1}`}
+                              </a>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                </>
+              );
+            })()}
 
             <div className="detail-actions">
               <Button
-                variant="primary"
+                variant="outline-primary"
                 onClick={() => {
                   setShowDetailsModal(false);
                   handleOpenEditRecord(selectedRecord);
                 }}
               >
-                Edit Record
+                <i className="fas fa-edit"></i> Edit Record
               </Button>
               <Button
                 variant="outline-secondary"
@@ -732,6 +973,115 @@ const MedicalRecords = () => {
           </div>
         </Modal>
       )}
+
+      {/* Patient Records Modal - Shows all records for a single patient */}
+      {showPatientRecordsModal && selectedPatientId && (
+        <Modal
+          title={`Medical Records for ${selectedPatientName}`}
+          onClose={() => setShowPatientRecordsModal(false)}
+          size="large"
+        >
+          <div className="patient-records-list">
+            <div className="patient-records-header">
+              <p>
+                <i className="fas fa-folder-open"></i>
+                Showing {patientRecords.length} record
+                {patientRecords.length !== 1 ? "s" : ""} for this patient
+              </p>
+              <Button
+                variant="outline-primary"
+                size="sm"
+                onClick={() => {
+                  setShowPatientRecordsModal(false);
+                  handleOpenNewRecord(selectedPatientId);
+                }}
+              >
+                <i className="fas fa-plus"></i> Add New Record
+              </Button>
+            </div>
+
+            {patientRecords.length > 0 ? (
+              <div className="timeline-records">
+                {patientRecords
+                  .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+                  .map((record, index) => {
+                    const recordData =
+                      record.records && record.records.length > 0
+                        ? record.records[0]
+                        : {};
+
+                    return (
+                      <div key={record._id} className="timeline-record-item">
+                        <div className="timeline-marker">
+                          <div className="timeline-number">{index + 1}</div>
+                          <div className="timeline-line"></div>
+                        </div>
+                        <div className="timeline-content">
+                          <div className="timeline-record">
+                            <div className="timeline-record-header">
+                              <h4>
+                                {recordData.title || "Untitled Record"}
+                                <span className="record-type-small">
+                                  {getRecordTypeLabel(recordData.recordType)}
+                                </span>
+                              </h4>
+                              <div className="timeline-date">
+                                {formatDate(
+                                  recordData.date || record.createdAt
+                                )}
+                              </div>
+                            </div>
+                            <p className="timeline-description">
+                              {recordData.description ||
+                                "No description provided"}
+                            </p>
+                            <div className="timeline-actions">
+                              <Button
+                                variant="outline-primary"
+                                size="sm"
+                                onClick={() => {
+                                  setShowPatientRecordsModal(false);
+                                  handleViewDetails(record);
+                                }}
+                              >
+                                <i className="fas fa-eye"></i> View Details
+                              </Button>
+                              <Button
+                                variant="outline-secondary"
+                                size="sm"
+                                onClick={() => {
+                                  setShowPatientRecordsModal(false);
+                                  handleOpenEditRecord(record);
+                                }}
+                              >
+                                <i className="fas fa-edit"></i> Edit
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+              </div>
+            ) : (
+              <div className="no-records-found">
+                <p>No records found for this patient.</p>
+              </div>
+            )}
+          </div>
+        </Modal>
+      )}
+
+      <Popup
+        type={popup.type}
+        title={popup.title}
+        message={popup.message}
+        isVisible={popup.show}
+        onClose={hidePopup}
+        position="top-right"
+        autoClose={true}
+        duration={5000}
+      />
     </div>
   );
 };
