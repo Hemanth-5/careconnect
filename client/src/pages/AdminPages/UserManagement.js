@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import adminAPI from "../../api/admin";
 import Button from "../../components/common/Button";
-import Input from "../../components/common/Input";
+import Popup from "../../components/common/Popup";
 import "./UserManagement.css";
 
 const UserManagement = () => {
@@ -12,6 +12,29 @@ const UserManagement = () => {
   const [selectedUser, setSelectedUser] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterRole, setFilterRole] = useState("all");
+
+  // Popup state
+  const [popup, setPopup] = useState({
+    show: false,
+    type: "error",
+    message: "",
+    title: "",
+  });
+
+  // Show popup method
+  const showPopup = (type, message, title = "") => {
+    setPopup({
+      show: true,
+      type,
+      message,
+      title,
+    });
+  };
+
+  // Hide popup method
+  const hidePopup = () => {
+    setPopup((prev) => ({ ...prev, show: false }));
+  };
 
   // Enhanced form state for adding/editing user
   const [formData, setFormData] = useState({
@@ -65,6 +88,7 @@ const UserManagement = () => {
       setAvailableSpecializations(response.data || []);
     } catch (err) {
       console.error("Error fetching specializations:", err);
+      showPopup("error", "Failed to load specializations.", "Error");
     }
   };
 
@@ -77,6 +101,11 @@ const UserManagement = () => {
     } catch (err) {
       console.error("Error fetching users:", err);
       setError("Failed to load users. Please try again later.");
+      showPopup(
+        "error",
+        "Failed to load users. Please try again later.",
+        "Error"
+      );
     } finally {
       setLoading(false);
     }
@@ -203,6 +232,7 @@ const UserManagement = () => {
       }
     } catch (err) {
       console.error("Error fetching doctor details:", err);
+      showPopup("error", "Failed to load doctor details.", "Error");
     }
   };
 
@@ -233,6 +263,7 @@ const UserManagement = () => {
       }
     } catch (err) {
       console.error("Error fetching patient details:", err);
+      showPopup("error", "Failed to load patient details.", "Error");
     }
   };
 
@@ -354,7 +385,6 @@ const UserManagement = () => {
 
         // Update user via API
         await adminAPI.updateUser(selectedUser._id, userData);
-        // console.log("User updated:", response.data);
 
         // Update role-specific data based on the selected user's role
         if (selectedUser.role === "doctor" && doctorData) {
@@ -374,13 +404,22 @@ const UserManagement = () => {
                 }
               );
               console.log("Doctor profile updated:", doctorResponse.data);
+              showPopup(
+                "success",
+                "Doctor profile updated successfully!",
+                "Success"
+              );
             } else {
               console.error("Doctor profile not found for this user");
-              setError("Could not find doctor profile to update.");
+              showPopup(
+                "warning",
+                "Could not find doctor profile to update.",
+                "Warning"
+              );
             }
           } catch (doctorErr) {
             console.error("Error updating doctor profile:", doctorErr);
-            setError("Failed to update doctor profile.");
+            showPopup("error", "Failed to update doctor profile.", "Error");
           }
         } else if (selectedUser.role === "patient" && patientData) {
           try {
@@ -399,15 +438,27 @@ const UserManagement = () => {
                 }
               );
               console.log("Patient profile updated:", patientResponse.data);
+              showPopup(
+                "success",
+                "Patient profile updated successfully!",
+                "Success"
+              );
             } else {
               console.error("Patient profile not found for this user");
-              setError("Could not find patient profile to update.");
+              showPopup(
+                "warning",
+                "Could not find patient profile to update.",
+                "Warning"
+              );
             }
           } catch (patientErr) {
             console.error("Error updating patient profile:", patientErr);
-            setError("Failed to update patient profile.");
+            showPopup("error", "Failed to update patient profile.", "Error");
           }
         }
+
+        // Show success message for user update
+        showPopup("success", "User updated successfully!", "Success");
       } else {
         // Add new user with improved handling
         console.log(userData);
@@ -447,8 +498,10 @@ const UserManagement = () => {
 
             if (!doctorProfile) {
               console.error("Doctor profile not found after user creation");
-              setError(
-                "User created but couldn't find doctor profile to update."
+              showPopup(
+                "warning",
+                "User created but couldn't find doctor profile to update.",
+                "Warning"
               );
               setShowAddUserModal(false);
               return;
@@ -461,9 +514,18 @@ const UserManagement = () => {
             );
 
             // console.log("Doctor profile updated:", doctorResponse.data);
+            showPopup(
+              "success",
+              "Doctor profile created successfully!",
+              "Success"
+            );
           } catch (doctorErr) {
             console.error("Error updating doctor profile:", doctorErr);
-            setError("User created but failed to set up doctor profile.");
+            showPopup(
+              "error",
+              "User created but failed to set up doctor profile.",
+              "Error"
+            );
           }
         }
 
@@ -479,8 +541,10 @@ const UserManagement = () => {
 
             if (!patientProfile) {
               console.error("Patient profile not found after user creation");
-              setError(
-                "User created but couldn't find patient profile to update."
+              showPopup(
+                "warning",
+                "User created but couldn't find patient profile to update.",
+                "Warning"
               );
               setShowAddUserModal(false);
               return;
@@ -493,11 +557,23 @@ const UserManagement = () => {
             );
 
             console.log("Patient profile updated:", patientResponse.data);
+            showPopup(
+              "success",
+              "Patient profile created successfully!",
+              "Success"
+            );
           } catch (patientErr) {
             console.error("Error updating patient profile:", patientErr);
-            setError("User created but failed to set up patient profile.");
+            showPopup(
+              "error",
+              "User created but failed to set up patient profile.",
+              "Error"
+            );
           }
         }
+
+        // Show success message for new user
+        showPopup("success", "User created successfully!", "Success");
       }
 
       // Refresh the user list to show the updated data
@@ -508,6 +584,11 @@ const UserManagement = () => {
       console.error("Error saving user:", err);
       setError(
         err.response?.data?.message || "Failed to save user. Please try again."
+      );
+      showPopup(
+        "error",
+        err.response?.data?.message || "Failed to save user. Please try again.",
+        "Error"
       );
     } finally {
       setLoading(false);
@@ -523,11 +604,18 @@ const UserManagement = () => {
       await adminAPI.deleteUser(userId);
       setUsers(users.filter((user) => user._id !== userId));
       setError(null);
+      showPopup("success", "User deleted successfully!", "Success");
     } catch (err) {
       console.error("Error deleting user:", err);
       setError(
         err.response?.data?.message ||
           "Failed to delete user. Please try again."
+      );
+      showPopup(
+        "error",
+        err.response?.data?.message ||
+          "Failed to delete user. Please try again.",
+        "Error"
       );
     } finally {
       setLoading(false);
@@ -1140,6 +1228,17 @@ const UserManagement = () => {
           </div>
         </div>
       )}
+      {/* Popup component for notifications */}
+      <Popup
+        type={popup.type}
+        title={popup.title}
+        message={popup.message}
+        isVisible={popup.show}
+        onClose={hidePopup}
+        position="top-right"
+        autoClose={true}
+        duration={5000}
+      />
     </div>
   );
 };

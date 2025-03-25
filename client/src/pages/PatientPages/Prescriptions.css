@@ -138,11 +138,11 @@
   color: var(--success);
 }
 
-.status-expired,
+/* .status-expired,
 .status-completed {
   background-color: rgba(var(--gray-rgb), 0.1);
   color: var(--gray-700);
-}
+} */
 
 .prescription-body {
   padding: var(--spacing-4);

@@ -2,6 +2,8 @@ import React, { useState, useEffect } from "react";
 import adminAPI from "../../api/admin";
 import Button from "../../components/common/Button";
 import Spinner from "../../components/common/Spinner";
+import Modal from "../../components/common/Modal";
+import Popup from "../../components/common/Popup";
 import "./SpecializationManagement.css";
 
 const SpecializationManagement = () => {
@@ -14,6 +16,33 @@ const SpecializationManagement = () => {
     name: "",
     description: "",
   });
+
+  // Add popup state
+  const [popup, setPopup] = useState({
+    show: false,
+    type: "info",
+    message: "",
+    title: "",
+  });
+
+  // Add state for delete confirmation modal
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [specializationToDelete, setSpecializationToDelete] = useState(null);
+
+  // Show popup method
+  const showPopup = (type, message, title = "") => {
+    setPopup({
+      show: true,
+      type,
+      message,
+      title,
+    });
+  };
+
+  // Hide popup method
+  const hidePopup = () => {
+    setPopup((prev) => ({ ...prev, show: false }));
+  };
 
   useEffect(() => {
     fetchSpecializations();
@@ -29,6 +58,11 @@ const SpecializationManagement = () => {
     } catch (err) {
       console.error("Error fetching specializations:", err);
       setError("Failed to load specializations. Please try again later.");
+      showPopup(
+        "error",
+        "Failed to load specializations. Please try again later.",
+        "Error"
+      );
     } finally {
       setLoading(false);
     }
@@ -82,10 +116,22 @@ const SpecializationManagement = () => {
             spec._id === selectedSpecialization._id ? response.data : spec
           )
         );
+
+        showPopup(
+          "success",
+          `Specialization "${formData.name}" updated successfully!`,
+          "Update Successful"
+        );
       } else {
         // Create new specialization using adminAPI
         const response = await adminAPI.createSpecialization(formData);
         setSpecializations([...specializations, response.data]);
+
+        showPopup(
+          "success",
+          `Specialization "${formData.name}" created successfully!`,
+          "Creation Successful"
+        );
       }
 
       setShowModal(false);
@@ -96,32 +142,64 @@ const SpecializationManagement = () => {
         err.response?.data?.message ||
           "Failed to save specialization. Please try again."
       );
+
+      showPopup(
+        "error",
+        err.response?.data?.message ||
+          "Failed to save specialization. Please try again.",
+        selectedSpecialization ? "Update Failed" : "Creation Failed"
+      );
     } finally {
       setLoading(false);
     }
   };
 
-  const handleDelete = async (id) => {
-    if (
-      !window.confirm("Are you sure you want to delete this specialization?")
-    ) {
-      return;
-    }
+  const handleDeleteClick = (specialization) => {
+    setSpecializationToDelete(specialization);
+    setShowDeleteModal(true);
+  };
+
+  const handleCancelDelete = () => {
+    setShowDeleteModal(false);
+    setSpecializationToDelete(null);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!specializationToDelete) return;
 
     try {
       setLoading(true);
       // Using adminAPI from api/admin.js that uses the core api client
-      await adminAPI.deleteSpecialization(id);
-      setSpecializations(specializations.filter((spec) => spec._id !== id));
+      await adminAPI.deleteSpecialization(specializationToDelete._id);
+      setSpecializations(
+        specializations.filter(
+          (spec) => spec._id !== specializationToDelete._id
+        )
+      );
       setError(null);
+
+      showPopup(
+        "info",
+        `Specialization "${specializationToDelete.name}" has been deleted successfully.`,
+        "Deletion Successful"
+      );
     } catch (err) {
       console.error("Error deleting specialization:", err);
       setError(
         err.response?.data?.message ||
           "Failed to delete specialization. Please try again."
       );
+
+      showPopup(
+        "error",
+        err.response?.data?.message ||
+          "Failed to delete specialization. Please try again.",
+        "Deletion Failed"
+      );
     } finally {
       setLoading(false);
+      setShowDeleteModal(false);
+      setSpecializationToDelete(null);
     }
   };
 
@@ -148,8 +226,6 @@ const SpecializationManagement = () => {
         </div>
       </div>
 
-      {error && <div className="alert alert-danger">{error}</div>}
-
       {loading && !showModal ? (
         <div className="loading-container">
           <Spinner center size="large" />
@@ -172,7 +248,7 @@ const SpecializationManagement = () => {
                   <Button
                     variant="outline-danger"
                     size="sm"
-                    onClick={() => handleDelete(specialization._id)}
+                    onClick={() => handleDeleteClick(specialization)}
                   >
                     <i className="fas fa-trash-alt"></i> Delete
                   </Button>
@@ -187,65 +263,111 @@ const SpecializationManagement = () => {
         </div>
       )}
 
-      {/* Add/Edit Specialization Modal */}
+      {/* Add/Edit Specialization Modal - Use the common Modal component */}
       {showModal && (
-        <div className="modal-overlay">
-          <div className="modal">
-            <div className="modal-header">
-              <h2>
-                {selectedSpecialization
-                  ? "Edit Specialization"
-                  : "Add Specialization"}
-              </h2>
-              <button className="close-btn" onClick={handleCloseModal}>
-                <i className="fas fa-times"></i>
-              </button>
+        <Modal
+          title={
+            selectedSpecialization
+              ? "Edit Specialization"
+              : "Add Specialization"
+          }
+          onClose={handleCloseModal}
+          size="medium"
+        >
+          <form onSubmit={handleSubmit} className="specialization-form">
+            <div className="form-group">
+              <label htmlFor="name">Specialization Name</label>
+              <input
+                type="text"
+                id="name"
+                name="name"
+                value={formData.name}
+                onChange={handleInputChange}
+                required
+                className="form-control"
+              />
             </div>
-            <div className="modal-body">
-              <form onSubmit={handleSubmit}>
-                <div className="form-group">
-                  <label htmlFor="name">Specialization Name</label>
-                  <input
-                    type="text"
-                    id="name"
-                    name="name"
-                    value={formData.name}
-                    onChange={handleInputChange}
-                    required
-                  />
-                </div>
-                <div className="form-group">
-                  <label htmlFor="description">Description</label>
-                  <textarea
-                    id="description"
-                    name="description"
-                    value={formData.description}
-                    onChange={handleInputChange}
-                    rows="4"
-                  ></textarea>
-                </div>
-                <div className="form-actions">
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    onClick={handleCloseModal}
-                  >
-                    Cancel
-                  </Button>
-                  <Button
-                    type="submit"
-                    variant="primary"
-                    disabled={loading}
-                    loading={loading}
-                  >
-                    {selectedSpecialization ? "Update" : "Add"}
-                  </Button>
-                </div>
-              </form>
+            <div className="form-group">
+              <label htmlFor="description">Description</label>
+              <textarea
+                id="description"
+                name="description"
+                value={formData.description}
+                onChange={handleInputChange}
+                rows="4"
+                className="form-control"
+              ></textarea>
+            </div>
+            <div className="form-actions">
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={handleCloseModal}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                variant="outline-primary"
+                disabled={loading}
+                loading={loading}
+              >
+                {selectedSpecialization ? "Update" : "Add"}
+              </Button>
+            </div>
+          </form>
+        </Modal>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && specializationToDelete && (
+        <Modal
+          title="Confirm Deletion"
+          onClose={handleCancelDelete}
+          size="small"
+        >
+          <div className="delete-confirmation">
+            <div className="delete-confirmation-icon">
+              <i className="fas fa-exclamation-triangle"></i>
+            </div>
+            <p className="delete-confirmation-message">
+              Are you sure you want to delete the specialization{" "}
+              <strong>"{specializationToDelete.name}"</strong>? This action
+              cannot be undone.
+            </p>
+            <div className="delete-confirmation-actions">
+              <Button
+                variant="secondary"
+                onClick={handleCancelDelete}
+                className="cancel-button"
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="danger"
+                onClick={handleConfirmDelete}
+                loading={loading && showDeleteModal}
+                disabled={loading && showDeleteModal}
+                className="delete-button"
+              >
+                Delete Specialization
+              </Button>
             </div>
           </div>
-        </div>
+        </Modal>
       )}
+
+      {/* Add Popup component for notifications */}
+      <Popup
+        type={popup.type}
+        title={popup.title}
+        message={popup.message}
+        isVisible={popup.show}
+        onClose={hidePopup}
+        position="top-right"
+        autoClose={true}
+        duration={5000}
+      />
     </div>
   );
 };

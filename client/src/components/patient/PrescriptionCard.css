@@ -86,11 +86,11 @@
   color: var(--success);
 }
 
-.status-expired,
+/* .status-expired,
 .status-completed {
   background-color: rgba(var(--gray-rgb), 0.1);
   color: var(--gray-700);
-}
+} */
 
 .view-details-link {
   font-size: var(--font-size-xs);

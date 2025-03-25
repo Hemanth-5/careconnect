@@ -2,6 +2,8 @@ import React, { useState, useEffect } from "react";
 import adminAPI from "../../api/admin";
 import Button from "../../components/common/Button";
 import Spinner from "../../components/common/Spinner";
+import Modal from "../../components/common/Modal";
+import Popup from "../../components/common/Popup";
 import "./AppointmentManagement.css";
 
 const AppointmentManagement = () => {
@@ -28,6 +30,29 @@ const AppointmentManagement = () => {
     status: "",
     notes: "",
   });
+
+  // Add state for popup notifications
+  const [popup, setPopup] = useState({
+    show: false,
+    type: "info",
+    message: "",
+    title: "",
+  });
+
+  // Show popup method
+  const showPopup = (type, message, title = "") => {
+    setPopup({
+      show: true,
+      type,
+      message,
+      title,
+    });
+  };
+
+  // Hide popup method
+  const hidePopup = () => {
+    setPopup((prev) => ({ ...prev, show: false }));
+  };
 
   useEffect(() => {
     fetchAppointments();
@@ -57,6 +82,11 @@ const AppointmentManagement = () => {
     } catch (err) {
       console.error("Error fetching appointments:", err);
       setError("Failed to load appointments. Please try again later.");
+      showPopup(
+        "error",
+        "Failed to load appointments. Please try again later.",
+        "Error"
+      );
     } finally {
       setLoading(false);
     }
@@ -135,9 +165,18 @@ const AppointmentManagement = () => {
 
       setShowStatusModal(false);
       setSelectedAppointment(null);
+      showPopup(
+        "success",
+        "Appointment status updated successfully!",
+        "Status Updated"
+      );
     } catch (err) {
       console.error("Error updating appointment status:", err);
-      setError("Failed to update appointment status. Please try again.");
+      showPopup(
+        "error",
+        "Failed to update appointment status. Please try again.",
+        "Update Failed"
+      );
     } finally {
       setLoading(false);
     }
@@ -368,226 +407,260 @@ const AppointmentManagement = () => {
         </div>
       )}
 
-      {/* Appointment Details Modal */}
+      {/* Replace the custom modal with the common Modal component for appointment details */}
       {showDetailsModal && selectedAppointment && (
-        <div className="modal-overlay">
-          <div className="modal appointment-details-modal">
-            <div className="modal-header">
-              <h2>Appointment Details</h2>
-              <button
-                className="close-btn"
-                onClick={() => setShowDetailsModal(false)}
-              >
-                <i className="fas fa-times"></i>
-              </button>
-            </div>
-            <div className="modal-body">
-              <div className="appointment-details">
-                <div className="appointment-info">
-                  <h3>Appointment Information</h3>
-                  <p>
-                    <strong>ID:</strong> {selectedAppointment._id}
-                  </p>
-                  <p>
-                    <strong>Date & Time:</strong>{" "}
-                    {formatDate(selectedAppointment.appointmentDate)}
-                  </p>
-                  <p>
-                    <strong>Status:</strong>
-                    <span
-                      className={`status-badge ${getStatusBadgeClass(
-                        selectedAppointment.status
-                      )}`}
-                    >
-                      {selectedAppointment.status?.charAt(0).toUpperCase() +
-                        selectedAppointment.status?.slice(1) || "Pending"}
+        <Modal
+          title="Appointment Details"
+          onClose={() => setShowDetailsModal(false)}
+          size="large"
+        >
+          <div className="appointment-details-container">
+            <div className="appointment-details">
+              <div className="appointment-info">
+                <h3>Appointment Information</h3>
+                <div className="info-grid">
+                  <div className="info-item">
+                    <span className="info-label">ID:</span>
+                    <span className="info-value">
+                      {selectedAppointment._id}
                     </span>
-                  </p>
-                  <p>
-                    <strong>Duration:</strong>{" "}
-                    {selectedAppointment.duration || 30} minutes
-                  </p>
-                  <p>
-                    <strong>Created:</strong>{" "}
-                    {formatDate(selectedAppointment.createdAt)}
-                  </p>
-                  {selectedAppointment.notes && (
-                    <div>
-                      <strong>Notes:</strong>
-                      <p className="appointment-notes">
-                        {selectedAppointment.notes}
-                      </p>
-                    </div>
-                  )}
+                  </div>
+                  <div className="info-item">
+                    <span className="info-label">Date & Time:</span>
+                    <span className="info-value">
+                      {formatDate(selectedAppointment.appointmentDate)}
+                    </span>
+                  </div>
+                  <div className="info-item">
+                    <span className="info-label">Status:</span>
+                    <span className="info-value">
+                      <span
+                        className={`status-badge ${getStatusBadgeClass(
+                          selectedAppointment.status
+                        )}`}
+                      >
+                        {selectedAppointment.status?.charAt(0).toUpperCase() +
+                          selectedAppointment.status?.slice(1) || "Pending"}
+                      </span>
+                    </span>
+                  </div>
+                  <div className="info-item">
+                    <span className="info-label">Duration:</span>
+                    <span className="info-value">
+                      {selectedAppointment.duration || 30} minutes
+                    </span>
+                  </div>
+                  <div className="info-item">
+                    <span className="info-label">Created:</span>
+                    <span className="info-value">
+                      {formatDate(selectedAppointment.createdAt)}
+                    </span>
+                  </div>
                 </div>
 
+                {selectedAppointment.notes && (
+                  <div className="appointment-notes-container">
+                    <h4>Notes</h4>
+                    <p className="appointment-notes">
+                      {selectedAppointment.notes}
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              <div className="detail-columns">
                 <div className="patient-info">
                   <h3>Patient</h3>
-                  <p>
-                    <strong>Name:</strong>{" "}
-                    {selectedAppointment.patient?.user?.fullname || "N/A"}
-                  </p>
-                  <p>
-                    <strong>Username:</strong>{" "}
-                    {selectedAppointment.patient?.user?.username || "N/A"}
-                  </p>
-                  <p>
-                    <strong>Email:</strong>{" "}
-                    {selectedAppointment.patient?.user?.email || "N/A"}
-                  </p>
-                  <p>
-                    <strong>Phone:</strong>{" "}
-                    {selectedAppointment.patient?.user?.contact?.phone || "N/A"}
-                  </p>
+                  <div className="info-grid">
+                    <div className="info-item">
+                      <span className="info-label">Name:</span>
+                      <span className="info-value">
+                        {selectedAppointment.patient?.user?.fullname || "N/A"}
+                      </span>
+                    </div>
+                    <div className="info-item">
+                      <span className="info-label">Username:</span>
+                      <span className="info-value">
+                        {selectedAppointment.patient?.user?.username || "N/A"}
+                      </span>
+                    </div>
+                    <div className="info-item">
+                      <span className="info-label">Email:</span>
+                      <span className="info-value">
+                        {selectedAppointment.patient?.user?.email || "N/A"}
+                      </span>
+                    </div>
+                    <div className="info-item">
+                      <span className="info-label">Phone:</span>
+                      <span className="info-value">
+                        {selectedAppointment.patient?.user?.contact?.phone ||
+                          "N/A"}
+                      </span>
+                    </div>
+                  </div>
                 </div>
 
                 <div className="doctor-info">
                   <h3>Doctor</h3>
-                  <p>
-                    <strong>Name:</strong>{" "}
-                    {selectedAppointment.doctor?.user?.fullname || "N/A"}
-                  </p>
-                  <p>
-                    <strong>Username:</strong>{" "}
-                    {selectedAppointment.doctor?.user?.username || "N/A"}
-                  </p>
-                  <p>
-                    <strong>Email:</strong>{" "}
-                    {selectedAppointment.doctor?.user?.email || "N/A"}
-                  </p>
-                  <p>
-                    <strong>Phone:</strong>{" "}
-                    {selectedAppointment.doctor?.user?.contact?.phone || "N/A"}
-                  </p>
-                </div>
-
-                {selectedAppointment.statusHistory &&
-                  selectedAppointment.statusHistory.length > 0 && (
-                    <div className="status-history">
-                      <h3>Status History</h3>
-                      <div className="status-timeline">
-                        {selectedAppointment.statusHistory.map(
-                          (history, index) => (
-                            <div key={index} className="status-item">
-                              <div className="status-marker"></div>
-                              <div className="status-content">
-                                <p className="status-title">
-                                  <span
-                                    className={`status-badge ${getStatusBadgeClass(
-                                      history.status
-                                    )}`}
-                                  >
-                                    {history.status?.charAt(0).toUpperCase() +
-                                      history.status?.slice(1) || "Unknown"}
-                                  </span>
-                                </p>
-                                <p className="status-date">
-                                  {formatDate(history.timestamp)}
-                                </p>
-                                {history.notes && (
-                                  <p className="status-notes">
-                                    {history.notes}
-                                  </p>
-                                )}
-                              </div>
-                            </div>
-                          )
-                        )}
-                      </div>
+                  <div className="info-grid">
+                    <div className="info-item">
+                      <span className="info-label">Name:</span>
+                      <span className="info-value">
+                        {selectedAppointment.doctor?.user?.fullname || "N/A"}
+                      </span>
                     </div>
-                  )}
+                    <div className="info-item">
+                      <span className="info-label">Username:</span>
+                      <span className="info-value">
+                        {selectedAppointment.doctor?.user?.username || "N/A"}
+                      </span>
+                    </div>
+                    <div className="info-item">
+                      <span className="info-label">Email:</span>
+                      <span className="info-value">
+                        {selectedAppointment.doctor?.user?.email || "N/A"}
+                      </span>
+                    </div>
+                    <div className="info-item">
+                      <span className="info-label">Phone:</span>
+                      <span className="info-value">
+                        {selectedAppointment.doctor?.user?.contact?.phone ||
+                          "N/A"}
+                      </span>
+                    </div>
+                  </div>
+                </div>
               </div>
 
-              <div className="modal-actions">
-                <Button
-                  variant="primary"
-                  onClick={() => {
-                    setShowDetailsModal(false);
-                    handleUpdateStatus(selectedAppointment);
-                  }}
-                >
-                  Update Status
-                </Button>
-                <Button
-                  variant="secondary"
-                  onClick={() => setShowDetailsModal(false)}
-                >
-                  Close
-                </Button>
-              </div>
+              {selectedAppointment.statusHistory &&
+                selectedAppointment.statusHistory.length > 0 && (
+                  <div className="status-history">
+                    <h3>Status History</h3>
+                    <div className="status-timeline">
+                      {selectedAppointment.statusHistory.map(
+                        (history, index) => (
+                          <div key={index} className="status-item">
+                            <div className="status-marker"></div>
+                            <div className="status-content">
+                              <div className="status-header">
+                                <span
+                                  className={`status-badge ${getStatusBadgeClass(
+                                    history.status
+                                  )}`}
+                                >
+                                  {history.status?.charAt(0).toUpperCase() +
+                                    history.status?.slice(1) || "Unknown"}
+                                </span>
+                                <span className="status-date">
+                                  {formatDate(history.timestamp)}
+                                </span>
+                              </div>
+                              {history.notes && (
+                                <p className="status-notes">{history.notes}</p>
+                              )}
+                            </div>
+                          </div>
+                        )
+                      )}
+                    </div>
+                  </div>
+                )}
+            </div>
+
+            <div className="modal-actions">
+              <Button
+                variant="outline-primary"
+                onClick={() => {
+                  setShowDetailsModal(false);
+                  handleUpdateStatus(selectedAppointment);
+                }}
+              >
+                Update Status
+              </Button>
+              <Button
+                variant="secondary"
+                onClick={() => setShowDetailsModal(false)}
+              >
+                Close
+              </Button>
             </div>
           </div>
-        </div>
+        </Modal>
       )}
 
-      {/* Update Status Modal */}
+      {/* Replace the custom modal with the common Modal component for status update */}
       {showStatusModal && selectedAppointment && (
-        <div className="modal-overlay">
-          <div className="modal status-update-modal">
-            <div className="modal-header">
-              <h2>Update Appointment Status</h2>
-              <button
-                className="close-btn"
+        <Modal
+          title="Update Appointment Status"
+          onClose={() => setShowStatusModal(false)}
+          size="medium"
+        >
+          <form onSubmit={submitStatusUpdate} className="status-update-form">
+            <div className="form-group">
+              <label htmlFor="status">Status</label>
+              <select
+                id="status"
+                name="status"
+                value={statusForm.status}
+                onChange={handleStatusFormChange}
+                required
+                className="status-select"
+              >
+                <option value="">Select Status</option>
+                <option value="pending">Pending</option>
+                <option value="confirmed">Confirmed</option>
+                <option value="scheduled">Scheduled</option>
+                <option value="completed">Completed</option>
+                <option value="cancelled">Cancelled</option>
+                <option value="no-show">No Show</option>
+              </select>
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="notes">Notes (Optional)</label>
+              <textarea
+                id="notes"
+                name="notes"
+                value={statusForm.notes}
+                onChange={handleStatusFormChange}
+                rows="3"
+                className="status-notes-input"
+                placeholder="Add any relevant notes about this status change"
+              ></textarea>
+            </div>
+
+            <div className="form-actions">
+              <Button
+                type="button"
+                variant="secondary"
                 onClick={() => setShowStatusModal(false)}
               >
-                <i className="fas fa-times"></i>
-              </button>
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                variant="outline-primary"
+                disabled={loading}
+                loading={loading}
+              >
+                Update Status
+              </Button>
             </div>
-            <div className="modal-body">
-              <form onSubmit={submitStatusUpdate}>
-                <div className="form-group">
-                  <label htmlFor="status">Status</label>
-                  <select
-                    id="status"
-                    name="status"
-                    value={statusForm.status}
-                    onChange={handleStatusFormChange}
-                    required
-                  >
-                    <option value="">Select Status</option>
-                    <option value="pending">Pending</option>
-                    <option value="confirmed">Confirmed</option>
-                    <option value="scheduled">Scheduled</option>
-                    <option value="completed">Completed</option>
-                    <option value="cancelled">Cancelled</option>
-                    <option value="no-show">No Show</option>
-                  </select>
-                </div>
-
-                <div className="form-group">
-                  <label htmlFor="notes">Notes (Optional)</label>
-                  <textarea
-                    id="notes"
-                    name="notes"
-                    value={statusForm.notes}
-                    onChange={handleStatusFormChange}
-                    rows="3"
-                    placeholder="Add any relevant notes about this status change"
-                  ></textarea>
-                </div>
-
-                <div className="form-actions">
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    onClick={() => setShowStatusModal(false)}
-                  >
-                    Cancel
-                  </Button>
-                  <Button
-                    type="submit"
-                    variant="primary"
-                    disabled={loading}
-                    loading={loading}
-                  >
-                    Update Status
-                  </Button>
-                </div>
-              </form>
-            </div>
-          </div>
-        </div>
+          </form>
+        </Modal>
       )}
+
+      {/* Add Popup component for notifications */}
+      <Popup
+        type={popup.type}
+        title={popup.title}
+        message={popup.message}
+        isVisible={popup.show}
+        onClose={hidePopup}
+        position="top-right"
+        autoClose={true}
+        duration={5000}
+      />
     </div>
   );
 };

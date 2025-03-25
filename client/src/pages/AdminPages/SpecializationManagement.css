@@ -296,3 +296,60 @@
     max-width: none;
   }
 }
+
+/* Delete Confirmation Modal Styles */
+.delete-confirmation {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-4);
+  padding: var(--spacing-2);
+}
+
+.delete-confirmation-icon {
+  font-size: 3rem;
+  color: var(--admin-danger);
+  margin-bottom: var(--spacing-2);
+}
+
+.delete-confirmation-message {
+  text-align: center;
+  color: var(--gray-800);
+  font-size: var(--font-size-md);
+  margin: 0;
+  line-height: 1.5;
+}
+
+.delete-confirmation-message strong {
+  color: var(--admin-danger);
+  font-weight: 600;
+}
+
+.delete-confirmation-actions {
+  display: flex;
+  justify-content: center;
+  gap: var(--spacing-4);
+  margin-top: var(--spacing-2);
+  width: 100%;
+}
+
+.delete-button {
+  min-width: 120px;
+}
+
+.cancel-button {
+  min-width: 100px;
+}
+
+@media (max-width: 576px) {
+  .delete-confirmation-actions {
+    flex-direction: column-reverse;
+    align-items: stretch;
+  }
+
+  .delete-button,
+  .cancel-button {
+    width: 100%;
+    min-width: auto;
+  }
+}

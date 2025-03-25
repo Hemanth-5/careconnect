@@ -178,7 +178,7 @@
 
 .status-completed {
   background-color: rgba(var(--admin-success-rgb), 0.1);
-  color: var (--admin-success);
+  color: var(--admin-success);
 }
 
 .status-cancelled {
@@ -507,5 +507,255 @@
   to {
     transform: translateY(0);
     opacity: 1;
+  }
+}
+
+/* Enhanced Appointment Details Modal Styles */
+.appointment-details-container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-6);
+}
+
+.appointment-details {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-6);
+}
+
+.detail-columns {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--spacing-6);
+}
+
+.appointment-info,
+.patient-info,
+.doctor-info,
+.status-history {
+  background-color: var(--gray-50);
+  padding: var(--spacing-4) var(--spacing-5);
+  border-radius: var(--border-radius-md);
+  box-shadow: var(--shadow-sm);
+  position: relative;
+  transition: all var(--transition-fast) ease;
+}
+
+.appointment-info:hover,
+.patient-info:hover,
+.doctor-info:hover,
+.status-history:hover {
+  box-shadow: var(--shadow-md);
+  background-color: white;
+}
+
+.appointment-info {
+  border-top: 4px solid var(--admin-secondary);
+}
+
+.patient-info {
+  border-top: 4px solid var(--admin-info);
+}
+
+.doctor-info {
+  border-top: 4px solid var(--admin-success);
+}
+
+.status-history {
+  border-top: 4px solid var(--admin-primary);
+}
+
+.appointment-info h3,
+.patient-info h3,
+.doctor-info h3,
+.status-history h3 {
+  margin-top: 0;
+  margin-bottom: var(--spacing-4);
+  color: var(--gray-800);
+  font-size: var(--font-size-lg);
+  padding-bottom: var(--spacing-2);
+  border-bottom: 1px solid var(--gray-200);
+}
+
+.info-grid {
+  display: grid;
+  gap: var(--spacing-3);
+}
+
+.info-item {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-1);
+}
+
+.info-label {
+  font-weight: 500;
+  color: var(--gray-600);
+  font-size: var(--font-size-sm);
+}
+
+.info-value {
+  color: var(--gray-800);
+}
+
+.appointment-notes-container {
+  margin-top: var(--spacing-4);
+}
+
+.appointment-notes-container h4 {
+  margin-top: 0;
+  margin-bottom: var(--spacing-2);
+  font-size: var(--font-size-md);
+  color: var(--gray-700);
+}
+
+.appointment-notes {
+  white-space: pre-line;
+  padding: var(--spacing-3);
+  background-color: rgba(var(--admin-secondary-rgb), 0.05);
+  border-radius: var(--border-radius);
+  border-left: 3px solid var(--admin-secondary);
+  line-height: 1.6;
+  margin: 0;
+  color: var(--gray-700);
+}
+
+/* Status Timeline - Enhanced */
+.status-timeline {
+  position: relative;
+  padding-left: var(--spacing-6);
+}
+
+.status-timeline::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 10px;
+  width: 2px;
+  background-color: var(--gray-300);
+}
+
+.status-item {
+  position: relative;
+  margin-bottom: var(--spacing-4);
+}
+
+.status-item:last-child {
+  margin-bottom: 0;
+}
+
+.status-marker {
+  position: absolute;
+  left: -28px;
+  top: 6px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background-color: var(--admin-primary);
+  border: 3px solid white;
+  box-shadow: 0 0 0 1px rgba(var(--admin-primary-rgb), 0.3);
+  z-index: 1;
+}
+
+.status-content {
+  background-color: white;
+  padding: var(--spacing-3);
+  border-radius: var (--border-radius);
+  box-shadow: var(--shadow-sm);
+  transition: all var(--transition-fast) ease;
+}
+
+.status-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--spacing-2);
+}
+
+.status-item:hover .status-content {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.status-date {
+  font-size: var(--font-size-xs);
+  color: var(--gray-600);
+}
+
+.status-notes {
+  padding: var(--spacing-2);
+  background-color: rgba(var(--admin-primary-rgb), 0.05);
+  border-radius: var(--border-radius);
+  font-size: var(--font-size-sm);
+  color: var(--gray-700);
+  margin: var(--spacing-2) 0 0;
+  border-left: 2px solid var(--admin-primary);
+}
+
+/* Status Update Form */
+.status-update-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-4);
+}
+
+.status-select {
+  width: 100%;
+  padding: var(--spacing-3);
+  border: 1px solid var(--gray-300);
+  border-radius: var(--border-radius);
+  background-color: white;
+  font-size: var(--font-size-md);
+  color: var(--gray-800);
+  transition: all var(--transition-fast) ease;
+}
+
+.status-select:focus {
+  border-color: var(--admin-primary);
+  box-shadow: 0 0 0 3px rgba(var(--admin-primary-rgb), 0.1);
+  outline: none;
+}
+
+.status-notes-input {
+  width: 100%;
+  padding: var(--spacing-3);
+  border: 1px solid var(--gray-300);
+  border-radius: var(--border-radius);
+  resize: vertical;
+  min-height: 100px;
+  font-family: inherit;
+  font-size: var(--font-size-md);
+  line-height: 1.5;
+  color: var(--gray-800);
+  transition: all var(--transition-fast) ease;
+}
+
+.status-notes-input:focus {
+  border-color: var(--admin-primary);
+  box-shadow: 0 0 0 3px rgba(var(--admin-primary-rgb), 0.1);
+  outline: none;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--spacing-3);
+  margin-top: var(--spacing-2);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .detail-columns {
+    grid-template-columns: 1fr;
+  }
+
+  .status-update-form .form-actions {
+    flex-direction: column;
+    gap: var(--spacing-2);
+  }
+
+  .status-update-form .form-actions button {
+    width: 100%;
   }
 }
