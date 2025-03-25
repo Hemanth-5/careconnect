@@ -411,7 +411,8 @@ const UserManagement = () => {
       } else {
         // Add new user with improved handling
         console.log(userData);
-        const response = await adminAPI.registerUser(userData);
+        const { email, password, role } = userData;
+        const response = await adminAPI.registerUser({ email, password, role });
 
         if (!response.data) {
           throw new Error("Failed to create user - no data returned");
@@ -424,7 +425,11 @@ const UserManagement = () => {
           throw new Error("Failed to get new user ID");
         }
 
-        console.log("New user created with ID:", newUserId);
+        // Update with user specific data
+        const userResponse = await adminAPI.updateUser(newUserId, userData);
+        if (!userResponse.data) {
+          throw new Error("Failed to update user with additional data");
+        }
 
         // Refresh the user list to get the complete data
         await fetchUsers();
@@ -455,7 +460,7 @@ const UserManagement = () => {
               doctorData
             );
 
-            console.log("Doctor profile updated:", doctorResponse.data);
+            // console.log("Doctor profile updated:", doctorResponse.data);
           } catch (doctorErr) {
             console.error("Error updating doctor profile:", doctorErr);
             setError("User created but failed to set up doctor profile.");

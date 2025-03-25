@@ -14,7 +14,7 @@ export const API = {
   },
   ADMIN: {
     GET_USERS: `${BASE_URL}/admin/users`,
-    REGISTER_USER: `${BASE_URL}/admin/users/register`,
+    REGISTER_USER: `${BASE_URL}/admin/register`,
     UPDATE_USER: (userId) => `${BASE_URL}/admin/users/${userId}`,
     DELETE_USER: (userId) => `${BASE_URL}/admin/users/${userId}`,
     GET_SPECIALIZATIONS: `${BASE_URL}/admin/specializations`,

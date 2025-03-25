@@ -49,7 +49,11 @@ const userSchema = new mongoose.Schema(
     },
     dateOfBirth: { type: Date },
     age: { type: Number },
-    profilePicture: { type: String, default: defaultProfilePicture },
+    profilePicture: {
+      type: String,
+      default:
+        "https://static.vecteezy.com/system/resources/previews/020/765/399/non_2x/default-profile-account-unknown-icon-black-silhouette-free-vector.jpg",
+    },
     profilePicturePublicId: { type: String },
     contact: contactSchema,
     isActive: { type: Boolean, default: true },

@@ -695,6 +695,14 @@
   margin-top: var(--spacing-2);
 }
 
+.working-hours span.available {
+  color: var(--success);
+}
+
+.working-hours span.unavailable {
+  color: var(--danger);
+}
+
 /* Ratings and Reviews Section */
 .ratings-summary {
   display: flex;

@@ -4,6 +4,7 @@ import Card from "../components/common/Card";
 import Button from "../components/common/Button";
 import Input from "../components/common/Input";
 import Spinner from "../components/common/Spinner";
+import Popup from "../components/common/Popup";
 import { API } from "../constants/api";
 import authAPI from "../api/auth";
 import "./Login.css";
@@ -22,6 +23,29 @@ const Login = () => {
   const [forgotPasswordMode, setForgotPasswordMode] = useState(false);
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
+
+  // Popup state
+  const [popup, setPopup] = useState({
+    show: false,
+    type: "error",
+    message: "",
+    title: "",
+  });
+
+  // Show popup method
+  const showPopup = (type, message, title = "") => {
+    setPopup({
+      show: true,
+      type,
+      message,
+      title,
+    });
+  };
+
+  // Hide popup method
+  const hidePopup = () => {
+    setPopup((prev) => ({ ...prev, show: false }));
+  };
 
   // Check if user is already logged in or has remembered credentials
   useEffect(() => {
@@ -172,11 +196,21 @@ const Login = () => {
         console.error("Error decoding token:", error);
       }
 
-      // Redirect based on user role
-      navigate("/redirect");
+      // Show success popup
+      showPopup("success", "Login successful. Redirecting...", "Welcome!");
+
+      // Redirect based on user role after a short delay
+      setTimeout(() => {
+        navigate("/redirect");
+      }, 1000);
     } catch (error) {
       console.error("Login error:", error);
       setLoginError(error.message || "Login failed. Please try again.");
+      showPopup(
+        "error",
+        error.message || "Login failed. Please try again.",
+        "Login Error"
+      );
     } finally {
       setLoading(false);
     }
@@ -195,12 +229,19 @@ const Login = () => {
 
       // Show success message
       setLoginError("");
-      alert(
-        `If an account exists for ${formData.email}, a password reset link will be sent.`
+      showPopup(
+        "info",
+        `If an account exists for ${formData.email}, a password reset link will be sent.`,
+        "Password Reset"
       );
       setForgotPasswordMode(false);
     } catch (error) {
       setLoginError("Unable to process your request. Please try again later.");
+      showPopup(
+        "warning",
+        "Unable to process your request. Please try again later.",
+        "Request Failed"
+      );
       console.error("Password reset error:", error);
     } finally {
       setLoading(false);
@@ -236,12 +277,6 @@ const Login = () => {
             </p>
           </div>
 
-          {loginError && (
-            <div className="login-error">
-              <i className="fas fa-exclamation-circle"></i> {loginError}
-            </div>
-          )}
-
           <form onSubmit={handleSubmit}>
             <Input
               label="Email"
@@ -257,7 +292,7 @@ const Login = () => {
             {!forgotPasswordMode && (
               <div className="password-input-container">
                 <Input
-                  label="Password (if applicable)"
+                  label="Password"
                   type={showPassword ? "text" : "password"}
                   id="password"
                   placeholder="Enter your password if required"
@@ -312,12 +347,22 @@ const Login = () => {
           </form>
 
           <div className="login-footer">
-            <p>
-              © {new Date().getFullYear()} CareConnect. All rights reserved.
-            </p>
+            <p>© {new Date().getFullYear()} CareConnect</p>
           </div>
         </Card>
       </div>
+
+      {/* Popup component for notifications */}
+      <Popup
+        type={popup.type}
+        title={popup.title}
+        message={popup.message}
+        isVisible={popup.show}
+        onClose={hidePopup}
+        position="top-right"
+        autoClose={true}
+        duration={5000}
+      />
     </div>
   );
 };
