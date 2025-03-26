@@ -1,10 +1,10 @@
 import axios from "axios";
-import dotenv from "dotenv";
+// import dotenv from "dotenv";
 
-dotenv.config();
+// dotenv.config();
 
 const api = axios.create({
-  baseURL: process.env.SERVER_BASE_URL.toString(),
+  baseURL: process.env.REACT_APP_SERVER_BASE_URL || "http://localhost:5000/api",
   headers: {
     "Content-Type": "application/json",
   },
