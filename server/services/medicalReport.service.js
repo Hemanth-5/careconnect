@@ -2,8 +2,9 @@ import MedicalReport from "../models/medicalReport.model.js";
 
 // Get all reports for a doctor
 const getDoctorReports = async (doctorId) => {
+  console.log(doctorId);
   try {
-    return await MedicalReport.find({ issuedBy: doctorId })
+    return await MedicalReport.find({ issuedByDoctor: doctorId })
       .populate({
         path: "associatedPatient",
         populate: {

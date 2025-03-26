@@ -19,6 +19,7 @@ export const getDoctorReports = async (req, res) => {
     }
 
     const reports = await MedicalReportService.getDoctorReports(doctor._id);
+    console.log(reports);
     res.status(200).json(reports);
   } catch (error) {
     console.error("Error fetching doctor reports:", error);

@@ -23,9 +23,13 @@ import {
   markNotificationAsRead,
   getAllPatients,
   getDoctorDashboard,
-  getReports,
-  getReportById,
 } from "../controllers/doctor.controller.js";
+
+// Import report controllers from medicalReport.controller.js
+import {
+  getDoctorReports as getReports,
+  getMedicalReportById as getReportById,
+} from "../controllers/medicalReport.controller.js";
 
 // Import the correct functions from patientRecord.controller.js
 import {

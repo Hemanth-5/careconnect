@@ -163,7 +163,9 @@ const Patients = () => {
                           <i className="fas fa-user"></i>
                         )}
                       </div>
-                      <h3 className="patient-name">{user.fullname || "N/A"}</h3>
+                      <h3 className="patient-name">
+                        {user.fullname || user.username || "N/A"}
+                      </h3>
                       {user.dateOfBirth && (
                         <p className="patient-age">
                           <i className="fas fa-birthday-cake"></i>

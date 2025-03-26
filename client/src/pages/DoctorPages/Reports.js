@@ -67,6 +67,7 @@ const Reports = () => {
     try {
       setLoading(true);
       const response = await doctorAPI.getReports();
+      console.log(response.data);
       if (response && response.data) {
         setReports(response.data || []);
       }
