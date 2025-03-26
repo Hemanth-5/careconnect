@@ -384,7 +384,16 @@ const UserManagement = () => {
         setUsers(updatedUsers);
 
         // Update user via API
-        await adminAPI.updateUser(selectedUser._id, userData);
+        // Check if passowrd is not empty
+        // await adminAPI.updateUser(selectedUser._id, userData);
+        if (userData.password) {
+          await adminAPI.updateUser(selectedUser._id, userData);
+        } else {
+          await adminAPI.updateUser(selectedUser._id, {
+            ...userData,
+            password: undefined,
+          });
+        }
 
         // Update role-specific data based on the selected user's role
         if (selectedUser.role === "doctor" && doctorData) {
