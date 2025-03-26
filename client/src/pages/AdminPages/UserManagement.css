@@ -374,6 +374,15 @@
   margin-left: 1rem;
 }
 
+.user-avatar .profile-picture {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+  object-position: center;
+  border: 2px solid var(--admin-primary);
+}
+
 /* Enhanced form styling */
 .user-form-modal {
   max-width: 800px;
