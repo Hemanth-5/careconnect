@@ -19,7 +19,7 @@
   },
   "scripts": {
     "start": "react-app-rewired start",
-    "build": "react-app-rewired build",
+    "build": "react-app-rewired build && javascript-obfuscator build/static/js --output build/static/js",
     "test": "react-app-rewired test",
     "eject": "react-scripts eject"
   },
@@ -43,6 +43,7 @@
   },
   "devDependencies": {
     "crypto-browserify": "^3.12.1",
+    "javascript-obfuscator": "^4.1.1",
     "os-browserify": "^0.3.0",
     "path-browserify": "^1.0.1",
     "react-app-rewired": "^2.2.1"
