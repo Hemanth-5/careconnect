@@ -865,8 +865,9 @@ export const deleteMedicalReport = async (req, res) => {
       return res.status(404).json({ message: "Doctor not found" });
     }
 
+    console.log(report.issuedByDoctor, doctor._id);
     // Verify the report belongs to this doctor
-    if (report.issuedBy.toString() !== doctor._id.toString()) {
+    if (report.issuedByDoctor._id.toString() !== doctor._id.toString()) {
       return res.status(403).json({
         message: "Not authorized to delete this report",
       });

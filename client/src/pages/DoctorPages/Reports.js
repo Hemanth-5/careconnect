@@ -53,10 +53,27 @@ const Reports = () => {
     includeAppointments: true,
     includePrescriptions: true,
     includeMedicalRecords: true,
+    // New field for specific items
+    specificItems: false,
   });
 
   // List of patients for select dropdown
   const [patients, setPatients] = useState([]);
+
+  // Additional state for managing items to include in reports
+  const [patientAppointments, setPatientAppointments] = useState([]);
+  const [patientPrescriptions, setPatientPrescriptions] = useState([]);
+  const [patientRecords, setPatientRecords] = useState([]);
+  const [showItemsModal, setShowItemsModal] = useState(false);
+  const [selectedItems, setSelectedItems] = useState({
+    appointments: [],
+    prescriptions: [],
+    patientRecords: [],
+  });
+
+  // Add debugging toggle state and state to manage which tab is currently shown
+  const [showDebug, setShowDebug] = useState(false);
+  const [activeTab, setActiveTab] = useState(0);
 
   useEffect(() => {
     fetchReports();
@@ -67,7 +84,6 @@ const Reports = () => {
     try {
       setLoading(true);
       const response = await doctorAPI.getReports();
-      console.log(response.data);
       if (response && response.data) {
         setReports(response.data || []);
       }
@@ -116,36 +132,70 @@ const Reports = () => {
     try {
       setIsGenerating(true);
 
+      // Check that patient ID is properly formatted
+      if (formData.associatedPatient) {
+        console.log("Using patient ID for report:", formData.associatedPatient);
+      }
+
       // Format data according to MedicalReport service
       const reportData = {
-        associatedPatient: formData.associatedPatient,
+        associatedPatient: formData.associatedPatient || null, // Ensure null if empty
         reportType: formData.reportType,
         comments: formData.comments,
         // Additional metadata as JSON for the report generation
-        metadata: {
-          dateRange: formData.dateRange,
-          startDate:
-            formData.dateRange === "custom"
-              ? formData.customStartDate
-              : undefined,
-          endDate:
-            formData.dateRange === "custom"
-              ? formData.customEndDate
-              : undefined,
+        reportMetadata: {
+          includeSummary: true,
           includeAppointments: formData.includeAppointments,
           includePrescriptions: formData.includePrescriptions,
-          includeMedicalRecords: formData.includeMedicalRecords,
+          includeRecords: formData.includeMedicalRecords,
+          dateRange: {
+            startDate:
+              formData.dateRange === "custom"
+                ? formData.customStartDate
+                : undefined,
+            endDate:
+              formData.dateRange === "custom"
+                ? formData.customEndDate
+                : undefined,
+          },
         },
       };
 
-      // Create a medical report using the MedicalReportService
-      const response = await doctorAPI.createMedicalReport(reportData);
+      console.log("Sending report data:", reportData);
+
+      // Create a medical report
+      const response = await doctorAPI.createReport(reportData);
 
       if (response && response.data) {
+        const newReport = response.data;
+        console.log("New report created:", newReport);
+
+        // If specific items are selected, add them to the report
+        if (
+          formData.specificItems &&
+          (selectedItems.appointments.length > 0 ||
+            selectedItems.prescriptions.length > 0 ||
+            selectedItems.patientRecords.length > 0)
+        ) {
+          console.log("Adding items to report:", {
+            appointments: selectedItems.appointments,
+            prescriptions: selectedItems.prescriptions,
+            patientRecords: selectedItems.patientRecords,
+          });
+
+          await doctorAPI.addItemsToReport(newReport._id, selectedItems);
+        }
+
         showPopup("success", "Report generated successfully!");
 
-        // Add the new report to the list
-        setReports((prevReports) => [response.data, ...prevReports]);
+        // Add the new report to the list using functional update to ensure we have the latest state
+        setReports((prevReports) => {
+          const updatedReports = [newReport, ...prevReports];
+          // Log inside the functional update to see the actual updated array
+          console.log("Reports updated:", updatedReports);
+          return updatedReports;
+        });
+
         setShowGenerateModal(false);
       }
     } catch (err) {
@@ -204,6 +254,14 @@ const Reports = () => {
       includeAppointments: true,
       includePrescriptions: true,
       includeMedicalRecords: true,
+      specificItems: false,
+    });
+
+    // Reset selected items
+    setSelectedItems({
+      appointments: [],
+      prescriptions: [],
+      patientRecords: [],
     });
   };
 
@@ -303,6 +361,198 @@ const Reports = () => {
       return dateSort === "desc" ? dateB - dateA : dateA - dateB;
     });
 
+  // Handle patient change - fetch their appointments, prescriptions, and records
+  useEffect(() => {
+    if (formData.associatedPatient && formData.specificItems) {
+      fetchPatientItems(formData.associatedPatient);
+    }
+  }, [formData.associatedPatient, formData.specificItems]);
+
+  // Fetch patient-specific items
+  const fetchPatientItems = async (patientId) => {
+    try {
+      setLoading(true);
+      console.log("Fetching items for patient ID:", patientId);
+
+      // Fetch appointments with better error handling and logging
+      try {
+        const appointmentsResponse = await doctorAPI.getAppointments();
+        console.log("All appointments:", appointmentsResponse.data);
+
+        // More robust filtering that handles various patient reference formats
+        const patientAppointments = appointmentsResponse.data.filter(
+          (appointment) => {
+            // First log the appointment to help debug
+            console.log("Checking appointment:", {
+              id: appointment._id,
+              patient: appointment.patient,
+              patientId: appointment.patient?._id || appointment.patient,
+            });
+
+            // Handle case where patient is completely missing
+            if (!appointment.patient) {
+              console.log(
+                `Appointment ${appointment._id} has no patient reference`
+              );
+              return false;
+            }
+
+            // Handle both object format and string ID format
+            let appointmentPatientId;
+            if (typeof appointment.patient === "object") {
+              appointmentPatientId = appointment.patient._id;
+            } else {
+              appointmentPatientId = appointment.patient.toString();
+            }
+
+            // Compare with the target patient ID
+            const isMatch = appointmentPatientId === patientId;
+            console.log(
+              `Appointment ${
+                appointment._id
+              } patient ${appointmentPatientId} vs ${patientId}: ${
+                isMatch ? "MATCH" : "NO MATCH"
+              }`
+            );
+
+            return isMatch;
+          }
+        );
+
+        console.log("Filtered appointments:", patientAppointments);
+        setPatientAppointments(patientAppointments);
+      } catch (apptError) {
+        console.error("Error fetching appointments:", apptError);
+        showPopup("error", "Failed to fetch appointments");
+        setPatientAppointments([]);
+      }
+
+      // Apply the same robust filtering to prescriptions
+      try {
+        const prescriptionsResponse = await doctorAPI.getPrescriptions();
+        console.log("All prescriptions:", prescriptionsResponse.data);
+
+        const patientPrescriptions = prescriptionsResponse.data.filter(
+          (prescription) => {
+            if (!prescription.patient) return false;
+
+            const prescriptionPatientId =
+              typeof prescription.patient === "object"
+                ? prescription.patient._id
+                : prescription.patient.toString();
+
+            return prescriptionPatientId === patientId;
+          }
+        );
+
+        console.log("Filtered prescriptions:", patientPrescriptions);
+        setPatientPrescriptions(patientPrescriptions);
+      } catch (rxError) {
+        console.error("Error fetching prescriptions:", rxError);
+        setPatientPrescriptions([]);
+      }
+
+      // Apply the same robust filtering to medical records
+      try {
+        const recordsResponse = await doctorAPI.getMedicalRecords();
+        console.log("All records:", recordsResponse.data);
+
+        const patientRecords = recordsResponse.data.filter((record) => {
+          if (!record.patient) return false;
+
+          const recordPatientId =
+            typeof record.patient === "object"
+              ? record.patient._id
+              : record.patient.toString();
+
+          return recordPatientId === patientId;
+        });
+
+        console.log("Filtered records:", patientRecords);
+        setPatientRecords(patientRecords);
+      } catch (recordError) {
+        console.error("Error fetching medical records:", recordError);
+        setPatientRecords([]);
+      }
+    } catch (error) {
+      console.error("Error in fetchPatientItems:", error);
+      showPopup("error", "Failed to load patient data: " + error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Function to handle tab switching - fix syntax
+  const handleTabChange = (tabIndex) => {
+    console.log("Switching to tab:", tabIndex);
+    setActiveTab(tabIndex);
+  };
+
+  // Open modal to select specific items
+  const openItemSelectionModal = () => {
+    if (!formData.associatedPatient) {
+      showPopup("error", "Please select a patient first");
+      return;
+    }
+
+    // Ensure the patient's data is loaded
+    fetchPatientItems(formData.associatedPatient);
+
+    // Default to first tab (Appointments) explicitly
+    setActiveTab(0);
+    setShowItemsModal(true);
+  };
+
+  // Handle item selection
+  const handleItemSelection = (type, itemId) => {
+    setSelectedItems((prev) => {
+      const currentItems = [...prev[type]];
+      const itemIndex = currentItems.indexOf(itemId);
+      if (itemIndex === -1) {
+        // Add item
+        return { ...prev, [type]: [...currentItems, itemId] };
+      } else {
+        // Remove item
+        currentItems.splice(itemIndex, 1);
+        return { ...prev, [type]: currentItems };
+      }
+    });
+  };
+
+  // Handle adding selected items to a report
+  const addItemsToReport = async (reportId) => {
+    try {
+      setLoading(true);
+
+      await doctorAPI.addItemsToReport(reportId, {
+        appointments: selectedItems.appointments,
+        prescriptions: selectedItems.prescriptions,
+        patientRecords: selectedItems.patientRecords,
+      });
+
+      showPopup("success", "Items added to report successfully");
+      setShowItemsModal(false);
+
+      // Refresh the report details
+      if (selectedReport && selectedReport._id === reportId) {
+        const updatedReport = await doctorAPI.getReportById(reportId);
+        setSelectedReport(updatedReport.data);
+      }
+    } catch (error) {
+      console.error("Error adding items to report:", error);
+      showPopup("error", "Failed to add items to report");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Add debug tracking for tab switching
+  useEffect(() => {
+    if (showDebug) {
+      console.log("Active tab:", activeTab);
+    }
+  }, [activeTab, showDebug]);
+
   return (
     <div className="doctor-reports">
       <div className="reports-header">
@@ -328,7 +578,6 @@ const Reports = () => {
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
             </div>
-
             <div className="filter-group">
               <select
                 value={typeFilter}
@@ -459,16 +708,16 @@ const Reports = () => {
           </p>
           <ul className="feature-list">
             <li>
-              <i className="fas fa-chart-line"></i>
-              Create patient summaries to review their health status
+              <i className="fas fa-chart-line"></i> Create patient summaries to
+              review their health status
             </li>
             <li>
-              <i className="fas fa-prescription"></i>
-              Generate prescription reports to track medication history
+              <i className="fas fa-prescription"></i> Generate prescription
+              reports to track medication history
             </li>
             <li>
-              <i className="fas fa-calendar-check"></i>
-              Produce appointment reports to analyze visit patterns
+              <i className="fas fa-calendar-check"></i> Produce appointment
+              reports to analyze visit patterns
             </li>
           </ul>
           <Button variant="outline-primary" onClick={openGenerateModal}>
@@ -630,6 +879,59 @@ const Reports = () => {
               </div>
             </div>
 
+            {/* New option for selecting specific items */}
+            <div className="form-group">
+              <div className="specific-items-option">
+                <input
+                  type="checkbox"
+                  id="specificItems"
+                  name="specificItems"
+                  checked={formData.specificItems}
+                  onChange={handleInputChange}
+                />
+                <label htmlFor="specificItems">
+                  <i className="fas fa-list-check"></i> Select specific items to
+                  include
+                  {selectedItems.appointments.length +
+                    selectedItems.prescriptions.length +
+                    selectedItems.patientRecords.length >
+                    0 && (
+                    <span className="items-count">
+                      (
+                      {selectedItems.appointments.length +
+                        selectedItems.prescriptions.length +
+                        selectedItems.patientRecords.length}
+                      )
+                    </span>
+                  )}
+                </label>
+              </div>
+              {formData.specificItems && formData.associatedPatient && (
+                <div className="specific-items-actions">
+                  <Button
+                    type="button"
+                    variant="outline-secondary"
+                    size="sm"
+                    onClick={openItemSelectionModal}
+                  >
+                    <i className="fas fa-list"></i> Select Items
+                    {selectedItems.appointments.length +
+                      selectedItems.prescriptions.length +
+                      selectedItems.patientRecords.length >
+                      0 && (
+                      <span className="items-count">
+                        (
+                        {selectedItems.appointments.length +
+                          selectedItems.prescriptions.length +
+                          selectedItems.patientRecords.length}
+                        )
+                      </span>
+                    )}
+                  </Button>
+                </div>
+              )}
+            </div>
+
             <div className="form-note">
               <i className="fas fa-info-circle"></i>
               <p>
@@ -658,6 +960,316 @@ const Reports = () => {
               </Button>
             </div>
           </form>
+        </Modal>
+      )}
+
+      {/* Item Selection Modal */}
+      {showItemsModal && (
+        <Modal
+          title="Select Items for Report"
+          onClose={() => setShowItemsModal(false)}
+          size="large"
+        >
+          <div className="item-selection-modal">
+            <div className="tabs-container">
+              <div className="tabs">
+                <button
+                  className={`tab ${activeTab === 0 ? "active" : ""}`}
+                  onClick={() => handleTabChange(0)}
+                >
+                  <i className="fas fa-calendar-check"></i> Appointments (
+                  {patientAppointments.length})
+                </button>
+                <button
+                  className={`tab ${activeTab === 1 ? "active" : ""}`}
+                  onClick={() => handleTabChange(1)}
+                >
+                  <i className="fas fa-prescription"></i> Prescriptions (
+                  {patientPrescriptions.length})
+                </button>
+                <button
+                  className={`tab ${activeTab === 2 ? "active" : ""}`}
+                  onClick={() => handleTabChange(2)}
+                >
+                  <i className="fas fa-file-medical"></i> Records (
+                  {patientRecords.length})
+                </button>
+              </div>
+
+              <div className="tab-content">
+                {/* Appointments Tab */}
+                <div className={`tab-panel ${activeTab === 0 ? "" : "hidden"}`}>
+                  {loading ? (
+                    <div className="loading-container">
+                      <Spinner center size="medium" />
+                    </div>
+                  ) : patientAppointments.length > 0 ? (
+                    <div className="item-list appointments-list">
+                      {patientAppointments.map((appointment) => (
+                        <div
+                          key={appointment._id}
+                          className={`item-card ${
+                            selectedItems.appointments.includes(appointment._id)
+                              ? "selected"
+                              : ""
+                          }`}
+                          onClick={() =>
+                            handleItemSelection("appointments", appointment._id)
+                          }
+                        >
+                          {/* Keep existing item card content */}
+                          <div className="item-checkbox">
+                            <input
+                              type="checkbox"
+                              checked={selectedItems.appointments.includes(
+                                appointment._id
+                              )}
+                              readOnly
+                            />
+                          </div>
+                          <div className="item-details">
+                            <div className="item-title">
+                              <i className="fas fa-calendar-day"></i>
+                              {new Date(
+                                appointment.appointmentDate
+                              ).toLocaleDateString("en-US", {
+                                year: "numeric",
+                                month: "short",
+                                day: "numeric",
+                                hour: "2-digit",
+                                minute: "2-digit",
+                              })}
+                            </div>
+                            <div className="item-subtitle">
+                              <span
+                                className={`status-badge status-${appointment.status}`}
+                              >
+                                {appointment.status}
+                              </span>
+                              <span className="item-id">
+                                ID: {appointment._id}
+                              </span>
+                            </div>
+                            {appointment.reason && (
+                              <div className="item-description">
+                                {appointment.reason}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="no-items">
+                      <i className="fas fa-calendar-times"></i>
+                      <p>No appointments found for this patient.</p>
+                      <p className="help-text">
+                        If you believe this is an error, please check the
+                        patient ID and try again.
+                        <br />
+                        Patient ID: {formData.associatedPatient}
+                      </p>
+                      {console.log(formData)}
+                    </div>
+                  )}
+                </div>
+
+                {/* Prescriptions Tab */}
+                <div className={`tab-panel ${activeTab === 1 ? "" : "hidden"}`}>
+                  {loading ? (
+                    <div className="loading-container">
+                      <Spinner center size="medium" />
+                    </div>
+                  ) : patientPrescriptions.length > 0 ? (
+                    <div className="item-list prescriptions-list">
+                      {patientPrescriptions.map((prescription) => (
+                        <div
+                          key={prescription._id}
+                          className={`item-card ${
+                            selectedItems.prescriptions.includes(
+                              prescription._id
+                            )
+                              ? "selected"
+                              : ""
+                          }`}
+                          onClick={() =>
+                            handleItemSelection(
+                              "prescriptions",
+                              prescription._id
+                            )
+                          }
+                        >
+                          {/* Keep existing item card content */}
+                          <div className="item-checkbox">
+                            <input
+                              type="checkbox"
+                              checked={selectedItems.prescriptions.includes(
+                                prescription._id
+                              )}
+                              readOnly
+                            />
+                          </div>
+                          <div className="item-details">
+                            <div className="item-title">
+                              <i className="fas fa-prescription-bottle-medical"></i>
+                              Prescription{" "}
+                              {new Date(
+                                prescription.createdAt
+                              ).toLocaleDateString()}
+                            </div>
+                            <div className="item-subtitle">
+                              <span className="item-id">
+                                ID: {prescription._id}
+                              </span>
+                            </div>
+                            <div className="item-medications">
+                              {prescription.medications
+                                ?.slice(0, 2)
+                                .map((med, idx) => (
+                                  <span key={idx} className="medication-tag">
+                                    {med.name}
+                                  </span>
+                                ))}
+                              {prescription.medications?.length > 2 && (
+                                <span className="medication-tag more">
+                                  +{prescription.medications.length - 2} more
+                                </span>
+                              )}
+                            </div>
+                            {prescription.notes && (
+                              <div className="item-description">
+                                {prescription.notes}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="no-items">
+                      <i className="fas fa-prescription-bottle-alt"></i>
+                      <p>No prescriptions found for this patient.</p>
+                    </div>
+                  )}
+                </div>
+
+                {/* Medical Records Tab */}
+                <div className={`tab-panel ${activeTab === 2 ? "" : "hidden"}`}>
+                  {loading ? (
+                    <div className="loading-container">
+                      <Spinner center size="medium" />
+                    </div>
+                  ) : patientRecords.length > 0 ? (
+                    <div className="item-list records-list">
+                      {patientRecords.map((record) => (
+                        <div
+                          key={record._id}
+                          className={`item-card ${
+                            selectedItems.patientRecords.includes(record._id)
+                              ? "selected"
+                              : ""
+                          }`}
+                          onClick={() =>
+                            handleItemSelection("patientRecords", record._id)
+                          }
+                        >
+                          {/* Keep existing item card content */}
+                          <div className="item-checkbox">
+                            <input
+                              type="checkbox"
+                              checked={selectedItems.patientRecords.includes(
+                                record._id
+                              )}
+                              readOnly
+                            />
+                          </div>
+                          <div className="item-details">
+                            <div className="item-title">
+                              <i className="fas fa-file-medical"></i>
+                              Medical Record{" "}
+                              {new Date(record.createdAt).toLocaleDateString(
+                                "en-US",
+                                {
+                                  year: "numeric",
+                                  month: "short",
+                                  day: "numeric",
+                                }
+                              )}
+                            </div>
+                            <div className="item-subtitle">
+                              <span className="item-id">ID: {record._id}</span>
+                            </div>
+                            {record.records && record.records.length > 0 && (
+                              <div className="record-entries">
+                                {record.records
+                                  .slice(0, 2)
+                                  .map((entry, idx) => (
+                                    <span key={idx} className="entry-tag">
+                                      {entry.recordType}: {entry.title}
+                                    </span>
+                                  ))}
+                                {record.records.length > 2 && (
+                                  <span className="entry-tag more">
+                                    +{record.records.length - 2} more entries
+                                  </span>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="no-items">
+                      <i className="fas fa-file-medical-alt"></i>
+                      <p>No medical records found for this patient.</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {showDebug && (
+              <div className="debug-info modal-debug">
+                <h4>Item Selection Debug</h4>
+                <div>Selected Patient ID: {formData.associatedPatient}</div>
+                <div>Appointments found: {patientAppointments.length}</div>
+                <div>Prescriptions found: {patientPrescriptions.length}</div>
+                <div>Records found: {patientRecords.length}</div>
+                <div>Active Tab: {activeTab}</div>
+              </div>
+            )}
+
+            <div className="modal-actions">
+              <Button
+                type="button"
+                variant="outline-primary"
+                onClick={() => {
+                  if (selectedReport) {
+                    addItemsToReport(selectedReport._id);
+                  } else {
+                    setShowItemsModal(false);
+                  }
+                }}
+                disabled={
+                  loading ||
+                  (selectedItems.appointments.length === 0 &&
+                    selectedItems.prescriptions.length === 0 &&
+                    selectedItems.patientRecords.length === 0)
+                }
+              >
+                <i className="fas fa-check"></i>{" "}
+                {selectedReport ? "Add to Report" : "Confirm Selection"}
+              </Button>
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={() => setShowItemsModal(false)}
+              >
+                Cancel
+              </Button>
+            </div>
+          </div>
         </Modal>
       )}
 
@@ -881,13 +1493,694 @@ const Reports = () => {
                   </p>
                 </div>
               )}
+
+              {/* New section for included items */}
+              <div className="report-content-section">
+                <div className="content-block">
+                  <h3>
+                    <i className="fas fa-clipboard-list"></i> Included Items
+                  </h3>
+                  {/* Appointments section */}
+                  <div className="included-items-section">
+                    <h4>
+                      <i className="fas fa-calendar-check"></i> Appointments
+                      <span className="item-count">
+                        {selectedReport.appointments?.length || 0}
+                      </span>
+                    </h4>
+                    {selectedReport.appointments?.length > 0 ? (
+                      <div className="items-list">
+                        {selectedReport.appointments.map((appointment) => (
+                          <div key={appointment._id} className="included-item">
+                            <div className="item-icon">
+                              <i className="fas fa-calendar-day"></i>
+                            </div>
+                            <div className="item-content">
+                              <span className="item-date">
+                                {new Date(
+                                  appointment.appointmentDate
+                                ).toLocaleDateString("en-US", {
+                                  year: "numeric",
+                                  month: "short",
+                                  day: "numeric",
+                                  hour: "2-digit",
+                                  minute: "2-digit",
+                                })}
+                              </span>
+                              <span
+                                className={`status-badge status-${appointment.status}`}
+                              >
+                                {appointment.status}
+                              </span>
+                              <span className="item-id">
+                                ID: {appointment._id}
+                              </span>
+                              {appointment.reason && (
+                                <p className="item-notes">
+                                  {appointment.reason}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                        {/* Add more button if there are too many items */}
+                        {selectedReport.appointments.length > 5 && (
+                          <Button
+                            variant="text"
+                            size="sm"
+                            className="view-more-btn"
+                          >
+                            View all {selectedReport.appointments.length}{" "}
+                            appointments
+                          </Button>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="no-items-message">
+                        <p>No appointments included in this report.</p>
+                        <Button
+                          variant="outline-secondary"
+                          size="sm"
+                          onClick={() => {
+                            setShowReportDetailsModal(false);
+                            setShowItemsModal(true);
+                          }}
+                        >
+                          <i className="fas fa-plus"></i> Add Appointments
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Prescriptions section */}
+                  <div className="included-items-section">
+                    <h4>
+                      <i className="fas fa-prescription"></i> Prescriptions
+                      <span className="item-count">
+                        {selectedReport.prescriptions?.length || 0}
+                      </span>
+                    </h4>
+                    {selectedReport.prescriptions?.length > 0 ? (
+                      <div className="items-list">
+                        {selectedReport.prescriptions.map((prescription) => (
+                          <div key={prescription._id} className="included-item">
+                            <div className="item-icon">
+                              <i className="fas fa-prescription-bottle-medical"></i>
+                            </div>
+                            <div className="item-content">
+                              <span className="item-title">
+                                Prescription{" "}
+                                {new Date(
+                                  prescription.startDate ||
+                                    prescription.createdAt
+                                ).toLocaleDateString()}
+                              </span>
+                              <div className="medications-list">
+                                {prescription.medications
+                                  ?.slice(0, 3)
+                                  .map((med, idx) => (
+                                    <span key={idx} className="medication-pill">
+                                      {med.name}{" "}
+                                      {med.dosage && `(${med.dosage})`}
+                                    </span>
+                                  ))}
+                                {prescription.medications?.length > 3 && (
+                                  <span className="medication-pill more">
+                                    +{prescription.medications.length - 3} more
+                                  </span>
+                                )}
+                              </div>
+                              {prescription.notes && (
+                                <p className="item-notes">
+                                  {prescription.notes}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="no-items-message">
+                        <p>No prescriptions included in this report.</p>
+                        <Button
+                          variant="outline-secondary"
+                          size="sm"
+                          onClick={() => {
+                            setShowReportDetailsModal(false);
+                            setShowItemsModal(true);
+                          }}
+                        >
+                          <i className="fas fa-plus"></i> Add Prescriptions
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Medical Records section */}
+                  <div className="included-items-section">
+                    <h4>
+                      <i className="fas fa-file-medical"></i> Medical Records
+                      <span className="item-count">
+                        {selectedReport.patientRecords?.length || 0}
+                      </span>
+                    </h4>
+                    {selectedReport.patientRecords?.length > 0 ? (
+                      <div className="items-list">
+                        {selectedReport.patientRecords.map((record) => (
+                          <div key={record._id} className="included-item">
+                            <div className="item-icon">
+                              <i className="fas fa-file-medical-alt"></i>
+                            </div>
+                            <div className="item-content">
+                              <span className="item-date">
+                                {new Date(record.createdAt).toLocaleDateString(
+                                  "en-US",
+                                  {
+                                    year: "numeric",
+                                    month: "short",
+                                    day: "numeric",
+                                  }
+                                )}
+                              </span>
+                              <span className="item-id">ID: {record._id}</span>
+                              {record.records && record.records.length > 0 && (
+                                <div className="record-entries">
+                                  {record.records
+                                    .slice(0, 2)
+                                    .map((entry, idx) => (
+                                      <div key={idx} className="record-entry">
+                                        <span className="entry-type">
+                                          {entry.recordType}:
+                                        </span>
+                                        <span className="entry-title">
+                                          {entry.title}
+                                        </span>
+                                      </div>
+                                    ))}
+                                  {record.records.length > 2 && (
+                                    <div className="more-entries">
+                                      +{record.records.length - 2} more entries
+                                    </div>
+                                  )}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="no-items-message">
+                        <p>No medical records included in this report.</p>
+                        <Button
+                          variant="outline-secondary"
+                          size="sm"
+                          onClick={() => {
+                            setShowReportDetailsModal(false);
+                            setShowItemsModal(true);
+                          }}
+                        >
+                          <i className="fas fa-plus"></i> Add Medical Records
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="modal-actions">
+              <Button
+                type="button"
+                variant="outline-primary"
+                onClick={() => {
+                  if (selectedReport) {
+                    addItemsToReport(selectedReport._id);
+                  } else {
+                    setShowItemsModal(false);
+                  }
+                }}
+                disabled={
+                  loading ||
+                  (selectedItems.appointments.length === 0 &&
+                    selectedItems.prescriptions.length === 0 &&
+                    selectedItems.patientRecords.length === 0)
+                }
+              >
+                <i className="fas fa-check"></i>{" "}
+                {selectedReport ? "Add to Report" : "Confirm Selection"}
+              </Button>
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={() => setShowItemsModal(false)}
+              >
+                Cancel
+              </Button>
+            </div>
+          </div>
+        </Modal>
+      )}
+
+      {/* Report Details Modal */}
+      {showReportDetailsModal && selectedReport && (
+        <Modal
+          title="Report Details"
+          onClose={() => setShowReportDetailsModal(false)}
+          size="large"
+        >
+          <div className="report-details-modal">
+            <div className="report-details-header">
+              <div className="report-title-section">
+                <h2>{getReportTypeName(selectedReport.reportType)}</h2>
+                <span
+                  className={`status-badge status-${getStatusClass(
+                    selectedReport.status
+                  )}`}
+                >
+                  {selectedReport.status || "Pending"}
+                </span>
+              </div>
+              <div className="report-meta-info">
+                <div className="meta-item">
+                  <i className="fas fa-calendar-alt"></i>
+                  <div className="meta-content">
+                    <span className="meta-label">Generated on</span>
+                    <span className="meta-value">
+                      {formatDate(
+                        selectedReport.dateIssued || selectedReport.createdAt
+                      )}
+                    </span>
+                  </div>
+                </div>
+                <div className="meta-item">
+                  <i className="fas fa-clock"></i>
+                  <div className="meta-content">
+                    <span className="meta-label">Time</span>
+                    <span className="meta-value">
+                      {formatTime(
+                        selectedReport.dateIssued || selectedReport.createdAt
+                      )}
+                    </span>
+                  </div>
+                </div>
+                <div className="meta-item">
+                  <i className="fas fa-user-md"></i>
+                  <div className="meta-content">
+                    <span className="meta-label">Doctor</span>
+                    <span className="meta-value">
+                      {selectedReport.issuedByDoctor?.user?.fullname ||
+                        "Unknown Doctor"}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="report-content-section">
+              <div className="content-block">
+                <h3>
+                  <i className="fas fa-user-injured"></i> Patient Information
+                </h3>
+                <div className="info-row">
+                  <span className="info-label">Name:</span>
+                  <span className="info-value">
+                    {selectedReport.associatedPatient?.user?.fullname ||
+                      "All Patients"}
+                  </span>
+                </div>
+                {selectedReport.associatedPatient && (
+                  <>
+                    <div className="info-row">
+                      <span className="info-label">Email:</span>
+                      <span className="info-value">
+                        {selectedReport.associatedPatient?.user?.email || "N/A"}
+                      </span>
+                    </div>
+                    <div className="info-row">
+                      <span className="info-label">Patient ID:</span>
+                      <span className="info-value">
+                        {selectedReport.associatedPatient?._id || "N/A"}
+                      </span>
+                    </div>
+                  </>
+                )}
+              </div>
+
+              <div className="content-block">
+                <h3>
+                  <i className="fas fa-clipboard-list"></i> Report Details
+                </h3>
+                <div className="info-row">
+                  <span className="info-label">Report Type:</span>
+                  <span className="info-value">
+                    {getReportTypeName(selectedReport.reportType)}
+                  </span>
+                </div>
+                <div className="info-row">
+                  <span className="info-label">Report ID:</span>
+                  <span className="info-value">{selectedReport._id}</span>
+                </div>
+                {selectedReport.metadata && (
+                  <div className="info-row">
+                    <span className="info-label">Date Range:</span>
+                    <span className="info-value">
+                      {selectedReport.metadata.dateRange === "custom"
+                        ? `${formatDate(
+                            selectedReport.metadata.startDate
+                          )} to ${formatDate(selectedReport.metadata.endDate)}`
+                        : selectedReport.metadata.dateRange === "week"
+                        ? "Last Week"
+                        : selectedReport.metadata.dateRange === "month"
+                        ? "Last Month"
+                        : selectedReport.metadata.dateRange === "quarter"
+                        ? "Last 3 Months"
+                        : selectedReport.metadata.dateRange === "year"
+                        ? "Last Year"
+                        : "All Time"}
+                    </span>
+                  </div>
+                )}
+                <div className="info-row">
+                  <span className="info-label">Included Data:</span>
+                  <div className="included-data-tags">
+                    {selectedReport.metadata?.includeAppointments !== false && (
+                      <span className="included-data-tag">
+                        <i className="fas fa-calendar-check"></i> Appointments
+                      </span>
+                    )}
+                    {selectedReport.metadata?.includePrescriptions !==
+                      false && (
+                      <span className="included-data-tag">
+                        <i className="fas fa-prescription"></i> Prescriptions
+                      </span>
+                    )}
+                    {selectedReport.metadata?.includeMedicalRecords !==
+                      false && (
+                      <span className="included-data-tag">
+                        <i className="fas fa-file-medical"></i> Medical Records
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {selectedReport.comments && (
+                <div className="content-block">
+                  <h3>
+                    <i className="fas fa-comment-alt"></i> Comments
+                  </h3>
+                  <p className="report-comments">{selectedReport.comments}</p>
+                </div>
+              )}
+
+              {selectedReport.document && (
+                <div className="content-block">
+                  <h3>
+                    <i className="fas fa-file-pdf"></i> Document
+                  </h3>
+                  <div className="document-details">
+                    <div className="document-icon">
+                      <i className="fas fa-file-pdf"></i>
+                    </div>
+                    <div className="document-info">
+                      <span className="document-name">
+                        {selectedReport.document.url.split("/").pop() ||
+                          "Report Document"}
+                      </span>
+                      <span className="document-size">
+                        {selectedReport.document.size
+                          ? `${(selectedReport.document.size / 1024).toFixed(
+                              1
+                            )} MB`
+                          : "Unknown size"}
+                      </span>
+                    </div>
+                    <Button
+                      variant="outline-primary"
+                      size="sm"
+                      onClick={() =>
+                        downloadReport(
+                          selectedReport.document.url,
+                          `${getReportTypeName(
+                            selectedReport.reportType
+                          )}-${formatDate(
+                            selectedReport.dateIssued ||
+                              selectedReport.createdAt
+                          )}.pdf`
+                        )
+                      }
+                    >
+                      <i className="fas fa-download"></i> Download
+                    </Button>
+                  </div>
+                </div>
+              )}
+
+              {selectedReport.status === "processing" && (
+                <div className="content-block processing-status">
+                  <div className="processing-indicator">
+                    <i className="fas fa-spinner fa-pulse"></i>
+                    <span>Report is being processed...</span>
+                  </div>
+                  <p>
+                    This may take a few moments. The report will be available
+                    for download once completed.
+                  </p>
+                </div>
+              )}
+
+              {selectedReport.status === "failed" && (
+                <div className="content-block error-status">
+                  <div className="error-indicator">
+                    <i className="fas fa-exclamation-circle"></i>
+                    <span>Report generation failed</span>
+                  </div>
+                  <p>
+                    There was an issue generating this report. Please try again
+                    or contact support if the problem persists.
+                  </p>
+                </div>
+              )}
+
+              {/* New section for included items */}
+              <div className="report-content-section">
+                <div className="content-block">
+                  <h3>
+                    <i className="fas fa-clipboard-list"></i> Included Items
+                  </h3>
+                  {/* Appointments section */}
+                  <div className="included-items-section">
+                    <h4>
+                      <i className="fas fa-calendar-check"></i> Appointments
+                      <span className="item-count">
+                        {selectedReport.appointments?.length || 0}
+                      </span>
+                    </h4>
+                    {selectedReport.appointments?.length > 0 ? (
+                      <div className="items-list">
+                        {selectedReport.appointments.map((appointment) => (
+                          <div key={appointment._id} className="included-item">
+                            <div className="item-icon">
+                              <i className="fas fa-calendar-day"></i>
+                            </div>
+                            <div className="item-content">
+                              <span className="item-date">
+                                {new Date(
+                                  appointment.appointmentDate
+                                ).toLocaleDateString("en-US", {
+                                  year: "numeric",
+                                  month: "short",
+                                  day: "numeric",
+                                  hour: "2-digit",
+                                  minute: "2-digit",
+                                })}
+                              </span>
+                              <span
+                                className={`status-badge status-${appointment.status}`}
+                              >
+                                {appointment.status}
+                              </span>
+                              <span className="item-id">
+                                ID: {appointment._id}
+                              </span>
+                              {appointment.reason && (
+                                <p className="item-notes">
+                                  {appointment.reason}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                        {/* Add more button if there are too many items */}
+                        {selectedReport.appointments.length > 5 && (
+                          <Button
+                            variant="text"
+                            size="sm"
+                            className="view-more-btn"
+                          >
+                            View all {selectedReport.appointments.length}{" "}
+                            appointments
+                          </Button>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="no-items-message">
+                        <p>No appointments included in this report.</p>
+                        <Button
+                          variant="outline-secondary"
+                          size="sm"
+                          onClick={() => {
+                            setShowReportDetailsModal(false);
+                            setShowItemsModal(true);
+                          }}
+                        >
+                          <i className="fas fa-plus"></i> Add Appointments
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Prescriptions section */}
+                  <div className="included-items-section">
+                    <h4>
+                      <i className="fas fa-prescription"></i> Prescriptions
+                      <span className="item-count">
+                        {selectedReport.prescriptions?.length || 0}
+                      </span>
+                    </h4>
+                    {selectedReport.prescriptions?.length > 0 ? (
+                      <div className="items-list">
+                        {selectedReport.prescriptions.map((prescription) => (
+                          <div key={prescription._id} className="included-item">
+                            <div className="item-icon">
+                              <i className="fas fa-prescription-bottle-medical"></i>
+                            </div>
+                            <div className="item-content">
+                              <span className="item-title">
+                                Prescription{" "}
+                                {new Date(
+                                  prescription.startDate ||
+                                    prescription.createdAt
+                                ).toLocaleDateString()}
+                              </span>
+                              <div className="medications-list">
+                                {prescription.medications
+                                  ?.slice(0, 3)
+                                  .map((med, idx) => (
+                                    <span key={idx} className="medication-pill">
+                                      {med.name}{" "}
+                                      {med.dosage && `(${med.dosage})`}
+                                    </span>
+                                  ))}
+                                {prescription.medications?.length > 3 && (
+                                  <span className="medication-pill more">
+                                    +{prescription.medications.length - 3} more
+                                  </span>
+                                )}
+                              </div>
+                              {prescription.notes && (
+                                <p className="item-notes">
+                                  {prescription.notes}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="no-items-message">
+                        <p>No prescriptions included in this report.</p>
+                        <Button
+                          variant="outline-secondary"
+                          size="sm"
+                          onClick={() => {
+                            setShowReportDetailsModal(false);
+                            setShowItemsModal(true);
+                          }}
+                        >
+                          <i className="fas fa-plus"></i> Add Prescriptions
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Medical Records section */}
+                  <div className="included-items-section">
+                    <h4>
+                      <i className="fas fa-file-medical"></i> Medical Records
+                      <span className="item-count">
+                        {selectedReport.patientRecords?.length || 0}
+                      </span>
+                    </h4>
+                    {selectedReport.patientRecords?.length > 0 ? (
+                      <div className="items-list">
+                        {selectedReport.patientRecords.map((record) => (
+                          <div key={record._id} className="included-item">
+                            <div className="item-icon">
+                              <i className="fas fa-file-medical-alt"></i>
+                            </div>
+                            <div className="item-content">
+                              <span className="item-date">
+                                {new Date(record.createdAt).toLocaleDateString(
+                                  "en-US",
+                                  {
+                                    year: "numeric",
+                                    month: "short",
+                                    day: "numeric",
+                                  }
+                                )}
+                              </span>
+                              <span className="item-id">ID: {record._id}</span>
+                              {record.records && record.records.length > 0 && (
+                                <div className="record-entries">
+                                  {record.records
+                                    .slice(0, 2)
+                                    .map((entry, idx) => (
+                                      <div key={idx} className="record-entry">
+                                        <span className="entry-type">
+                                          {entry.recordType}:
+                                        </span>
+                                        <span className="entry-title">
+                                          {entry.title}
+                                        </span>
+                                      </div>
+                                    ))}
+                                  {record.records.length > 2 && (
+                                    <div className="more-entries">
+                                      +{record.records.length - 2} more entries
+                                    </div>
+                                  )}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="no-items-message">
+                        <p>No medical records included in this report.</p>
+                        <Button
+                          variant="outline-secondary"
+                          size="sm"
+                          onClick={() => {
+                            setShowReportDetailsModal(false);
+                            setShowItemsModal(true);
+                          }}
+                        >
+                          <i className="fas fa-plus"></i> Add Medical Records
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
             </div>
 
             <div className="modal-actions">
               {selectedReport.document?.url && (
                 <Button
                   variant="outline-primary"
-                  onClick={() =>
+                  onClick={() => {
                     downloadReport(
                       selectedReport.document.url,
                       `${getReportTypeName(
@@ -895,8 +2188,8 @@ const Reports = () => {
                       )}-${formatDate(
                         selectedReport.dateIssued || selectedReport.createdAt
                       )}.pdf`
-                    )
-                  }
+                    );
+                  }}
                 >
                   <i className="fas fa-download"></i> Download Report
                 </Button>
@@ -926,6 +2219,10 @@ const Reports = () => {
                         false,
                     });
                     setShowGenerateModal(true);
+                    // Fetch the patient's data for selection
+                    if (selectedReport.associatedPatient) {
+                      fetchPatientItems(selectedReport.associatedPatient._id);
+                    }
                   }}
                 >
                   <i className="fas fa-sync"></i> Try Again
@@ -943,12 +2240,90 @@ const Reports = () => {
               >
                 Close
               </Button>
+              {/* Add button to modify the included items */}
+              {selectedReport.status !== "processing" && (
+                <Button
+                  variant="outline-secondary"
+                  onClick={() => {
+                    setShowReportDetailsModal(false);
+                    // Reset selected items based on what's already in the report
+                    setSelectedItems({
+                      appointments:
+                        selectedReport.appointments?.map((a) => a._id) || [],
+                      prescriptions:
+                        selectedReport.prescriptions?.map((p) => p._id) || [],
+                      patientRecords:
+                        selectedReport.patientRecords?.map((r) => r._id) || [],
+                    });
+                    setShowItemsModal(true);
+                    // Fetch the patient's data for selection
+                    if (selectedReport.associatedPatient) {
+                      fetchPatientItems(selectedReport.associatedPatient._id);
+                    }
+                  }}
+                >
+                  <i className="fas fa-edit"></i> Modify Included Items
+                </Button>
+              )}
             </div>
           </div>
         </Modal>
       )}
 
       {/* Add Popup component for notifications */}
+      <Popup
+        show={popup.show}
+        message={popup.message}
+        title={popup.title}
+        type={popup.type}
+        onClose={hidePopup}
+        autoClose={true}
+        duration={5000}
+        position="top-right"
+      />
+
+      {/* Add a button somewhere for developers to toggle debug */}
+      <Button
+        variant="text"
+        size="sm"
+        onClick={() => setShowDebug(!showDebug)}
+        style={{
+          position: "fixed",
+          bottom: "10px",
+          right: "10px",
+          opacity: 0.6,
+        }}
+      >
+        {showDebug ? "Hide Debug" : "Debug"}
+      </Button>
+
+      {showDebug && (
+        <div className="debug-info">
+          <h4>Debug Information</h4>
+          <div>
+            <strong>Patient Items:</strong>
+            <div>Appointments: {patientAppointments.length}</div>
+            <div>Prescriptions: {patientPrescriptions.length}</div>
+            <div>Records: {patientRecords.length}</div>
+          </div>
+          <div>
+            <strong>Selected Items:</strong>
+            <div>Appointments: {selectedItems.appointments.length}</div>
+            <div>Prescriptions: {selectedItems.prescriptions.length}</div>
+            <div>Records: {selectedItems.patientRecords.length}</div>
+          </div>
+          <div>
+            <strong>Selected Report Items:</strong>
+            <div>Appointments: {selectedReport?.appointments?.length || 0}</div>
+            <div>
+              Prescriptions: {selectedReport?.prescriptions?.length || 0}
+            </div>
+            <div>Records: {selectedReport?.patientRecords?.length || 0}</div>
+          </div>
+        </div>
+      )}
+
+      {/* Popup */}
       <Popup
         type={popup.type}
         title={popup.title}

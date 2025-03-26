@@ -131,7 +131,7 @@
 }
 
 .tab-content {
-  display: none;
+  /* display: none; */
   animation: fadeIn 0.3s ease;
 }
 

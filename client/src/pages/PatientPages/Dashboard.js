@@ -1,29 +1,24 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import patientAPI from "../../api/patient";
-import Button from "../../components/common/Button";
 import Spinner from "../../components/common/Spinner";
-import DashboardStatCard from "../../components/patient/DashboardStatCard";
-import AppointmentCard from "../../components/patient/AppointmentCard";
-import PrescriptionCard from "../../components/patient/PrescriptionCard";
-import NotificationItem from "../../components/patient/NotificationItem";
+import Button from "../../components/common/Button";
 import "./Dashboard.css";
 
 const Dashboard = () => {
+  const [stats, setStats] = useState({
+    totalAppointments: 0,
+    upcomingAppointments: 0,
+    completedAppointments: 0,
+    todayAppointments: 0,
+    activePrescriptions: 0,
+    totalMedicalRecords: 0,
+  });
+  const [upcomingAppointments, setUpcomingAppointments] = useState([]);
+  const [activePrescriptions, setActivePrescriptions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [dashboardData, setDashboardData] = useState({
-    profile: null,
-    stats: {
-      upcomingAppointments: 0,
-      activePrescriptions: 0,
-      unreadNotifications: 0,
-      totalRecords: 0,
-    },
-    appointments: [],
-    prescriptions: [],
-    notifications: [],
-  });
+  const [profile, setProfile] = useState(null);
 
   useEffect(() => {
     fetchDashboardData();
@@ -35,296 +30,397 @@ const Dashboard = () => {
       setError(null);
 
       // Fetch all required data in parallel
-      const [profileRes, appointmentsRes, prescriptionsRes, notificationsRes] =
-        await Promise.all([
+      const [profileRes, appointmentsRes, prescriptionsRes] = await Promise.all(
+        [
           patientAPI.getProfile(),
           patientAPI.getAppointments(),
           patientAPI.getPrescriptions(),
-          patientAPI.getNotifications(),
-        ]);
+        ]
+      );
 
-      // Get unread notifications
-      const unreadNotifications = (notificationsRes.data || [])
-        .filter((notif) => !notif.isRead)
-        .slice(0, 3);
+      // Process appointments data
+      const appointments = appointmentsRes.data.appointments || [];
+      const upcoming = appointments.filter(
+        (apt) =>
+          new Date(apt.appointmentDate) > new Date() &&
+          apt.status !== "cancelled"
+      );
+      const completed = appointments.filter(
+        (apt) => apt.status === "completed"
+      );
+      const today = new Date().toISOString().split("T")[0];
+      const todayApts = appointments.filter(
+        (apt) =>
+          new Date(apt.appointmentDate).toISOString().split("T")[0] === today
+      );
 
-      setDashboardData({
-        profile: profileRes.data,
-        stats: {
-          upcomingAppointments: (
-            appointmentsRes.data.appointments || []
-          ).filter(
-            (apt) =>
-              new Date(apt.appointmentDate) > new Date() &&
-              apt.status !== "cancelled"
-          ).length,
-          activePrescriptions: (
-            prescriptionsRes.data.prescriptions || []
-          ).filter((pres) => pres.status === "active").length,
-          unreadNotifications: unreadNotifications.length,
-          totalRecords: profileRes.data?.medicalRecords?.length || 0,
-        },
-        appointments: (appointmentsRes.data.appointments || [])
-          .filter(
-            (apt) =>
-              new Date(apt.appointmentDate) > new Date() &&
-              apt.status !== "cancelled"
-          )
+      // Process prescriptions data
+      const prescriptions = prescriptionsRes.data.prescriptions || [];
+      const active = prescriptions.filter((pres) => pres.status === "active");
+
+      // Get medical records count
+      const medicalRecords = profileRes.data?.medicalRecords || [];
+
+      // Update stats
+      setStats({
+        totalAppointments: appointments.length,
+        upcomingAppointments: upcoming.length,
+        completedAppointments: completed.length,
+        todayAppointments: todayApts.length,
+        activePrescriptions: active.length,
+        totalMedicalRecords: medicalRecords.length,
+      });
+
+      // Store profile data
+      setProfile(profileRes.data);
+
+      // Get 5 most recent upcoming appointments
+      setUpcomingAppointments(
+        upcoming
           .sort(
             (a, b) => new Date(a.appointmentDate) - new Date(b.appointmentDate)
           )
-          .slice(0, 2),
-        prescriptions: (prescriptionsRes.data.prescriptions || [])
-          .filter((pres) => pres.status === "active")
-          .slice(0, 2),
-        notifications: unreadNotifications,
-      });
+          .slice(0, 5)
+      );
+
+      // Get active prescriptions
+      setActivePrescriptions(active.slice(0, 5));
     } catch (err) {
       console.error("Error fetching dashboard data:", err);
-      setError("Failed to load dashboard data. Please try again later.");
+      setError("Failed to load dashboard data. Please try again.");
     } finally {
       setLoading(false);
     }
   };
 
+  // Format date for display
+  const formatDate = (dateString) => {
+    const options = {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    };
+    return new Date(dateString).toLocaleDateString("en-US", options);
+  };
+
+  // Get status badge class
+  const getStatusBadgeClass = (status) => {
+    switch (status?.toLowerCase()) {
+      case "scheduled":
+        return "status-scheduled";
+      case "completed":
+        return "status-completed";
+      case "cancelled":
+        return "status-cancelled";
+      case "no-show":
+        return "status-no-show";
+      case "confirmed":
+        return "status-confirmed";
+      default:
+        return "status-pending";
+    }
+  };
+
+  // Calculate age from DOB
+  const calculateAge = (dob) => {
+    if (!dob) return "--";
+    const birthDate = new Date(dob);
+    const today = new Date();
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const monthDiff = today.getMonth() - birthDate.getMonth();
+    if (
+      monthDiff < 0 ||
+      (monthDiff === 0 && today.getDate() < birthDate.getDate())
+    ) {
+      age--;
+    }
+    return age;
+  };
+
   if (loading) {
     return (
-      <div className="loading-container">
+      <div className="patient-loading-container">
         <Spinner center size="large" />
       </div>
     );
   }
 
-  if (error) {
-    return (
-      <div className="error-container">
-        <div className="alert alert-danger">{error}</div>
-        <Button variant="primary" onClick={() => window.location.reload()}>
-          Retry
-        </Button>
-      </div>
-    );
-  }
-
-  const { profile, stats, appointments, prescriptions, notifications } =
-    dashboardData;
-
   return (
     <div className="patient-dashboard">
-      <div className="dashboard-welcome">
-        <h1 className="page-title">
-          Welcome, {profile?.user?.fullname || "Patient"}
-        </h1>
-        <p className="dashboard-date">
-          {new Date().toLocaleDateString("en-US", {
-            weekday: "long",
-            year: "numeric",
-            month: "long",
-            day: "numeric",
-          })}
-        </p>
-      </div>
+      <h1 className="page-title">Dashboard</h1>
 
-      <div className="dashboard-stats-container">
-        <DashboardStatCard
-          title="Appointments"
-          value={stats.upcomingAppointments}
-          icon="fa-calendar-check"
-          label="Upcoming"
-          color="primary"
-          link="/patient/appointments"
-        />
-        <DashboardStatCard
-          title="Prescriptions"
-          value={stats.activePrescriptions}
-          icon="fa-prescription-bottle"
-          label="Active"
-          color="success"
-          link="/patient/prescriptions"
-        />
-        <DashboardStatCard
-          title="Notifications"
-          value={stats.unreadNotifications}
-          icon="fa-bell"
-          label="Unread"
-          color="warning"
-          link="/patient/notifications"
-        />
-        <DashboardStatCard
-          title="Medical Records"
-          value={stats.totalRecords}
-          icon="fa-file-medical"
-          label="Total"
-          color="info"
-          link="/patient/medical-records"
-        />
-      </div>
+      {error && (
+        <div className="patient-alert patient-alert-danger">{error}</div>
+      )}
 
-      <div className="dashboard-main-content">
-        <div className="dashboard-column">
-          <div className="dashboard-card appointments-card">
-            <div className="card-header">
-              <h2>Upcoming Appointments</h2>
-              <Link to="/patient/appointments" className="view-all">
-                View All
-              </Link>
-            </div>
-            <div className="card-content">
-              {appointments.length > 0 ? (
-                <div className="appointments-list">
-                  {appointments.map((appointment) => (
-                    <AppointmentCard
-                      key={appointment._id}
-                      appointment={appointment}
-                    />
-                  ))}
-                </div>
-              ) : (
-                <div className="empty-list-message">
-                  <i className="fas fa-calendar-times"></i>
-                  <p>No upcoming appointments</p>
-                  <Link
-                    to="/patient/appointments"
-                    className="btn btn-primary btn-sm"
-                  >
-                    Schedule Now
-                  </Link>
-                </div>
-              )}
-            </div>
+      <div className="patient-stats-grid">
+        <div className="patient stat-card">
+          <div className="stat-icon">
+            <i className="fas fa-calendar-check"></i>
           </div>
-
-          <div className="dashboard-card prescriptions-card">
-            <div className="card-header">
-              <h2>Active Prescriptions</h2>
-              <Link to="/patient/prescriptions" className="view-all">
-                View All
-              </Link>
-            </div>
-            <div className="card-content">
-              {prescriptions.length > 0 ? (
-                <div className="prescriptions-list">
-                  {prescriptions.map((prescription) => (
-                    <PrescriptionCard
-                      key={prescription._id}
-                      prescription={prescription}
-                    />
-                  ))}
-                </div>
-              ) : (
-                <div className="empty-list-message">
-                  <i className="fas fa-prescription-bottle-alt"></i>
-                  <p>No active prescriptions</p>
-                  <Link
-                    to="/patient/prescriptions"
-                    className="btn btn-primary btn-sm"
-                  >
-                    View History
-                  </Link>
-                </div>
-              )}
-            </div>
+          <div className="stat-content">
+            <h3 className="stat-value">{stats.upcomingAppointments}</h3>
+            <p className="stat-label">Upcoming Appointments</p>
           </div>
         </div>
 
-        <div className="dashboard-column">
-          <div className="dashboard-card notifications-card">
-            <div className="card-header">
-              <h2>Recent Notifications</h2>
-              <Link to="/patient/notifications" className="view-all">
-                View All
-              </Link>
-            </div>
-            <div className="card-content">
-              {notifications.length > 0 ? (
-                <div className="notifications-list">
-                  {notifications.map((notification) => (
-                    <NotificationItem
-                      key={notification._id}
-                      notification={notification}
-                    />
-                  ))}
-                </div>
-              ) : (
-                <div className="empty-list-message">
-                  <i className="fas fa-bell-slash"></i>
-                  <p>No new notifications</p>
-                </div>
-              )}
-            </div>
+        <div className="patient stat-card">
+          <div className="stat-icon">
+            <i className="fas fa-prescription-bottle-alt"></i>
           </div>
+          <div className="stat-content">
+            <h3 className="stat-value">{stats.activePrescriptions}</h3>
+            <p className="stat-label">Active Medications</p>
+          </div>
+        </div>
 
-          <div className="dashboard-card profile-summary-card">
-            <div className="card-header">
-              <h2>Profile Overview</h2>
-              <Link to="/patient/profile" className="view-all">
-                Edit Profile
-              </Link>
-            </div>
-            <div className="card-content">
-              <div className="profile-summary">
-                <div className="profile-avatar">
-                  {profile?.user?.profilePicture ? (
-                    <img src={profile.user.profilePicture} alt="Profile" />
-                  ) : (
-                    <div className="avatar-placeholder">
-                      <i className="fas fa-user"></i>
+        <div className="patient stat-card">
+          <div className="stat-icon">
+            <i className="fas fa-file-medical-alt"></i>
+          </div>
+          <div className="stat-content">
+            <h3 className="stat-value">{stats.totalMedicalRecords}</h3>
+            <p className="stat-label">Medical Records</p>
+          </div>
+        </div>
+
+        <div className="patient stat-card">
+          <div className="stat-icon">
+            <i className="fas fa-check-circle"></i>
+          </div>
+          <div className="stat-content">
+            <h3 className="stat-value">{stats.completedAppointments}</h3>
+            <p className="stat-label">Past Visits</p>
+          </div>
+        </div>
+      </div>
+
+      <div className="patient-dashboard-grid">
+        <div className="patient-dashboard-card appointments-today">
+          <div className="card-header">
+            <h2>Today's Schedule</h2>
+          </div>
+          <div className="card-body">
+            {stats.todayAppointments > 0 ? (
+              <div className="today-count">
+                <h3>{stats.todayAppointments}</h3>
+                <p>appointments scheduled for today</p>
+                <Link
+                  to="/patient/appointments?filter=today"
+                  className="view-all-link"
+                >
+                  <Button variant="outline-primary" size="sm">
+                    View Today's Appointments
+                  </Button>
+                </Link>
+              </div>
+            ) : (
+              <div className="no-appointments">
+                <i className="fas fa-calendar-times"></i>
+                <p>No appointments scheduled for today</p>
+                <Link to="/patient/appointments" className="schedule-link">
+                  <Button variant="outline-primary" size="sm">
+                    Schedule New Appointment
+                  </Button>
+                </Link>
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="patient-dashboard-card upcoming-appointments">
+          <div className="card-header">
+            <h2>Upcoming Appointments</h2>
+          </div>
+          <div className="card-body">
+            {upcomingAppointments.length > 0 ? (
+              <div className="appointment-list">
+                {upcomingAppointments.map((appointment) => (
+                  <div key={appointment._id} className="appointment-item">
+                    <div className="appointment-details">
+                      <h4>{appointment.doctor?.user?.fullname || "Doctor"}</h4>
+                      <p className="appointment-date">
+                        {formatDate(appointment.appointmentDate)}
+                      </p>
+                    </div>
+                    <div className="appointment-status">
+                      <span
+                        className={`status-badge ${getStatusBadgeClass(
+                          appointment.status
+                        )}`}
+                      >
+                        {appointment.status?.charAt(0).toUpperCase() +
+                          appointment.status?.slice(1) || "Pending"}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+                <div className="view-all">
+                  <Link to="/patient/appointments">
+                    <Button variant="text">View All Appointments</Button>
+                  </Link>
+                </div>
+              </div>
+            ) : (
+              <div className="no-data">
+                <p>No upcoming appointments found</p>
+                <Link to="/patient/appointments">
+                  <Button variant="outline-primary" size="sm">
+                    Schedule New Appointment
+                  </Button>
+                </Link>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      <div className="patient-dashboard-row">
+        <div className="patient-dashboard-card active-medications">
+          <div className="card-header">
+            <h2>Active Medications</h2>
+          </div>
+          <div className="card-body">
+            {activePrescriptions.length > 0 ? (
+              <div className="medication-list">
+                {activePrescriptions.map((prescription) => (
+                  <div key={prescription._id} className="medication-item">
+                    <div className="medication-icon">
+                      <i className="fas fa-prescription-bottle"></i>
+                    </div>
+                    <div className="medication-details">
+                      <h4>
+                        {prescription.medications?.[0]?.name || "Medication"}
+                        {prescription.medications?.length > 1 &&
+                          ` + ${prescription.medications.length - 1} more`}
+                      </h4>
+                      <p className="medication-dosage">
+                        {prescription.medications?.[0]?.dosage || "As directed"}
+                      </p>
+                      <p className="medication-doctor">
+                        <i className="fas fa-user-md"></i>
+                        {prescription.doctor?.user?.fullname || "Doctor"}
+                      </p>
+                    </div>
+                    <Link
+                      to={`/patient/prescriptions/${prescription._id}`}
+                      className="medication-link"
+                    >
+                      <i className="fas fa-chevron-right"></i>
+                    </Link>
+                  </div>
+                ))}
+                <div className="view-all">
+                  <Link to="/patient/prescriptions">
+                    <Button variant="text">View All Medications</Button>
+                  </Link>
+                </div>
+              </div>
+            ) : (
+              <div className="no-data">
+                <p>No active medications found</p>
+                <Link to="/patient/prescriptions">
+                  <Button variant="outline-primary" size="sm">
+                    View Medication History
+                  </Button>
+                </Link>
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="patient-dashboard-card profile-overview">
+          <div className="card-header">
+            <h2>Profile Overview</h2>
+          </div>
+          <div className="card-body">
+            <div className="profile-card">
+              <div className="profile-avatar">
+                {profile?.user?.profilePicture ? (
+                  <img src={profile.user.profilePicture} alt="Profile" />
+                ) : (
+                  <i className="fas fa-user-circle"></i>
+                )}
+              </div>
+              <div className="profile-details">
+                <h3>{profile?.user?.fullname || "Patient"}</h3>
+                <div className="profile-stats">
+                  {profile?.user?.dob && (
+                    <div className="profile-stat">
+                      <span className="stat-label">Age</span>
+                      <span className="stat-value">
+                        {calculateAge(profile.user.dob)}
+                      </span>
+                    </div>
+                  )}
+                  {profile?.bloodType && (
+                    <div className="profile-stat">
+                      <span className="stat-label">Blood Type</span>
+                      <span className="stat-value">{profile.bloodType}</span>
+                    </div>
+                  )}
+                  {profile?.height && (
+                    <div className="profile-stat">
+                      <span className="stat-label">Height</span>
+                      <span className="stat-value">{profile.height} cm</span>
+                    </div>
+                  )}
+                  {profile?.weight && (
+                    <div className="profile-stat">
+                      <span className="stat-label">Weight</span>
+                      <span className="stat-value">{profile.weight} kg</span>
                     </div>
                   )}
                 </div>
-                <div className="profile-details">
-                  <h3>{profile?.user?.fullname || "Patient"}</h3>
-                  <ul className="profile-info-list">
-                    <li>
-                      <i className="fas fa-envelope"></i>
-                      <span>{profile?.user?.email || "No email provided"}</span>
-                    </li>
-                    <li>
-                      <i className="fas fa-phone"></i>
-                      <span>
-                        {profile?.user?.contact?.phone || "No phone provided"}
-                      </span>
-                    </li>
-                    {profile?.bloodType && (
-                      <li>
-                        <i className="fas fa-tint"></i>
-                        <span>Blood Type: {profile.bloodType}</span>
-                      </li>
-                    )}
-                  </ul>
+                <div className="profile-actions">
+                  <Link to="/patient/profile">
+                    <Button variant="outline-primary" size="sm">
+                      Update Profile
+                    </Button>
+                  </Link>
+                  <Link to="/patient/medical-records">
+                    <Button variant="outline-secondary" size="sm">
+                      View Records
+                    </Button>
+                  </Link>
                 </div>
               </div>
             </div>
           </div>
+        </div>
+      </div>
 
-          <div className="dashboard-card quick-actions-card">
-            <div className="card-header">
-              <h2>Quick Actions</h2>
+      <div className="patient-quick-access">
+        <div className="card-header">
+          <h2>Quick Actions</h2>
+        </div>
+        <div className="quick-access-grid">
+          <Link to="/patient/appointments/new" className="quick-access-card">
+            <div className="quick-access-icon">
+              <i className="fas fa-calendar-plus"></i>
             </div>
-            <div className="card-content">
-              <div className="quick-actions-grid">
-                <Link to="/patient/appointments" className="quick-action-item">
-                  <i className="fas fa-calendar-plus"></i>
-                  <span>Book Appointment</span>
-                </Link>
-                <Link to="/patient/prescriptions" className="quick-action-item">
-                  <i className="fas fa-pills"></i>
-                  <span>View Medications</span>
-                </Link>
-                <Link
-                  to="/patient/medical-records"
-                  className="quick-action-item"
-                >
-                  <i className="fas fa-file-medical-alt"></i>
-                  <span>View Records</span>
-                </Link>
-                <Link to="/patient/profile" className="quick-action-item">
-                  <i className="fas fa-user-edit"></i>
-                  <span>Edit Profile</span>
-                </Link>
-              </div>
+            <h3>Book Appointment</h3>
+          </Link>
+          <Link to="/patient/messages" className="quick-access-card">
+            <div className="quick-access-icon">
+              <i className="fas fa-comment-medical"></i>
             </div>
-          </div>
+            <h3>Message Doctor</h3>
+          </Link>
+          <Link to="/patient/medical-records" className="quick-access-card">
+            <div className="quick-access-icon">
+              <i className="fas fa-file-medical"></i>
+            </div>
+            <h3>Medical Records</h3>
+          </Link>
+          <Link to="/patient/billing" className="quick-access-card">
+            <div className="quick-access-icon">
+              <i className="fas fa-file-invoice-dollar"></i>
+            </div>
+            <h3>Billing</h3>
+          </Link>
         </div>
       </div>
     </div>

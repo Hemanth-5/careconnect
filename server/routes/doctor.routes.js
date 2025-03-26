@@ -29,6 +29,7 @@ import {
 import {
   getDoctorReports as getReports,
   getMedicalReportById as getReportById,
+  addItemsToReport,
 } from "../controllers/medicalReport.controller.js";
 
 // Import the correct functions from patientRecord.controller.js
@@ -97,6 +98,8 @@ router.get("/reports/:reportId", doctorMiddleware, getReportById);
 router.post("/reports", doctorMiddleware, createMedicalReport);
 router.put("/reports/:reportId", doctorMiddleware, updateMedicalReport);
 router.delete("/reports/:reportId", doctorMiddleware, deleteMedicalReport);
+// New route for adding items to a report
+router.post("/reports/:reportId/items", doctorMiddleware, addItemsToReport);
 
 // Patients
 router.get("/patients", doctorMiddleware, getMyPatients);

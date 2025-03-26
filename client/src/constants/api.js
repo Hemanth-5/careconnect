@@ -73,6 +73,8 @@ export const API = {
     CREATE_MEDICAL_REPORT: `${BASE_URL}/doctors/reports`,
     UPDATE_MEDICAL_REPORT: (reportId) =>
       `${BASE_URL}/doctors/reports/${reportId}`,
+    DELETE_MEDICAL_REPORT: (reportId) =>
+      `${BASE_URL}/doctors/reports/${reportId}`,
     GET_NOTIFICATIONS: `${BASE_URL}/doctors/notifications`,
     MARK_NOTIFICATION_AS_READ: (notificationId) =>
       `${BASE_URL}/doctors/notifications/${notificationId}`,
@@ -83,6 +85,9 @@ export const API = {
     CREATE_REPORT: `${BASE_URL}/doctors/reports`,
     UPDATE_REPORT: (reportId) => `${BASE_URL}/doctors/reports/${reportId}`,
     DELETE_REPORT: (reportId) => `${BASE_URL}/doctors/reports/${reportId}`,
+    // Add new endpoint for adding items to a report
+    ADD_ITEMS_TO_REPORT: (reportId) =>
+      `${BASE_URL}/doctors/reports/${reportId}/items`,
   },
   PATIENTS: {
     GET_PROFILE: `${BASE_URL}/patients/profile`,

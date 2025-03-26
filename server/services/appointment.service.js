@@ -1,31 +1,30 @@
 import Appointment from "../models/appointment.model.js";
 
 // Get all appointments for a doctor
-const getDoctorAppointments = async (doctorId, options = {}) => {
+const getDoctorAppointments = async (doctorId) => {
   try {
-    const { limit, sort } = options;
-
-    const query = Appointment.find({ doctor: doctorId }).populate({
-      path: "patient",
-      populate: {
-        path: "user",
-        select: "username fullname email profilePicture",
-      },
-    });
-
-    if (sort) {
-      query.sort(sort);
-    } else {
-      query.sort({ appointmentDate: 1 }); // Default sort by appointment date
-    }
-
-    if (limit) {
-      query.limit(limit);
-    }
-
-    return await query.exec();
+    // Make sure we properly populate the patient field
+    return await Appointment.find({ doctor: doctorId })
+      .populate({
+        path: "patient",
+        select: "_id user",
+        populate: {
+          path: "user",
+          select: "fullname email profilePicture",
+        },
+      })
+      .populate({
+        path: "doctor",
+        select: "_id user specializations",
+        populate: {
+          path: "user",
+          select: "fullname email profilePicture",
+        },
+      })
+      .sort({ appointmentDate: -1 });
   } catch (error) {
-    throw new Error("Error fetching doctor appointments: " + error.message);
+    console.error("Error in getDoctorAppointments:", error);
+    throw new Error(`Error fetching doctor appointments: ${error.message}`);
   }
 };
 

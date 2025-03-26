@@ -35,7 +35,7 @@ export const getDoctorReports = async (req, res) => {
 export const getMedicalReportById = async (req, res) => {
   try {
     const { reportId } = req.params;
-    const report = await MedicalReportService.getMedicalReportById(reportId);
+    const report = await MedicalReportService.getReportById(reportId); // Fixed to use correct method name
 
     if (!report) {
       return res.status(404).json({ message: "Medical report not found" });
@@ -100,6 +100,63 @@ export const createMedicalReport = async (req, res) => {
     res
       .status(500)
       .json({ message: "Error creating medical report", error: error.message });
+  }
+};
+
+/**
+ * Add items to a medical report
+ */
+export const addItemsToReport = async (req, res) => {
+  try {
+    const { reportId } = req.params;
+    const {
+      appointments = [],
+      prescriptions = [],
+      patientRecords = [],
+    } = req.body;
+
+    console.log("Adding items to report:", reportId);
+    console.log("Appointments:", appointments);
+    console.log("Prescriptions:", prescriptions);
+    console.log("Patient records:", patientRecords);
+
+    // Verify report exists
+    const existingReport = await MedicalReportService.getReportById(reportId); // Fixed method name
+    if (!existingReport) {
+      return res.status(404).json({ message: "Medical report not found" });
+    }
+
+    // Get doctor info to verify authorization
+    const user = await User.findById(req.user.userId);
+    const doctor = await Doctor.findOne({ user: user._id });
+
+    // Verify doctor owns this report
+    if (
+      existingReport.issuedByDoctor._id.toString() !== doctor._id.toString()
+    ) {
+      return res
+        .status(403)
+        .json({ message: "Unauthorized to update this report" });
+    }
+
+    // Add items to the report
+    const updatedReport = await MedicalReportService.addItemsToReport(
+      reportId,
+      {
+        appointments,
+        prescriptions,
+        patientRecords,
+      }
+    );
+
+    console.log("Updated report:", updatedReport);
+
+    res.status(200).json(updatedReport);
+  } catch (error) {
+    console.error("Error adding items to report:", error);
+    res
+      .status(500)
+      .json({ message: "Error adding items to report", error: error.message });
   }
 };
 

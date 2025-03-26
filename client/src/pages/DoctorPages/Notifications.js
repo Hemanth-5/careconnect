@@ -95,7 +95,19 @@ const Notifications = () => {
 
   return (
     <div className="doctor-notifications">
-      <div className="notifications-header">
+      {/* Coming Soon Notice Card */}
+      <div className="coming-soon-card">
+        <div className="coming-soon-icon">
+          <i className="fas fa-code"></i>
+        </div>
+        <h2>This Feature is Coming Soon</h2>
+        <p>
+          We're working hard to implement real-time notifications. Check back
+          later!
+        </p>
+      </div>
+
+      {/* <div className="notifications-header">
         <h1 className="page-title">Notifications</h1>
         {unreadCount > 0 && (
           <Button
@@ -106,11 +118,11 @@ const Notifications = () => {
             Mark All as Read
           </Button>
         )}
-      </div>
+      </div> */}
 
-      {error && <div className="alert alert-danger">{error}</div>}
+      {/* {error && <div className="alert alert-danger">{error}</div>} */}
 
-      {loading ? (
+      {/* {loading ? (
         <div className="loading-container">
           <Spinner center size="large" />
         </div>
@@ -188,7 +200,7 @@ const Notifications = () => {
             </div>
           )}
         </div>
-      )}
+      )} */}
     </div>
   );
 };

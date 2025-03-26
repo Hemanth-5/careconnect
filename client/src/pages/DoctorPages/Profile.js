@@ -493,7 +493,7 @@ const Profile = () => {
           <form onSubmit={handleSaveProfile}>
             {/* Personal Information Tab */}
             <div
-              className={`tab-content ${
+              className={`profile-tab-content ${
                 activeTab === "personal" ? "active" : ""
               }`}
             >
@@ -580,7 +580,7 @@ const Profile = () => {
 
             {/* Professional Information Tab */}
             <div
-              className={`tab-content ${
+              className={`profile-tab-content ${
                 activeTab === "professional" ? "active" : ""
               }`}
             >
@@ -647,7 +647,7 @@ const Profile = () => {
 
             {/* Education & Experience Tab */}
             <div
-              className={`tab-content ${
+              className={`profile-tab-content ${
                 activeTab === "education" ? "active" : ""
               }`}
             >
@@ -674,7 +674,7 @@ const Profile = () => {
 
             {/* Specializations Tab */}
             <div
-              className={`tab-content ${
+              className={`profile-tab-content ${
                 activeTab === "specializations" ? "active" : ""
               }`}
             >
@@ -714,7 +714,7 @@ const Profile = () => {
 
             {/* Availability Tab */}
             <div
-              className={`tab-content ${
+              className={`profile-tab-content ${
                 activeTab === "availability" ? "active" : ""
               }`}
             >

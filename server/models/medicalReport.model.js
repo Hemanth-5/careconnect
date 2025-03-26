@@ -23,6 +23,36 @@ const medicalReportSchema = new mongoose.Schema(
       default: "pending",
     },
     comments: { type: String },
+    // New fields to include related data
+    appointments: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Appointment",
+      },
+    ],
+    prescriptions: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Prescription",
+      },
+    ],
+    patientRecords: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "PatientRecord",
+      },
+    ],
+    // Optional metadata for report generation
+    reportMetadata: {
+      includeSummary: { type: Boolean, default: true },
+      includeAppointments: { type: Boolean, default: true },
+      includePrescriptions: { type: Boolean, default: true },
+      includeRecords: { type: Boolean, default: true },
+      dateRange: {
+        startDate: { type: Date },
+        endDate: { type: Date },
+      },
+    },
   },
   { timestamps: true }
 );

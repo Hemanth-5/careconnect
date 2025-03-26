@@ -99,6 +99,8 @@ const doctorAPI = {
     axios.post(API.DOCTORS.CREATE_MEDICAL_REPORT, data, getAuthHeader()),
   updateMedicalReport: (id, data) =>
     axios.put(API.DOCTORS.UPDATE_MEDICAL_REPORT(id), data, getAuthHeader()),
+  deleteMedicalReport: (id) =>
+    axios.delete(API.DOCTORS.DELETE_MEDICAL_REPORT(id), getAuthHeader()),
 
   // Notifications
   getNotifications: () =>
@@ -116,6 +118,9 @@ const doctorAPI = {
     axios.put(API.DOCTORS.UPDATE_REPORT(id), data, getAuthHeader()),
   deleteReport: (id) =>
     axios.delete(API.DOCTORS.DELETE_REPORT(id), getAuthHeader()),
+  // Add new function for adding items to a report
+  addItemsToReport: (id, items) =>
+    axios.post(API.DOCTORS.ADD_ITEMS_TO_REPORT(id), items, getAuthHeader()),
 };
 
 export default doctorAPI;

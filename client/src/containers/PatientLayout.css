@@ -11,6 +11,8 @@
   transition: width 0.3s ease;
   height: 100vh;
   position: sticky;
+  display: flex;
+  flex-direction: column;
   top: 0;
   overflow-y: auto;
   box-shadow: var(--shadow-md);
@@ -37,6 +39,10 @@
   font-size: var(--font-size-xl);
   color: white;
   margin: 0;
+}
+
+.logo i {
+  font-size: var(--font-size-xl);
 }
 
 .sidebar-toggle {
@@ -73,6 +79,16 @@
   position: relative;
 }
 
+.patient-layout .sidebar-nav li.active::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  width: 4px;
+  background-color: var(--patient-primary-light);
+}
+
 .sidebar-nav li a {
   display: flex;
   align-items: center;
@@ -95,20 +111,11 @@
   font-weight: 500;
 }
 
-.sidebar-nav li.active::before {
-  content: "";
-  position: absolute;
-  left: 0;
-  top: 0;
-  height: 100%;
-  width: 4px;
-  background-color: var(--patient-primary-light);
-}
-
 .sidebar-nav i {
   font-size: var(--font-size-lg);
   width: 24px;
   text-align: center;
+  color: rgba(255, 255, 255, 0.9);
 }
 
 .sidebar-collapsed .sidebar-text {
@@ -117,13 +124,222 @@
 
 .patient-main-content {
   flex: 1;
-  padding: var(--spacing-6);
   max-width: calc(100% - var(--sidebar-width, 250px));
   transition: max-width 0.3s ease;
+  display: flex;
+  flex-direction: column;
 }
 
 .sidebar-collapsed .patient-main-content {
   max-width: calc(100% - 70px);
+}
+
+/* Patient profile section in sidebar */
+.patient-profile-section {
+  padding: var(--spacing-4);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-3);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.patient-avatar {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background-color: var(--primary-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: var(--font-size-xl);
+  overflow: hidden;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.patient-avatar:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.patient-avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.patient-info {
+  overflow: hidden;
+}
+
+.patient-name {
+  margin: 0;
+  font-size: var(--font-size-md);
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.patient-username {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  opacity: 0.8;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sidebar-collapsed .patient-info {
+  display: none;
+}
+
+.sidebar-collapsed .patient-avatar {
+  width: 40px;
+  height: 40px;
+  margin: 0 auto;
+}
+
+/* Profile Modal styles */
+.profile-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  animation: fadeIn 0.2s ease;
+}
+
+.profile-modal {
+  background-color: white;
+  border-radius: var(--border-radius-lg);
+  width: 90%;
+  max-width: 500px;
+  overflow: hidden;
+  box-shadow: var(--shadow-lg);
+  animation: slideIn 0.3s ease;
+}
+
+.profile-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--spacing-4) var(--spacing-5);
+  border-bottom: 1px solid var(--gray-200);
+  background-color: var(--gray-50);
+}
+
+.profile-modal-header h3 {
+  margin: 0;
+  color: var(--patient-primary);
+  font-size: var(--font-size-lg);
+}
+
+.close-button {
+  background: none;
+  border: none;
+  font-size: var(--font-size-lg);
+  color: var(--gray-500);
+  cursor: pointer;
+  padding: var(--spacing-1);
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s;
+}
+
+.close-button:hover {
+  background-color: var(--gray-200);
+  color: var(--gray-700);
+}
+
+.profile-modal-body {
+  padding: var(--spacing-5);
+}
+
+.profile-preview {
+  width: 150px;
+  height: 150px;
+  border-radius: 50%;
+  margin: 0 auto var(--spacing-4);
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 3px solid var(--patient-primary-light);
+  background-color: var(--gray-100);
+}
+
+.preview-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.no-image {
+  text-align: center;
+  color: var(--gray-500);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+}
+
+.no-image i {
+  font-size: 3rem;
+  margin-bottom: var(--spacing-2);
+}
+
+.profile-modal-actions {
+  display: flex;
+  gap: var(--spacing-3);
+  justify-content: center;
+  margin-top: var(--spacing-4);
+}
+
+.select-image-button,
+.upload-button {
+  padding: var(--spacing-2) var(--spacing-4);
+  border-radius: var(--border-radius);
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.select-image-button {
+  background-color: var(--gray-200);
+  color: var(--gray-800);
+  border: none;
+}
+
+.select-image-button:hover {
+  background-color: var(--gray-300);
+}
+
+.upload-button {
+  background-color: var(--patient-primary);
+  color: white;
+  border: none;
+}
+
+.upload-button:hover {
+  background-color: var(--patient-primary-dark);
+}
+
+.upload-button:disabled,
+.select-image-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 /* Add logout button to sidebar footer */
@@ -161,10 +377,103 @@
   margin-right: 0;
 }
 
+/* Header styles */
+.patient-header {
+  background-color: white;
+  box-shadow: var(--shadow-sm);
+  padding: var(--spacing-4);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.patient-header-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.patient-title {
+  margin: 0;
+  font-size: var(--font-size-xl);
+  color: var(--patient-primary);
+  font-weight: 600;
+}
+
+.patient-user-info {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-3);
+}
+
+.patient-user-name {
+  font-weight: 500;
+  color: var(--gray-800);
+}
+
+.patient-user-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: var(--gray-100);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border: 2px solid var(--patient-primary-light);
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.patient-user-avatar:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.patient-user-avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.patient-user-avatar i {
+  font-size: 1.5rem;
+  color: var(--patient-primary);
+}
+
+/* Content area */
+.patient-content-body {
+  padding: var(--spacing-6);
+  flex: 1;
+  overflow-y: auto;
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateY(-30px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
 /* Responsive Adjustments */
 @media (max-width: 992px) {
   .patient-sidebar {
     width: 70px;
+    position: fixed;
   }
 
   .sidebar-text {
@@ -172,7 +481,8 @@
   }
 
   .patient-main-content {
-    max-width: calc(100% - 70px);
+    max-width: 100%;
+    margin-left: 70px;
   }
 
   .sidebar-collapsed .patient-sidebar {
@@ -182,6 +492,7 @@
 
   .sidebar-collapsed .patient-main-content {
     max-width: 100%;
+    margin-left: 0;
   }
 }
 
@@ -198,5 +509,13 @@
 
   .sidebar-collapsed .patient-main-content {
     margin-left: 0;
+  }
+
+  .patient-header {
+    padding: var(--spacing-3);
+  }
+
+  .profile-modal {
+    width: 95%;
   }
 }

@@ -18,8 +18,8 @@
 }
 
 .not-found-icon {
-  font-size: 4rem;
-  color: var(--warning);
+  font-size: 6rem;
+  /* color: var(--warning); */
   margin-bottom: var(--spacing-4);
 }
 
