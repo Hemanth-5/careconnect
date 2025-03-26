@@ -8,8 +8,7 @@
 //   process.env.REACT_APP_SERVER_BASE_URL
 // );
 
-const BASE_URL =
-  process.env.REACT_APP_SERVER_BASE_URL || "http://localhost:5000/api";
+const BASE_URL = process.env.REACT_APP_SERVER_BASE_URL;
 
 export const API = {
   USERS: {
