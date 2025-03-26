@@ -3,10 +3,10 @@
 
 // dotenv.config();
 
-console.log(
-  "process.env.REACT_APP_SERVER_BASE_URL",
-  process.env.REACT_APP_SERVER_BASE_URL
-);
+// console.log(
+//   "process.env.REACT_APP_SERVER_BASE_URL",
+//   process.env.REACT_APP_SERVER_BASE_URL
+// );
 
 const BASE_URL =
   process.env.REACT_APP_SERVER_BASE_URL || "http://localhost:5000/api";
