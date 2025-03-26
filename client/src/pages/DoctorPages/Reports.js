@@ -134,7 +134,7 @@ const Reports = () => {
 
       // Check that patient ID is properly formatted
       if (formData.associatedPatient) {
-        console.log("Using patient ID for report:", formData.associatedPatient);
+        // console.log("Using patient ID for report:", formData.associatedPatient);
       }
 
       // Format data according to MedicalReport service
@@ -161,14 +161,14 @@ const Reports = () => {
         },
       };
 
-      console.log("Sending report data:", reportData);
+      // console.log("Sending report data:", reportData);
 
       // Create a medical report
       const response = await doctorAPI.createReport(reportData);
 
       if (response && response.data) {
         const newReport = response.data;
-        console.log("New report created:", newReport);
+        // console.log("New report created:", newReport);
 
         // If specific items are selected, add them to the report
         if (
@@ -177,11 +177,11 @@ const Reports = () => {
             selectedItems.prescriptions.length > 0 ||
             selectedItems.patientRecords.length > 0)
         ) {
-          console.log("Adding items to report:", {
-            appointments: selectedItems.appointments,
-            prescriptions: selectedItems.prescriptions,
-            patientRecords: selectedItems.patientRecords,
-          });
+          // console.log("Adding items to report:", {
+          //   appointments: selectedItems.appointments,
+          //   prescriptions: selectedItems.prescriptions,
+          //   patientRecords: selectedItems.patientRecords,
+          // });
 
           await doctorAPI.addItemsToReport(newReport._id, selectedItems);
         }
@@ -192,7 +192,7 @@ const Reports = () => {
         setReports((prevReports) => {
           const updatedReports = [newReport, ...prevReports];
           // Log inside the functional update to see the actual updated array
-          console.log("Reports updated:", updatedReports);
+          // console.log("Reports updated:", updatedReports);
           return updatedReports;
         });
 
@@ -372,28 +372,28 @@ const Reports = () => {
   const fetchPatientItems = async (patientId) => {
     try {
       setLoading(true);
-      console.log("Fetching items for patient ID:", patientId);
+      // console.log("Fetching items for patient ID:", patientId);
 
       // Fetch appointments with better error handling and logging
       try {
         const appointmentsResponse = await doctorAPI.getAppointments();
-        console.log("All appointments:", appointmentsResponse.data);
+        // console.log("All appointments:", appointmentsResponse.data);
 
         // More robust filtering that handles various patient reference formats
         const patientAppointments = appointmentsResponse.data.filter(
           (appointment) => {
             // First log the appointment to help debug
-            console.log("Checking appointment:", {
-              id: appointment._id,
-              patient: appointment.patient,
-              patientId: appointment.patient?._id || appointment.patient,
-            });
+            // console.log("Checking appointment:", {
+            //   id: appointment._id,
+            //   patient: appointment.patient,
+            //   patientId: appointment.patient?._id || appointment.patient,
+            // });
 
             // Handle case where patient is completely missing
             if (!appointment.patient) {
-              console.log(
-                `Appointment ${appointment._id} has no patient reference`
-              );
+              // console.log(
+              //   `Appointment ${appointment._id} has no patient reference`
+              // );
               return false;
             }
 
@@ -407,19 +407,19 @@ const Reports = () => {
 
             // Compare with the target patient ID
             const isMatch = appointmentPatientId === patientId;
-            console.log(
-              `Appointment ${
-                appointment._id
-              } patient ${appointmentPatientId} vs ${patientId}: ${
-                isMatch ? "MATCH" : "NO MATCH"
-              }`
-            );
+            // console.log(
+            //   `Appointment ${
+            //     appointment._id
+            //   } patient ${appointmentPatientId} vs ${patientId}: ${
+            //     isMatch ? "MATCH" : "NO MATCH"
+            //   }`
+            // );
 
             return isMatch;
           }
         );
 
-        console.log("Filtered appointments:", patientAppointments);
+        // console.log("Filtered appointments:", patientAppointments);
         setPatientAppointments(patientAppointments);
       } catch (apptError) {
         console.error("Error fetching appointments:", apptError);
@@ -430,7 +430,7 @@ const Reports = () => {
       // Apply the same robust filtering to prescriptions
       try {
         const prescriptionsResponse = await doctorAPI.getPrescriptions();
-        console.log("All prescriptions:", prescriptionsResponse.data);
+        // console.log("All prescriptions:", prescriptionsResponse.data);
 
         const patientPrescriptions = prescriptionsResponse.data.filter(
           (prescription) => {
@@ -445,7 +445,7 @@ const Reports = () => {
           }
         );
 
-        console.log("Filtered prescriptions:", patientPrescriptions);
+        // console.log("Filtered prescriptions:", patientPrescriptions);
         setPatientPrescriptions(patientPrescriptions);
       } catch (rxError) {
         console.error("Error fetching prescriptions:", rxError);
@@ -455,7 +455,7 @@ const Reports = () => {
       // Apply the same robust filtering to medical records
       try {
         const recordsResponse = await doctorAPI.getMedicalRecords();
-        console.log("All records:", recordsResponse.data);
+        // console.log("All records:", recordsResponse.data);
 
         const patientRecords = recordsResponse.data.filter((record) => {
           if (!record.patient) return false;
@@ -468,7 +468,7 @@ const Reports = () => {
           return recordPatientId === patientId;
         });
 
-        console.log("Filtered records:", patientRecords);
+        // console.log("Filtered records:", patientRecords);
         setPatientRecords(patientRecords);
       } catch (recordError) {
         console.error("Error fetching medical records:", recordError);
@@ -484,7 +484,7 @@ const Reports = () => {
 
   // Function to handle tab switching - fix syntax
   const handleTabChange = (tabIndex) => {
-    console.log("Switching to tab:", tabIndex);
+    // console.log("Switching to tab:", tabIndex);
     setActiveTab(tabIndex);
   };
 
@@ -549,7 +549,7 @@ const Reports = () => {
   // Add debug tracking for tab switching
   useEffect(() => {
     if (showDebug) {
-      console.log("Active tab:", activeTab);
+      // console.log("Active tab:", activeTab);
     }
   }, [activeTab, showDebug]);
 
@@ -1069,7 +1069,7 @@ const Reports = () => {
                         <br />
                         Patient ID: {formData.associatedPatient}
                       </p>
-                      {console.log(formData)}
+                      {/* {console.log(formData)} */}
                     </div>
                   )}
                 </div>

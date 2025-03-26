@@ -126,7 +126,7 @@ const Prescriptions = () => {
 
   const handleOpenEditPrescription = (prescription) => {
     setSelectedPrescription(prescription);
-    console.log(prescription);
+    // console.log(prescription);
 
     // Format dates for the form
     const startDate = prescription.startDate

@@ -2,7 +2,7 @@ import MedicalReport from "../models/medicalReport.model.js";
 
 // Get all reports for a doctor
 const getDoctorReports = async (doctorId) => {
-  console.log(doctorId);
+  // console.log(doctorId);
   try {
     return await MedicalReport.find({ issuedByDoctor: doctorId })
       .populate({
@@ -21,7 +21,7 @@ const getDoctorReports = async (doctorId) => {
 // Get a specific report by ID
 const getReportById = async (reportId) => {
   try {
-    console.log(`Fetching report with ID: ${reportId}`);
+    // console.log(`Fetching report with ID: ${reportId}`);
 
     const report = await MedicalReport.findById(reportId)
       .populate({
@@ -54,12 +54,12 @@ const getReportById = async (reportId) => {
         select: "patient doctor records createdAt",
       });
 
-    console.log(`Report fetched:`, {
-      id: report?._id,
-      hasAppointments: report?.appointments?.length > 0,
-      hasPrescriptions: report?.prescriptions?.length > 0,
-      hasRecords: report?.patientRecords?.length > 0,
-    });
+    // console.log(`Report fetched:`, {
+    //   id: report?._id,
+    //   hasAppointments: report?.appointments?.length > 0,
+    //   hasPrescriptions: report?.prescriptions?.length > 0,
+    //   hasRecords: report?.patientRecords?.length > 0,
+    // });
 
     return report;
   } catch (error) {
@@ -124,12 +124,12 @@ const addItemsToReport = async (reportId, items) => {
       patientRecords = [],
     } = items;
 
-    console.log("Service - Adding items to report:", reportId);
-    console.log("Service - Items to add:", {
-      appointments: appointments.length > 0 ? appointments : "None",
-      prescriptions: prescriptions.length > 0 ? prescriptions : "None",
-      patientRecords: patientRecords.length > 0 ? patientRecords : "None",
-    });
+    // console.log("Service - Adding items to report:", reportId);
+    // console.log("Service - Items to add:", {
+    //   appointments: appointments.length > 0 ? appointments : "None",
+    //   prescriptions: prescriptions.length > 0 ? prescriptions : "None",
+    //   patientRecords: patientRecords.length > 0 ? patientRecords : "None",
+    // });
 
     const report = await MedicalReport.findById(reportId);
     if (!report) {
@@ -156,9 +156,9 @@ const addItemsToReport = async (reportId, items) => {
         (id) => !existingAppointmentIds.includes(id.toString())
       );
       if (newAppointments.length > 0) {
-        console.log(
-          `Adding ${newAppointments.length} new appointments to report`
-        );
+        // console.log(
+        //   `Adding ${newAppointments.length} new appointments to report`
+        // );
         report.appointments.push(...newAppointments);
       }
     }
@@ -179,11 +179,11 @@ const addItemsToReport = async (reportId, items) => {
       report.patientRecords.push(...newRecords);
     }
 
-    console.log("Service - Updated report before save:", {
-      appointmentsCount: report.appointments.length,
-      prescriptionsCount: report.prescriptions.length,
-      patientRecordsCount: report.patientRecords.length,
-    });
+    // console.log("Service - Updated report before save:", {
+    //   appointmentsCount: report.appointments.length,
+    //   prescriptionsCount: report.prescriptions.length,
+    //   patientRecordsCount: report.patientRecords.length,
+    // });
 
     return await report.save();
   } catch (error) {

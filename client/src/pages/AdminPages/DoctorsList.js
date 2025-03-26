@@ -20,12 +20,12 @@ const DoctorsList = () => {
   const fetchData = async () => {
     try {
       setLoading(true);
-      console.log("Fetching doctors and specializations data...");
+      // console.log("Fetching doctors and specializations data...");
 
       // First fetch specializations
       try {
         const specializationsResponse = await adminAPI.getSpecializations();
-        console.log("Specializations response:", specializationsResponse);
+        // console.log("Specializations response:", specializationsResponse);
         setSpecializations(specializationsResponse.data || []);
       } catch (specsError) {
         console.error("Error fetching specializations:", specsError);
@@ -39,10 +39,10 @@ const DoctorsList = () => {
           doctorsResponse = await adminAPI.getDoctorsBySpecialization(
             filterSpecialization
           );
-          console.log("Filtered doctors response:", doctorsResponse);
+          // console.log("Filtered doctors response:", doctorsResponse);
         } else {
           doctorsResponse = await adminAPI.getAllDoctors();
-          console.log("All doctors response:", doctorsResponse);
+          // console.log("All doctors response:", doctorsResponse);
         }
 
         setDoctors(doctorsResponse.data || []);

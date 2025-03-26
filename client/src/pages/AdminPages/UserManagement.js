@@ -403,7 +403,7 @@ const UserManagement = () => {
                   ...doctorData,
                 }
               );
-              console.log("Doctor profile updated:", doctorResponse.data);
+              // console.log("Doctor profile updated:", doctorResponse.data);
               showPopup(
                 "success",
                 "Doctor profile updated successfully!",
@@ -437,7 +437,7 @@ const UserManagement = () => {
                   ...patientData,
                 }
               );
-              console.log("Patient profile updated:", patientResponse.data);
+              // console.log("Patient profile updated:", patientResponse.data);
               showPopup(
                 "success",
                 "Patient profile updated successfully!",
@@ -461,7 +461,7 @@ const UserManagement = () => {
         showPopup("success", "User updated successfully!", "Success");
       } else {
         // Add new user with improved handling
-        console.log(userData);
+        // console.log(userData);
         const { email, password, role } = userData;
         const response = await adminAPI.registerUser({ email, password, role });
 
@@ -556,7 +556,7 @@ const UserManagement = () => {
               patientData
             );
 
-            console.log("Patient profile updated:", patientResponse.data);
+            // console.log("Patient profile updated:", patientResponse.data);
             showPopup(
               "success",
               "Patient profile created successfully!",

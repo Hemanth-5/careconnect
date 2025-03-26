@@ -275,7 +275,7 @@ const Profile = () => {
         (id) => !selectedSpecializations.includes(id)
       );
 
-      console.log(toAdd);
+      // console.log(toAdd);
       if (toAdd.length > 0) {
         await doctorAPI.assignSpecializations(toAdd);
       }

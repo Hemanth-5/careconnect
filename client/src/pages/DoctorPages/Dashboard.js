@@ -30,7 +30,7 @@ const Dashboard = () => {
       // Fetch dashboard data from API
       const dashboardResponse = await doctorAPI.getDashboardStats();
 
-      console.log(dashboardResponse.data);
+      // console.log(dashboardResponse.data);
 
       if (dashboardResponse && dashboardResponse.data) {
         setStats(

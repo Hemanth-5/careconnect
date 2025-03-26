@@ -89,6 +89,27 @@ const AuthCheck = ({ children, redirectTo }) => {
   );
 };
 
+// Role-based route checker component
+const RoleBasedRoute = ({ requiredRole, children }) => {
+  const [authorized, setAuthorized] = useState(null);
+  const location = useLocation();
+
+  useEffect(() => {
+    const userType = localStorage.getItem("userType");
+    setAuthorized(userType === requiredRole);
+  }, [requiredRole]);
+
+  if (authorized === null) {
+    return <Spinner center size="medium" />;
+  }
+
+  return authorized ? (
+    children
+  ) : (
+    <Navigate to="/unauthorized" state={{ from: location }} replace />
+  );
+};
+
 // Create a simple RedirectBasedOnRole component that doesn't immediately redirect
 const RedirectBasedOnRole = () => {
   const [destination, setDestination] = useState(null);
@@ -178,12 +199,14 @@ const App = () => {
           {/* Role-based redirect */}
           <Route path="/redirect" element={<RedirectBasedOnRole />} />
 
-          {/* Admin routes */}
+          {/* Admin routes - with role verification */}
           <Route
             path="/admin"
             element={
               <AuthCheckWrapper redirectTo="/login">
-                <AdminLayout />
+                <RoleBasedRoute requiredRole="admin">
+                  <AdminLayout />
+                </RoleBasedRoute>
               </AuthCheckWrapper>
             }
           >
@@ -200,12 +223,14 @@ const App = () => {
             <Route index element={<Navigate to="/admin/dashboard" replace />} />
           </Route>
 
-          {/* Doctor routes */}
+          {/* Doctor routes - with role verification */}
           <Route
             path="/doctor"
             element={
               <AuthCheckWrapper redirectTo="/login">
-                <DoctorLayout />
+                <RoleBasedRoute requiredRole="doctor">
+                  <DoctorLayout />
+                </RoleBasedRoute>
               </AuthCheckWrapper>
             }
           >
@@ -219,12 +244,14 @@ const App = () => {
             <Route path="notifications" element={<DoctorNotifications />} />
           </Route>
 
-          {/* Patient routes */}
+          {/* Patient routes - with role verification */}
           <Route
             path="/patient"
             element={
               <AuthCheckWrapper redirectTo="/login">
-                <PatientLayout />
+                <RoleBasedRoute requiredRole="patient">
+                  <PatientLayout />
+                </RoleBasedRoute>
               </AuthCheckWrapper>
             }
           >

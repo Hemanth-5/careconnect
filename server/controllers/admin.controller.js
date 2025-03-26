@@ -273,7 +273,7 @@ export const getDoctorsBySpecialization = async (req, res) => {
   try {
     const { specializationId } = req.params;
 
-    console.log(`Filtering doctors by specialization: ${specializationId}`);
+    // console.log(`Filtering doctors by specialization: ${specializationId}`);
 
     // Make sure we handle both string IDs and ObjectId references
     const doctors = await Doctor.find({
@@ -282,9 +282,9 @@ export const getDoctorsBySpecialization = async (req, res) => {
       .populate("user")
       .populate("specializations");
 
-    console.log(
-      `Found ${doctors.length} doctors with specialization ${specializationId}`
-    );
+    // console.log(
+    //   `Found ${doctors.length} doctors with specialization ${specializationId}`
+    // );
 
     res.json(doctors);
   } catch (error) {

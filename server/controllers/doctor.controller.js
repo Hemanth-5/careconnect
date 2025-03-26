@@ -608,7 +608,7 @@ export const updatePrescription = async (req, res) => {
 export const createPatientRecord = async (req, res) => {
   try {
     const { patient, records } = req.body;
-    console.log(patient, records);
+    // console.log(patient, records);
 
     // 1️⃣ Validate if patient exists
     const dbPatient = await Patient.findById(patient);
@@ -664,7 +664,7 @@ export const updatePatientRecord = async (req, res) => {
       updatedData
     );
 
-    console.log(updatedPatientRecord);
+    // console.log(updatedPatientRecord);
 
     if (!updatedPatientRecord) {
       return res.status(404).json({ message: "Patient record not found" });
@@ -865,7 +865,7 @@ export const deleteMedicalReport = async (req, res) => {
       return res.status(404).json({ message: "Doctor not found" });
     }
 
-    console.log(report.issuedByDoctor, doctor._id);
+    // console.log(report.issuedByDoctor, doctor._id);
     // Verify the report belongs to this doctor
     if (report.issuedByDoctor._id.toString() !== doctor._id.toString()) {
       return res.status(403).json({

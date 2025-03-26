@@ -33,7 +33,7 @@
 /* Universal Reset */
 * {
   font-family: "Poppins", sans-serif;
-  font-size: 1.1rem;
+  /* font-size: 1.1rem; */
   margin: 0;
   padding: 0;
   box-sizing: border-box;

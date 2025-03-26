@@ -22,7 +22,7 @@ export const getDoctorPatientRecords = async (req, res) => {
       doctor._id
     );
 
-    console.log(records);
+    // console.log(records);
     res.status(200).json(records);
   } catch (error) {
     console.error("Error fetching patient records:", error);
@@ -69,7 +69,7 @@ export const createPatientRecord = async (req, res) => {
       return res.status(404).json({ message: "Doctor not found" });
     }
 
-    console.log(req.body);
+    // console.log(req.body);
     // Validate patient if provided
     if (req.body.patient) {
       const patientExists = await Patient.findById(req.body.patient);

@@ -111,7 +111,7 @@ export const getUserDetails = async (req, res) => {
 export const updateUserProfile = async (req, res) => {
   try {
     const data = req.body;
-    console.log(data);
+    // console.log(data);
 
     const updatedUser = await User.findByIdAndUpdate(req.user.userId, data, {
       new: true,

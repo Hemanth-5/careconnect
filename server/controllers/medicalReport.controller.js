@@ -19,7 +19,7 @@ export const getDoctorReports = async (req, res) => {
     }
 
     const reports = await MedicalReportService.getDoctorReports(doctor._id);
-    console.log(reports);
+    // console.log(reports);
     res.status(200).json(reports);
   } catch (error) {
     console.error("Error fetching doctor reports:", error);
@@ -66,7 +66,7 @@ export const createMedicalReport = async (req, res) => {
       return res.status(404).json({ message: "Doctor not found" });
     }
 
-    console.log(req.body);
+    // console.log(req.body);
 
     // Prepare report data with doctor information
     const reportData = {
@@ -115,10 +115,10 @@ export const addItemsToReport = async (req, res) => {
       patientRecords = [],
     } = req.body;
 
-    console.log("Adding items to report:", reportId);
-    console.log("Appointments:", appointments);
-    console.log("Prescriptions:", prescriptions);
-    console.log("Patient records:", patientRecords);
+    // console.log("Adding items to report:", reportId);
+    // console.log("Appointments:", appointments);
+    // console.log("Prescriptions:", prescriptions);
+    // console.log("Patient records:", patientRecords);
 
     // Verify report exists
     const existingReport = await MedicalReportService.getReportById(reportId); // Fixed method name
@@ -149,7 +149,7 @@ export const addItemsToReport = async (req, res) => {
       }
     );
 
-    console.log("Updated report:", updatedReport);
+    // console.log("Updated report:", updatedReport);
 
     res.status(200).json(updatedReport);
   } catch (error) {

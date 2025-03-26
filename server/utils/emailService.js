@@ -15,7 +15,7 @@ const createTransporter = async () => {
 
   // For development, use a test account if credentials not provided
   if (!host || !user || !pass) {
-    console.log("Email credentials not found, using test account...");
+    // console.log("Email credentials not found, using test account...");
     const testAccount = await nodemailer.createTestAccount();
     return nodemailer.createTransport({
       host: "smtp.ethereal.email",
@@ -72,10 +72,10 @@ export const sendPasswordResetEmail = async (email, token, name, resetUrl) => {
 
     // Log preview URL for development (ethereal.email)
     if (info.messageId && !process.env.EMAIL_HOST) {
-      console.log(
-        "Password reset email preview URL:",
-        nodemailer.getTestMessageUrl(info)
-      );
+      // console.log(
+      //   "Password reset email preview URL:",
+      //   nodemailer.getTestMessageUrl(info)
+      // );
     }
 
     return info;
@@ -103,10 +103,10 @@ export const sendNotificationEmail = async (recipient, subject, content) => {
 
     // Log preview URL for development (ethereal.email)
     if (info.messageId && !process.env.EMAIL_HOST) {
-      console.log(
-        "Notification email preview URL:",
-        nodemailer.getTestMessageUrl(info)
-      );
+      // console.log(
+      //   "Notification email preview URL:",
+      //   nodemailer.getTestMessageUrl(info)
+      // );
     }
 
     return info;

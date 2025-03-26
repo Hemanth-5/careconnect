@@ -59,7 +59,7 @@ const Appointments = () => {
     try {
       setLoading(true);
       const response = await patientAPI.getAppointments();
-      console.log("Appointments", response.data);
+      // console.log("Appointments", response.data);
       if (response && response.data) {
         setAppointments(response.data.appointments || []);
       }
