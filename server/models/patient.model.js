@@ -25,6 +25,7 @@ const patientSchema = new mongoose.Schema(
     insuranceDetails: {
       provider: { type: String },
       policyNumber: { type: String },
+      groupNumber: { type: String },
       coverageDetails: { type: String },
     },
     // Added calculatedAge to match frontend

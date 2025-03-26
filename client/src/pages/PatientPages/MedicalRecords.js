@@ -3,20 +3,43 @@ import patientAPI from "../../api/patient";
 import Button from "../../components/common/Button";
 import Spinner from "../../components/common/Spinner";
 import Modal from "../../components/common/Modal";
+import Popup from "../../components/common/Popup";
 import "./MedicalRecords.css";
 
 const MedicalRecords = () => {
   const [loading, setLoading] = useState(true);
   const [medicalRecords, setMedicalRecords] = useState([]);
-  const [error, setError] = useState(null);
   const [selectedRecord, setSelectedRecord] = useState(null);
   const [showRecordModal, setShowRecordModal] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [filter, setFilter] = useState("all");
 
+  // Popup notification state
+  const [popup, setPopup] = useState({
+    show: false,
+    message: "",
+    title: "",
+    type: "info",
+  });
+
   useEffect(() => {
     fetchMedicalRecords();
   }, []);
+
+  // Show popup helper
+  const showPopup = (type, message, title = "") => {
+    setPopup({
+      show: true,
+      type,
+      message,
+      title,
+    });
+  };
+
+  // Hide popup method
+  const hidePopup = () => {
+    setPopup((prev) => ({ ...prev, show: false }));
+  };
 
   const fetchMedicalRecords = async () => {
     try {
@@ -25,17 +48,16 @@ const MedicalRecords = () => {
       if (response && response.data) {
         setMedicalRecords(response.data || []);
       }
-      setError(null);
     } catch (err) {
       console.error("Error fetching medical records:", err);
-      setError("Failed to load medical records. Please try again.");
+      showPopup("error", "Failed to load medical records. Please try again.");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleViewRecord = (record) => {
-    setSelectedRecord(record);
+  const handleViewRecord = (record, entry) => {
+    setSelectedRecord({ ...record, currentEntry: entry });
     setShowRecordModal(true);
   };
 
@@ -67,6 +89,38 @@ const MedicalRecords = () => {
     }
   };
 
+  // Get record type icon
+  const getRecordTypeIcon = (type) => {
+    switch (type) {
+      case "examination":
+        return "fas fa-stethoscope";
+      case "test":
+        return "fas fa-vial";
+      case "procedure":
+        return "fas fa-procedures";
+      case "consultation":
+        return "fas fa-comments";
+      case "follow-up":
+        return "fas fa-calendar-check";
+      default:
+        return "fas fa-file-medical";
+    }
+  };
+
+  // Get attachment icon based on file type
+  const getAttachmentIcon = (filename) => {
+    if (!filename) return "fas fa-file";
+
+    if (filename.match(/\.(pdf)$/i)) return "fas fa-file-pdf";
+    if (filename.match(/\.(jpg|jpeg|png|gif)$/i)) return "fas fa-file-image";
+    if (filename.match(/\.(doc|docx)$/i)) return "fas fa-file-word";
+    if (filename.match(/\.(xls|xlsx)$/i)) return "fas fa-file-excel";
+    if (filename.match(/\.(ppt|pptx)$/i)) return "fas fa-file-powerpoint";
+    if (filename.match(/\.(txt)$/i)) return "fas fa-file-alt";
+
+    return "fas fa-file";
+  };
+
   // Filter records based on search term and filter
   const filteredRecords = medicalRecords
     .filter((record) => {
@@ -94,20 +148,23 @@ const MedicalRecords = () => {
   return (
     <div className="patient-medical-records">
       <div className="records-header">
-        <h1 className="page-title">My Medical Records</h1>
+        <div className="patient-header-content">
+          <h1 className="page-title">My Medical Records</h1>
+          <p className="subtitle">
+            View and manage your complete health record history
+          </p>
+        </div>
       </div>
-
-      {error && <div className="alert alert-danger">{error}</div>}
 
       <div className="filter-bar">
         <div className="search-box">
-          <i className="fas fa-search"></i>
           <input
             type="text"
             placeholder="Search by doctor or record details..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
+          <i className="fas fa-search"></i>
         </div>
 
         <div className="record-type-filter">
@@ -128,14 +185,18 @@ const MedicalRecords = () => {
         </div>
       ) : filteredRecords.length > 0 ? (
         <div className="records-grid">
-          {filteredRecords.map((record) => (
-            <div key={record._id} className="record-card">
-              {record.records.map((entry, index) => (
-                <div key={index} className="record-entry">
+          {filteredRecords.flatMap((record) =>
+            record.records.map((entry, index) => (
+              <div key={`${record._id}-${index}`} className="record-card">
+                <div className="record-entry" data-type={entry.recordType}>
                   <div className="record-header">
                     <div className="record-type">
-                      <span className="record-type-badge">
-                        {getRecordTypeName(entry.recordType)}
+                      <span
+                        className="record-type-badge"
+                        data-type={entry.recordType}
+                      >
+                        <i className={getRecordTypeIcon(entry.recordType)}></i>
+                        &nbsp;{getRecordTypeName(entry.recordType)}
                       </span>
                     </div>
                     <div className="record-date">{formatDate(entry.date)}</div>
@@ -160,18 +221,17 @@ const MedicalRecords = () => {
                   </div>
 
                   <div className="record-footer">
-                    <Button
-                      variant="outline-primary"
-                      size="sm"
-                      onClick={() => handleViewRecord(record)}
+                    <button
+                      className="record-view-btn"
+                      onClick={() => handleViewRecord(record, entry)}
                     >
-                      View Details
-                    </Button>
+                      <i className="fas fa-eye"></i> View Details
+                    </button>
                   </div>
                 </div>
-              ))}
-            </div>
-          ))}
+              </div>
+            ))
+          )}
         </div>
       ) : (
         <div className="empty-state">
@@ -188,13 +248,13 @@ const MedicalRecords = () => {
           </p>
           {(searchTerm || filter !== "all") && (
             <Button
-              variant="primary"
+              variant="outline-primary"
               onClick={() => {
                 setSearchTerm("");
                 setFilter("all");
               }}
             >
-              Clear Filters
+              <i className="fas fa-sync"></i> Clear Filters
             </Button>
           )}
         </div>
@@ -205,103 +265,166 @@ const MedicalRecords = () => {
         <Modal
           title="Medical Record Details"
           onClose={() => setShowRecordModal(false)}
+          size="large"
         >
           <div className="medical-record-details">
-            {selectedRecord.records.map((record, index) => (
-              <div key={index} className="record-detail-section">
-                <div className="record-header-info">
-                  <div className="record-type-info">
-                    <span className="record-type-badge large">
-                      {getRecordTypeName(record.recordType)}
-                    </span>
-                    <span className="record-date-info">
-                      {formatDate(record.date)}
-                    </span>
-                  </div>
-                  <h2 className="record-title-large">{record.title}</h2>
+            <div
+              className="record-detail-section"
+              data-type={
+                selectedRecord.currentEntry?.recordType || "examination"
+              }
+            >
+              <div className="record-header-info">
+                <div className="record-type-info">
+                  <span
+                    className="record-type-badge large"
+                    data-type={selectedRecord.currentEntry?.recordType}
+                  >
+                    <i
+                      className={getRecordTypeIcon(
+                        selectedRecord.currentEntry?.recordType
+                      )}
+                    ></i>
+                    &nbsp;
+                    {getRecordTypeName(selectedRecord.currentEntry?.recordType)}
+                  </span>
+                  <span className="record-date-info">
+                    {formatDate(selectedRecord.currentEntry?.date)}
+                  </span>
+                </div>
+                <h2 className="record-title-large">
+                  {selectedRecord.currentEntry?.title}
+                </h2>
+              </div>
+
+              <div className="doctor-info">
+                <div className="doctor-avatar">
+                  {selectedRecord.doctor?.user?.profilePicture ? (
+                    <img
+                      src={selectedRecord.doctor.user.profilePicture}
+                      alt={selectedRecord.doctor.user.fullname}
+                    />
+                  ) : (
+                    <i className="fas fa-user-md"></i>
+                  )}
+                </div>
+                <div className="doctor-details">
+                  <h3>
+                    Dr. {selectedRecord.doctor?.user?.fullname || "Unknown"}
+                  </h3>
+                  <p>
+                    {selectedRecord.doctor?.specializations
+                      ?.map((s) => s.name)
+                      .join(", ") || "General Practitioner"}
+                  </p>
+                </div>
+              </div>
+
+              <div className="record-info-grid">
+                <div className="info-section">
+                  <h4>
+                    <i className="fas fa-clipboard"></i> Description
+                  </h4>
+                  <p>
+                    {selectedRecord.currentEntry?.description ||
+                      "No description provided"}
+                  </p>
                 </div>
 
-                <div className="doctor-info">
-                  <div className="doctor-avatar">
-                    {selectedRecord.doctor?.user?.profilePicture ? (
-                      <img
-                        src={selectedRecord.doctor.user.profilePicture}
-                        alt={selectedRecord.doctor.user.fullname}
-                      />
-                    ) : (
-                      <i className="fas fa-user-md"></i>
-                    )}
-                  </div>
-                  <div className="doctor-details">
-                    <h3>
-                      Dr. {selectedRecord.doctor?.user?.fullname || "Unknown"}
-                    </h3>
-                    <p>
-                      {selectedRecord.doctor?.specializations
-                        ?.map((s) => s.name)
-                        .join(", ") || "General Practitioner"}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="record-info-grid">
+                {selectedRecord.currentEntry?.diagnosis && (
                   <div className="info-section">
-                    <h4>Description</h4>
-                    <p>{record.description || "No description provided"}</p>
+                    <h4>
+                      <i className="fas fa-diagnoses"></i> Diagnosis
+                    </h4>
+                    <p>{selectedRecord.currentEntry.diagnosis}</p>
                   </div>
+                )}
 
-                  {record.diagnosis && (
-                    <div className="info-section">
-                      <h4>Diagnosis</h4>
-                      <p>{record.diagnosis}</p>
-                    </div>
-                  )}
+                {selectedRecord.currentEntry?.treatmentPlan && (
+                  <div className="info-section">
+                    <h4>
+                      <i className="fas fa-clipboard-list"></i> Treatment Plan
+                    </h4>
+                    <p>{selectedRecord.currentEntry.treatmentPlan}</p>
+                  </div>
+                )}
 
-                  {record.treatmentProgress && (
-                    <div className="info-section">
-                      <h4>Treatment Progress</h4>
-                      <p>{record.treatmentProgress}</p>
-                    </div>
-                  )}
+                {selectedRecord.currentEntry?.testResults && (
+                  <div className="info-section">
+                    <h4>
+                      <i className="fas fa-vial"></i> Test Results
+                    </h4>
+                    <p>{selectedRecord.currentEntry.testResults}</p>
+                  </div>
+                )}
 
-                  {record.notes && (
-                    <div className="info-section">
-                      <h4>Additional Notes</h4>
-                      <p>{record.notes}</p>
-                    </div>
-                  )}
-                </div>
-
-                {record.attachments && record.attachments.length > 0 && (
-                  <div className="attachments-section">
-                    <h4>Attachments</h4>
-                    <div className="attachments-list">
-                      {record.attachments.map((attachment, i) => (
-                        <div key={i} className="attachment-item">
-                          <i className="fas fa-file"></i>
-                          <a
-                            href={attachment.url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                          >
-                            {attachment.filename || `Attachment ${i + 1}`}
-                          </a>
-                        </div>
-                      ))}
-                    </div>
+                {selectedRecord.currentEntry?.notes && (
+                  <div className="info-section">
+                    <h4>
+                      <i className="fas fa-sticky-note"></i> Additional Notes
+                    </h4>
+                    <p>{selectedRecord.currentEntry.notes}</p>
                   </div>
                 )}
               </div>
-            ))}
 
-            <div className="modal-actions">
-              <Button variant="outline-primary" onClick={() => window.print()}>
-                <i className="fas fa-print"></i> Print Record
-              </Button>
+              {selectedRecord.currentEntry?.attachments &&
+                selectedRecord.currentEntry.attachments.length > 0 && (
+                  <div className="attachments-section">
+                    <h4>
+                      <i className="fas fa-paperclip"></i> Attachments
+                    </h4>
+                    <div className="attachments-list">
+                      {selectedRecord.currentEntry.attachments.map(
+                        (attachment, i) => (
+                          <div key={i} className="attachment-item">
+                            <i
+                              className={getAttachmentIcon(attachment.filename)}
+                            ></i>
+                            <a
+                              href={attachment.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                            >
+                              {attachment.filename || `Attachment ${i + 1}`}
+                            </a>
+                          </div>
+                        )
+                      )}
+                    </div>
+                  </div>
+                )}
+
+              <div className="modal-actions">
+                <Button
+                  variant="outline-secondary"
+                  onClick={() => setShowRecordModal(false)}
+                >
+                  Close
+                </Button>
+                <Button
+                  variant="outline-primary"
+                  onClick={() => window.print()}
+                >
+                  <i className="fas fa-print"></i> Print Record
+                </Button>
+              </div>
             </div>
           </div>
         </Modal>
       )}
+
+      {/* Popup notifications */}
+      <Popup
+        type={popup.type}
+        title={popup.title}
+        message={popup.message}
+        isVisible={popup.show}
+        onClose={hidePopup}
+        position="top-right"
+        autoClose={true}
+        duration={5000}
+      />
     </div>
   );
 };

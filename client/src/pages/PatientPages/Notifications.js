@@ -151,7 +151,17 @@ const Notifications = () => {
 
   return (
     <div className="patient-notifications">
-      <div className="notifications-header">
+      <div className="coming-soon-card">
+        <div className="coming-soon-icon">
+          <i className="fas fa-code"></i>
+        </div>
+        <h2>This Feature is Coming Soon</h2>
+        <p>
+          We're working hard to implement real-time notifications. Check back
+          later!
+        </p>
+      </div>
+      {/* <div className="notifications-header">
         <h1 className="page-title">Notifications</h1>
         {unreadCount > 0 && (
           <div className="unread-badge">{unreadCount} unread</div>
@@ -263,7 +273,7 @@ const Notifications = () => {
             </Button>
           )}
         </div>
-      )}
+      )} */}
     </div>
   );
 };

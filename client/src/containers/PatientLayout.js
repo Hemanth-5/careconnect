@@ -159,14 +159,13 @@ const PatientLayout = () => {
       {/* Sidebar */}
       <aside className="patient-sidebar">
         <div className="sidebar-header">
-          <h2 className="logo">
-            {/* <i className="fas fa-heartbeat"></i> */}
-            <span className="sidebar-text">Care Connect</span>
-          </h2>
+          <h1 className="sidebar-logo">
+            {sidebarCollapsed ? "CC" : "CareConnect"}
+          </h1>
           <button className="sidebar-toggle" onClick={toggleSidebar}>
             <i
-              className={`fas ${
-                sidebarCollapsed ? "fa-angle-right" : "fa-angle-left"
+              className={`fas fa-${
+                sidebarCollapsed ? "chevron-right" : "chevron-left"
               }`}
             ></i>
           </button>
@@ -220,7 +219,7 @@ const PatientLayout = () => {
                 <span className="sidebar-text">Medical Records</span>
               </Link>
             </li>
-            <li
+            {/* <li
               className={
                 location.pathname === "/patient/messages" ? "active" : ""
               }
@@ -229,8 +228,8 @@ const PatientLayout = () => {
                 <i className="fas fa-comment-medical"></i>
                 <span className="sidebar-text">Messages</span>
               </Link>
-            </li>
-            <li
+            </li> */}
+            {/* <li
               className={
                 location.pathname === "/patient/billing" ? "active" : ""
               }
@@ -239,7 +238,7 @@ const PatientLayout = () => {
                 <i className="fas fa-file-invoice-dollar"></i>
                 <span className="sidebar-text">Billing</span>
               </Link>
-            </li>
+            </li> */}
             <li
               className={
                 location.pathname === "/patient/notifications" ? "active" : ""

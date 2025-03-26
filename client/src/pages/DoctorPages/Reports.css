@@ -728,8 +728,10 @@
 
 .medications-list {
   display: flex;
+  flex-direction: column;
   flex-wrap: wrap;
   margin-top: 6px;
+  list-style: none;
 }
 
 .record-entries-list {

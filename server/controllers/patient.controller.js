@@ -165,11 +165,9 @@ export const updateAppointment = async (req, res) => {
       appointment.status === "completed" ||
       appointment.status === "cancelled"
     ) {
-      return res
-        .status(400)
-        .json({
-          message: "Cannot update completed or cancelled appointments.",
-        });
+      return res.status(400).json({
+        message: "Cannot update completed or cancelled appointments.",
+      });
     }
 
     // Update appointment fields (only allow certain fields to be updated by patients)
@@ -248,16 +246,18 @@ export const cancelAppointment = async (req, res) => {
     await appointment.save();
 
     // Create notification for doctor
-    await NotificationService.createNotification({
-      recipient: appointment.doctor.user,
-      type: "appointment",
-      message: `Appointment for ${new Date(
-        appointment.appointmentDate
-      ).toLocaleDateString()} has been cancelled by the patient.`,
-      relatedId: appointment._id,
-    });
+    // await NotificationService.createNotification({
+    //   recipient: appointment.doctor.user,
+    //   type: "appointment",
+    //   message: `Appointment for ${new Date(
+    //     appointment.appointmentDate
+    //   ).toLocaleDateString()} has been cancelled by the patient.`,
+    //   relatedId: appointment._id,
+    // });
 
-    res.json({ success: true, message: "Appointment cancelled successfully." });
+    res
+      .status(200)
+      .json({ success: true, message: "Appointment cancelled successfully." });
   } catch (error) {
     console.error("Error cancelling appointment:", error);
     res
@@ -280,13 +280,20 @@ export const getPatientAppointments = async (req, res) => {
     }
 
     // Find upcoming appointments for the patient
+    // Populate all doctor details, along with expanded user details
     const appointments = await Appointment.find({
-      patient: patientId,
+      patient: patientId._id,
     })
-      .populate("doctor", "name specialization") // Populate doctor details
-      .sort({ date: 1 }); // Sort by nearest appointment first
+      .populate({
+        path: "doctor",
+        populate: [
+          { path: "user", select: "fullname email profilePicture username" },
+          { path: "specializations" },
+        ],
+      })
+      .sort({ appointmentDate: 1 });
 
-    res.json({ success: true, appointments });
+    res.status(200).json({ success: true, appointments });
   } catch (error) {
     res.status(500).json({ message: "Error fetching appointments.", error });
   }
@@ -302,7 +309,13 @@ export const getPatientPrescriptions = async (req, res) => {
     // Find prescriptions for the patient
     const prescriptions = await Prescription.find({
       patient: patientId,
-    }).populate("doctor", "name specialization"); // Populate doctor details
+    }).populate({
+      path: "doctor",
+      populate: [
+        { path: "user", select: "fullname email profilePicture username" },
+        { path: "specializations" },
+      ],
+    }); // Populate doctor details
 
     res.json({ success: true, prescriptions });
   } catch (error) {
@@ -365,12 +378,10 @@ export const getPatientMedicalRecords = async (req, res) => {
     res.json(medicalRecords);
   } catch (error) {
     console.error("Error fetching medical records:", error);
-    res
-      .status(500)
-      .json({
-        message: "Error fetching medical records.",
-        error: error.message,
-      });
+    res.status(500).json({
+      message: "Error fetching medical records.",
+      error: error.message,
+    });
   }
 };
 
@@ -409,12 +420,10 @@ export const getPatientMedicalRecordById = async (req, res) => {
     res.json(record);
   } catch (error) {
     console.error("Error fetching medical record:", error);
-    res
-      .status(500)
-      .json({
-        message: "Error fetching medical record.",
-        error: error.message,
-      });
+    res.status(500).json({
+      message: "Error fetching medical record.",
+      error: error.message,
+    });
   }
 };
 

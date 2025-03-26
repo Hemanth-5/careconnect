@@ -179,7 +179,7 @@
   color: var(--doctor-primary-dark);
   font-size: var(--font-size-xl);
   font-weight: 600;
-  border-bottom: 2px solid var(--doctor-primary-light);
+  /* border-bottom: 2px solid var(--doctor-primary-light); */
   padding-bottom: var(--spacing-3);
 }
 

@@ -110,19 +110,20 @@ export const getUserDetails = async (req, res) => {
 // Update user profile (accessible to users only)
 export const updateUserProfile = async (req, res) => {
   try {
-    const { fullName, contact } = req.body;
+    const data = req.body;
+    console.log(data);
 
-    const updatedUser = await User.findByIdAndUpdate(
-      req.user.userId,
-      { fullName, contact },
-      { new: true }
-    );
+    const updatedUser = await User.findByIdAndUpdate(req.user.userId, data, {
+      new: true,
+    });
+
+    // console.log("updated", updatedUser);
 
     if (!updatedUser) {
       return res.status(404).json({ message: "User not found" });
     }
 
-    res.json(updatedUser);
+    res.status(200).json({ message: "Profile updated successfully" });
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });
   }
