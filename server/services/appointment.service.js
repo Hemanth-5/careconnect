@@ -10,7 +10,7 @@ const getDoctorAppointments = async (doctorId) => {
         select: "_id user",
         populate: {
           path: "user",
-          select: "fullname email profilePicture",
+          select: "fullname email profilePicture username",
         },
       })
       .populate({
@@ -18,7 +18,7 @@ const getDoctorAppointments = async (doctorId) => {
         select: "_id user specializations",
         populate: {
           path: "user",
-          select: "fullname email profilePicture",
+          select: "fullname email profilePicture username",
         },
       })
       .sort({ appointmentDate: -1 });

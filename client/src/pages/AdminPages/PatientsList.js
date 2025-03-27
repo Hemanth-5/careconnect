@@ -237,9 +237,7 @@ const PatientsList = () => {
                   </div>
                   <div className="patient-profile-info">
                     <h3>{viewDetails.user?.username || "N/A"}</h3>
-                    <p>
-                      {viewDetails.user?.fullname || viewDetails.name || ""}
-                    </p>
+                    <p>{viewDetails.user?.fullname || ""}</p>
                     <p className="patient-profile-id">
                       <span>Patient ID:</span> {viewDetails._id}
                     </p>

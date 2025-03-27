@@ -9,8 +9,24 @@ const getDoctorReports = async (doctorId) => {
         path: "associatedPatient",
         populate: {
           path: "user",
-          select: "fullname email profilePicture",
+          select: "-password",
         },
+      })
+      .populate({
+        path: "issuedByDoctor",
+        populate: {
+          path: "user",
+          select: "-password",
+        },
+      })
+      .populate({
+        path: "appointments",
+      })
+      .populate({
+        path: "prescriptions",
+      })
+      .populate({
+        path: "patientRecords",
       })
       .sort({ createdAt: -1 });
   } catch (error) {
@@ -28,30 +44,27 @@ const getReportById = async (reportId) => {
         path: "associatedPatient",
         populate: {
           path: "user",
-          select: "fullname email profilePicture",
+          select: "-password",
         },
       })
       .populate({
         path: "issuedByDoctor",
         populate: {
           path: "user",
-          select: "fullname email profilePicture",
+          select: "-password",
         },
       })
       // Properly populate appointments with relevant fields
       .populate({
         path: "appointments",
-        select: "appointmentDate status reason patient doctor",
       })
       // Properly populate prescriptions with relevant fields
       .populate({
         path: "prescriptions",
-        select: "medications startDate endDate notes patient doctor createdAt",
       })
       // Properly populate patient records with relevant fields
       .populate({
         path: "patientRecords",
-        select: "patient doctor records createdAt",
       });
 
     // console.log(`Report fetched:`, {
@@ -118,11 +131,7 @@ const getPatientReports = async (patientId) => {
 // Add items to a report with improved error handling
 const addItemsToReport = async (reportId, items) => {
   try {
-    const {
-      appointments = [],
-      prescriptions = [],
-      patientRecords = [],
-    } = items;
+    const { appointments, prescriptions, patientRecords } = items;
 
     // console.log("Service - Adding items to report:", reportId);
     // console.log("Service - Items to add:", {

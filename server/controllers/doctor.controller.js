@@ -4,6 +4,10 @@ import PatientRecordService from "../services/patientRecord.service.js";
 import MedicalReportService from "../services/medicalReport.service.js";
 import NotificationService from "../services/notification.service.js";
 
+import Appointment from "../models/appointment.model.js";
+import Prescription from "../models/prescription.model.js";
+import PatientRecord from "../models/patientRecord.model.js";
+
 import User from "../models/user.model.js";
 import Doctor from "../models/doctor.model.js";
 import Patient from "../models/patient.model.js";
@@ -11,6 +15,7 @@ import Specialization from "../models/specialization.model.js";
 import mongoose from "mongoose";
 import path from "path";
 import fs from "fs";
+import generatePDF from "../utils/pdfGenerator.js";
 
 // Get doctor profile
 export const getDoctorProfile = async (req, res) => {
@@ -754,41 +759,42 @@ export const createMedicalReport = async (req, res) => {
     res.status(201).json(newMedicalReport);
 
     // Asynchronously generate the actual report content
-    // This would typically be handled by a background job or queue
     setTimeout(async () => {
       try {
-        // Simulate report generation
-        const reportData = {
-          status: Math.random() > 0.1 ? "completed" : "failed", // 10% chance of failure for testing
-          dateIssued: new Date(),
-          document:
-            Math.random() > 0.1
-              ? {
-                  url: `https://example.com/reports/${newMedicalReport._id}.pdf`,
-                  filename: `report-${newMedicalReport._id}.pdf`,
-                  size: Math.floor(Math.random() * 5 * 1024 * 1024), // Random size up to 5MB
-                }
-              : null,
-        };
-
-        // Update the report with the generated data
-        await MedicalReportService.updateMedicalReport(
-          newMedicalReport._id,
-          reportData
+        // Generate report data based on real data
+        const reportData = await generateReportContent(
+          newMedicalReport,
+          data.reportType
         );
 
-        // In a real implementation, you would also send a notification to the user
-        // NotificationService.createNotification({
+        // Generate the actual PDF document and upload it to Cloudinary
+        const documentDetails = await generatePDF(
+          reportData.content,
+          data.reportType
+        );
+
+        // Update the report with the generated data and PDF document URL
+        await MedicalReportService.updateMedicalReport(newMedicalReport._id, {
+          status: "completed",
+          dateIssued: new Date(),
+          document: documentDetails,
+        });
+
+        // Send notification to the user that the report is ready
+        // await NotificationService.createNotification({
         //   recipient: user._id,
-        //   type: 'report_ready',
-        //   title: 'Report Ready',
-        //   message: `Your ${getReportTypeName(data.reportType)} report is now ready for download.`,
+        //   type: "report_ready",
+        //   title: "Report Ready",
+        //   message: `Your ${getReportTypeName(
+        //     data.reportType
+        //   )} report is now ready for download.`,
         //   url: `/doctor/reports?id=${newMedicalReport._id}`,
         // });
       } catch (error) {
         console.error("Error generating report content:", error);
         await MedicalReportService.updateMedicalReport(newMedicalReport._id, {
           status: "failed",
+          errorDetails: error.message,
         });
       }
     }, 5000); // Simulate 5 seconds of processing time
@@ -800,6 +806,626 @@ export const createMedicalReport = async (req, res) => {
     });
   }
 };
+
+// Helper function to generate actual report content based on real data
+async function generateReportContent(report, reportType) {
+  try {
+    // Common report data structure
+    const reportData = {
+      status: "processing", // Will be updated to "completed" after PDF generation
+      dateIssued: new Date(),
+      content: {}, // Will hold the actual content based on report type
+    };
+
+    // Get patient data if associated with a patient
+    let patientData = null;
+    if (report.associatedPatient) {
+      patientData = await Patient.findById(report.associatedPatient).populate(
+        "user",
+        "fullname email gender dateOfBirth contact"
+      );
+    }
+
+    // Get doctor data
+    const doctor = await Doctor.findById(report.issuedByDoctor).populate(
+      "user",
+      "fullname email"
+    );
+
+    // Generate content based on report type
+    switch (reportType) {
+      case "patient-summary":
+        if (!patientData)
+          throw new Error("Patient data required for summary report");
+        reportData.content = await generatePatientSummary(patientData, doctor);
+        break;
+
+      case "appointments":
+        reportData.content = await generateAppointmentsReport(
+          patientData,
+          doctor
+        );
+        break;
+
+      case "prescriptions":
+        reportData.content = await generatePrescriptionsReport(
+          patientData,
+          doctor
+        );
+        break;
+
+      case "medical-records":
+        reportData.content = await generateMedicalRecordsReport(
+          patientData,
+          doctor
+        );
+        break;
+
+      case "analytics":
+        reportData.content = await generateAnalyticsReport(patientData, doctor);
+        break;
+
+      default:
+        throw new Error(`Unsupported report type: ${reportType}`);
+    }
+
+    return reportData;
+  } catch (error) {
+    console.error("Failed to generate report content:", error);
+    return {
+      status: "failed",
+      dateIssued: new Date(),
+      errorDetails: error.message,
+    };
+  }
+}
+
+// Generate a comprehensive summary of patient information
+async function generatePatientSummary(patient, doctor) {
+  // Basic patient info section (original patient summary)
+  const basicInfo = {
+    patientDetails: {
+      name: patient.user.fullname,
+      age: patient.age,
+      gender: patient.user.gender,
+      contactInfo: patient.user.contact,
+      bloodType: patient.medicalInfo?.bloodType || "Not specified",
+      allergies: patient.medicalInfo?.allergies || [],
+      chronicConditions: patient.medicalInfo?.chronicConditions || [],
+    },
+  };
+
+  // Get recent appointments
+  const recentAppointments = await Appointment.find({
+    patient: patient._id,
+    doctor: doctor._id,
+  })
+    .sort({ appointmentDate: -1 })
+    .limit(5);
+
+  // Get active prescriptions
+  const activePrescriptions = await Prescription.find({
+    patient: patient._id,
+    doctor: doctor._id,
+    status: "active",
+  });
+
+  // Get recent patient records
+  const patientRecords = await PatientRecord.find({
+    patient: patient._id,
+    doctor: doctor._id,
+  })
+    .sort({ createdAt: -1 })
+    .limit(5);
+
+  // Get appointment metrics
+  const allAppointments = await Appointment.find({
+    patient: patient._id,
+    doctor: doctor._id,
+  });
+
+  const now = new Date();
+  const appointmentMetrics = {
+    total: allAppointments.length,
+    completed: allAppointments.filter((a) => a.status === "completed").length,
+    cancelled: allAppointments.filter((a) => a.status === "cancelled").length,
+    upcoming: allAppointments.filter(
+      (a) =>
+        a.status !== "completed" &&
+        a.status !== "cancelled" &&
+        new Date(a.appointmentDate) > now
+    ).length,
+  };
+
+  // Get all prescriptions for statistics
+  const allPrescriptions = await Prescription.find({
+    patient: patient._id,
+    doctor: doctor._id,
+  });
+
+  // Group prescriptions by status
+  const groupedPrescriptions = {
+    active: [],
+    expired: [],
+    completed: [],
+  };
+
+  allPrescriptions.forEach((rx) => {
+    const status = rx.status;
+    if (groupedPrescriptions[status]) {
+      groupedPrescriptions[status].push({
+        id: rx._id,
+        startDate: rx.startDate,
+        endDate: rx.endDate,
+        status: rx.status,
+        notes: rx.notes,
+        medications: rx.medications.map((med) => ({
+          name: med.name,
+          dosage: med.dosage,
+          instructions: med.instructions,
+          frequency: med.frequency,
+          duration: med.duration,
+        })),
+      });
+    }
+  });
+
+  // Calculate medication statistics
+  const medicationStats = {};
+  allPrescriptions.forEach((rx) => {
+    rx.medications.forEach((med) => {
+      if (!medicationStats[med.name]) {
+        medicationStats[med.name] = 0;
+      }
+      medicationStats[med.name]++;
+    });
+  });
+
+  // Process medical records for statistics
+  const processedRecords = [];
+  const recordTypes = {};
+
+  patientRecords.forEach((record) => {
+    const recordData = {
+      id: record._id,
+      date: record.createdAt,
+      entries: record.records.map((entry) => ({
+        recordType: entry.recordType,
+        title: entry.title,
+        description: entry.description,
+        diagnosis: entry.diagnosis,
+        findings: entry.findings,
+        treatment: entry.treatment,
+        treatmentProgress: entry.treatmentProgress,
+        notes: entry.notes,
+        date: entry.date,
+        hasAttachments: entry.attachments && entry.attachments.length > 0,
+      })),
+    };
+
+    processedRecords.push(recordData);
+
+    record.records.forEach((entry) => {
+      if (!recordTypes[entry.recordType]) {
+        recordTypes[entry.recordType] = 0;
+      }
+      recordTypes[entry.recordType]++;
+    });
+  });
+
+  // Return comprehensive report data
+  return {
+    reportTitle: `Comprehensive Medical Report for ${patient.user.fullname}`,
+    generatedDate: new Date(),
+    // Patient summary section
+    patientDetails: basicInfo.patientDetails,
+    recentAppointments: recentAppointments.map((apt) => ({
+      date: apt.appointmentDate,
+      status: apt.status,
+      reason: apt.reason,
+      notes: apt.notes,
+    })),
+    activePrescriptions: activePrescriptions.map((rx) => ({
+      startDate: rx.startDate,
+      endDate: rx.endDate,
+      medications: rx.medications.map((med) => ({
+        name: med.name,
+        dosage: med.dosage,
+        instructions: med.instructions,
+      })),
+    })),
+    recentRecords: patientRecords.map((record) => ({
+      date: record.createdAt,
+      entries: record.records.map((entry) => ({
+        type: entry.recordType,
+        title: entry.title,
+        diagnosis: entry.diagnosis,
+        treatment: entry.treatment,
+      })),
+    })),
+
+    // Appointments section
+    appointmentStatistics: {
+      totalAppointments: allAppointments.length,
+      completedCount: appointmentMetrics.completed,
+      upcomingCount: appointmentMetrics.upcoming,
+      cancelledCount: appointmentMetrics.cancelled,
+      completionRate: allAppointments.length
+        ? (
+            (appointmentMetrics.completed / allAppointments.length) *
+            100
+          ).toFixed(2) + "%"
+        : "0%",
+    },
+    appointments: {
+      upcoming: allAppointments
+        .filter(
+          (a) =>
+            a.status !== "completed" &&
+            a.status !== "cancelled" &&
+            new Date(a.appointmentDate) > now
+        )
+        .map((apt) => ({
+          id: apt._id,
+          date: apt.appointmentDate,
+          status: apt.status,
+          reason: apt.reason,
+          notes: apt.notes,
+        }))
+        .slice(0, 10), // limit to 10 appointments
+
+      completed: allAppointments
+        .filter((a) => a.status === "completed")
+        .map((apt) => ({
+          id: apt._id,
+          date: apt.appointmentDate,
+          status: apt.status,
+          reason: apt.reason,
+          notes: apt.notes,
+        }))
+        .slice(0, 10), // limit to 10 appointments
+    },
+
+    // Prescriptions section
+    prescriptionStatistics: {
+      totalPrescriptions: allPrescriptions.length,
+      activeCount: groupedPrescriptions.active.length,
+      expiredCount: groupedPrescriptions.expired.length,
+      completedCount: groupedPrescriptions.completed.length,
+      mostPrescribedMedications: Object.entries(medicationStats)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 5)
+        .map(([name, count]) => ({ name, count })),
+    },
+    prescriptions: groupedPrescriptions,
+
+    // Medical records section
+    medicalRecordStatistics: {
+      totalRecords: patientRecords.length,
+      totalEntries: patientRecords.reduce(
+        (total, record) => total + record.records.length,
+        0
+      ),
+      recordTypeBreakdown: Object.entries(recordTypes).map(([type, count]) => ({
+        type,
+        count,
+        percentage:
+          (
+            (count / Object.values(recordTypes).reduce((a, b) => a + b, 0)) *
+            100
+          ).toFixed(1) + "%",
+      })),
+    },
+    records: processedRecords,
+  };
+}
+
+// Generate a detailed report of appointments
+async function generateAppointmentsReport(patient, doctor) {
+  const query = { doctor: doctor._id };
+
+  // If patient is specified, filter by patient
+  if (patient) {
+    query.patient = patient._id;
+  }
+
+  // Get all relevant appointments
+  const appointments = await Appointment.find(query)
+    .sort({ appointmentDate: -1 })
+    .populate("patient", "user")
+    .populate("patient.user", "fullname");
+
+  // Group appointments by status
+  const groupedAppointments = {
+    completed: [],
+    upcoming: [],
+    cancelled: [],
+  };
+
+  const now = new Date();
+
+  appointments.forEach((apt) => {
+    const aptData = {
+      id: apt._id,
+      date: apt.appointmentDate,
+      status: apt.status,
+      reason: apt.reason,
+      notes: apt.notes,
+      patientName: patient
+        ? patient.user.fullname
+        : apt.patient?.user?.fullname || "Unknown",
+    };
+
+    if (apt.status === "completed") {
+      groupedAppointments.completed.push(aptData);
+    } else if (apt.status === "cancelled" || apt.status === "no-show") {
+      groupedAppointments.cancelled.push(aptData);
+    } else if (new Date(apt.appointmentDate) > now) {
+      groupedAppointments.upcoming.push(aptData);
+    }
+  });
+
+  // Calculate statistics
+  const statistics = {
+    totalAppointments: appointments.length,
+    completedCount: groupedAppointments.completed.length,
+    upcomingCount: groupedAppointments.upcoming.length,
+    cancelledCount: groupedAppointments.cancelled.length,
+    completionRate: appointments.length
+      ? (
+          (groupedAppointments.completed.length / appointments.length) *
+          100
+        ).toFixed(2) + "%"
+      : "0%",
+  };
+
+  return {
+    reportTitle: patient
+      ? `Appointment History for ${patient.user.fullname}`
+      : `Appointment Summary for Dr. ${doctor.user.fullname}`,
+    generatedDate: new Date(),
+    statistics,
+    appointments: groupedAppointments,
+  };
+}
+
+// Generate a detailed report of prescriptions
+async function generatePrescriptionsReport(patient, doctor) {
+  const query = { doctor: doctor._id };
+
+  // If patient is specified, filter by patient
+  if (patient) {
+    query.patient = patient._id;
+  }
+
+  // Get all relevant prescriptions
+  const prescriptions = await Prescription.find(query)
+    .sort({ createdAt: -1 })
+    .populate("patient", "user")
+    .populate("patient.user", "fullname");
+
+  // Group prescriptions by status
+  const groupedPrescriptions = {
+    active: [],
+    expired: [],
+    completed: [],
+  };
+
+  prescriptions.forEach((rx) => {
+    const rxData = {
+      id: rx._id,
+      startDate: rx.startDate,
+      endDate: rx.endDate,
+      status: rx.status,
+      notes: rx.notes,
+      patientName: patient
+        ? patient.user.fullname
+        : rx.patient?.user?.fullname || "Unknown",
+      medications: rx.medications.map((med) => ({
+        name: med.name,
+        dosage: med.dosage,
+        instructions: med.instructions,
+        frequency: med.frequency,
+        duration: med.duration,
+      })),
+    };
+
+    groupedPrescriptions[rx.status].push(rxData);
+  });
+
+  // Calculate medication statistics
+  const medicationStats = {};
+  prescriptions.forEach((rx) => {
+    rx.medications.forEach((med) => {
+      if (!medicationStats[med.name]) {
+        medicationStats[med.name] = 0;
+      }
+      medicationStats[med.name]++;
+    });
+  });
+
+  return {
+    reportTitle: patient
+      ? `Prescription History for ${patient.user.fullname}`
+      : `Prescription Summary for Dr. ${doctor.user.fullname}`,
+    generatedDate: new Date(),
+    statistics: {
+      totalPrescriptions: prescriptions.length,
+      activeCount: groupedPrescriptions.active.length,
+      expiredCount: groupedPrescriptions.expired.length,
+      completedCount: groupedPrescriptions.completed.length,
+      mostPrescribedMedications: Object.entries(medicationStats)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 5)
+        .map(([name, count]) => ({ name, count })),
+    },
+    prescriptions: groupedPrescriptions,
+  };
+}
+
+// Generate a detailed report of medical records
+async function generateMedicalRecordsReport(patient, doctor) {
+  if (!patient) {
+    throw new Error("Patient data required for medical records report");
+  }
+
+  // Get patient records
+  const patientRecords = await PatientRecord.find({
+    patient: patient._id,
+    doctor: doctor._id,
+  }).sort({ createdAt: -1 });
+
+  // Process records
+  const processedRecords = [];
+
+  patientRecords.forEach((record) => {
+    const recordData = {
+      id: record._id,
+      date: record.createdAt,
+      entries: record.records.map((entry) => ({
+        recordType: entry.recordType,
+        title: entry.title,
+        description: entry.description,
+        diagnosis: entry.diagnosis,
+        findings: entry.findings,
+        treatment: entry.treatment,
+        treatmentProgress: entry.treatmentProgress,
+        notes: entry.notes,
+        date: entry.date,
+        hasAttachments: entry.attachments && entry.attachments.length > 0,
+      })),
+    };
+
+    processedRecords.push(recordData);
+  });
+
+  // Group records by type
+  const recordTypes = {};
+  patientRecords.forEach((record) => {
+    record.records.forEach((entry) => {
+      if (!recordTypes[entry.recordType]) {
+        recordTypes[entry.recordType] = 0;
+      }
+      recordTypes[entry.recordType]++;
+    });
+  });
+
+  return {
+    reportTitle: `Medical Records for ${patient.user.fullname}`,
+    generatedDate: new Date(),
+    patientDetails: {
+      name: patient.user.fullname,
+      age: patient.age,
+      gender: patient.user.gender,
+      contactInfo: patient.user.contact,
+    },
+    statistics: {
+      totalRecords: patientRecords.length,
+      totalEntries: patientRecords.reduce(
+        (total, record) => total + record.records.length,
+        0
+      ),
+      recordTypeBreakdown: Object.entries(recordTypes).map(([type, count]) => ({
+        type,
+        count,
+        percentage:
+          (
+            (count / Object.values(recordTypes).reduce((a, b) => a + b, 0)) *
+            100
+          ).toFixed(1) + "%",
+      })),
+    },
+    records: processedRecords,
+  };
+}
+
+// Generate an analytics report
+async function generateAnalyticsReport(patient, doctor) {
+  const query = { doctor: doctor._id };
+
+  // If patient is specified, filter by patient
+  if (patient) {
+    query.patient = patient._id;
+  }
+
+  // Get appointments for analysis
+  const appointments = await Appointment.find(query);
+
+  // Get prescriptions for analysis
+  const prescriptions = await Prescription.find(query);
+
+  // Calculate metrics
+  const now = new Date();
+  const appointmentMetrics = {
+    total: appointments.length,
+    completed: appointments.filter((a) => a.status === "completed").length,
+    cancelled: appointments.filter((a) => a.status === "cancelled").length,
+    upcoming: appointments.filter(
+      (a) =>
+        a.status !== "completed" &&
+        a.status !== "cancelled" &&
+        new Date(a.appointmentDate) > now
+    ).length,
+  };
+
+  // Calculate appointment time distribution by month
+  const appointmentsByMonth = {};
+  appointments.forEach((apt) => {
+    const date = new Date(apt.appointmentDate);
+    const monthYear = `${date.getMonth() + 1}/${date.getFullYear()}`;
+
+    if (!appointmentsByMonth[monthYear]) {
+      appointmentsByMonth[monthYear] = 0;
+    }
+    appointmentsByMonth[monthYear]++;
+  });
+
+  const prescriptionMetrics = {
+    total: prescriptions.length,
+    active: prescriptions.filter((p) => p.status === "active").length,
+    expired: prescriptions.filter((p) => p.status === "expired").length,
+    completed: prescriptions.filter((p) => p.status === "completed").length,
+  };
+
+  // Calculate most prescribed medications
+  const medicationStats = {};
+  prescriptions.forEach((rx) => {
+    rx.medications.forEach((med) => {
+      if (!medicationStats[med.name]) {
+        medicationStats[med.name] = 0;
+      }
+      medicationStats[med.name]++;
+    });
+  });
+
+  const topMedications = Object.entries(medicationStats)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 5)
+    .map(([name, count]) => ({ name, count }));
+
+  return {
+    reportTitle: patient
+      ? `Analytics Report for ${patient.user.fullname}`
+      : `Patient Analytics for Dr. ${doctor.user.fullname}`,
+    generatedDate: new Date(),
+    appointmentMetrics,
+    appointmentTrends: Object.entries(appointmentsByMonth)
+      .sort((a, b) => {
+        const [aMonth, aYear] = a[0].split("/").map(Number);
+        const [bMonth, bYear] = b[0].split("/").map(Number);
+        return aYear * 12 + aMonth - (bYear * 12 + bMonth);
+      })
+      .map(([month, count]) => ({ month, count })),
+    prescriptionMetrics,
+    medicationStats: {
+      topMedications,
+      totalMedications: Object.values(medicationStats).reduce(
+        (a, b) => a + b,
+        0
+      ),
+    },
+  };
+}
 
 // Helper function to get friendly report type name
 function getReportTypeName(type) {
@@ -898,12 +1524,22 @@ export const deleteMedicalReport = async (req, res) => {
       return res.status(404).json({ message: "Doctor not found" });
     }
 
-    // console.log(report.issuedByDoctor, doctor._id);
     // Verify the report belongs to this doctor
     if (report.issuedByDoctor._id.toString() !== doctor._id.toString()) {
       return res.status(403).json({
         message: "Not authorized to delete this report",
       });
+    }
+
+    // Delete the PDF from Cloudinary if it exists
+    if (report.document && report.document.publicId) {
+      try {
+        const { deleteImage } = await import("../utils/cloudinary.js");
+        await deleteImage(report.document.publicId);
+      } catch (cloudinaryError) {
+        console.error("Error deleting PDF from Cloudinary:", cloudinaryError);
+        // Continue with deletion even if Cloudinary deletion fails
+      }
     }
 
     // Delete the report using the service
@@ -1035,7 +1671,7 @@ export const getMyPatients = async (req, res) => {
 
     const patients = await Patient.find({
       _id: { $in: doctor.patientsUnderCare },
-    }).populate("user", ["username", "email", "_id", "profilePicture"]);
+    }).populate("user", "-password");
     res.status(200).json(patients);
   } catch (error) {
     res.status(500).json({ message: "Error fetching patients", error });

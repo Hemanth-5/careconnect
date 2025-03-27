@@ -54,3 +54,30 @@ export const deleteImage = async (publicId) => {
     throw new Error("Failed to delete image from Cloudinary");
   }
 };
+
+/**
+ * Uploads a PDF document to Cloudinary
+ * @param {string} filePath - The path to the PDF file or base64 string
+ * @param {Object} options - Upload options
+ * @returns {Promise} - Cloudinary upload result
+ */
+export const uploadPDF = async (filePath, options = {}) => {
+  try {
+    // Default options for PDF documents
+    const defaultOptions = {
+      folder: "careconnect/documents",
+      resource_type: "auto", // Allows Cloudinary to detect file type
+      format: "pdf",
+    };
+
+    // Merge default options with provided options
+    const uploadOptions = { ...defaultOptions, ...options };
+
+    // Upload the PDF to Cloudinary
+    const result = await cloudinary.uploader.upload(filePath, uploadOptions);
+    return result;
+  } catch (error) {
+    console.error("Error uploading PDF to Cloudinary:", error);
+    throw new Error("Failed to upload PDF to Cloudinary");
+  }
+};

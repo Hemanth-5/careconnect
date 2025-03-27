@@ -150,7 +150,7 @@ const Prescriptions = () => {
   // Generate a PDF prescription with jsPDF instead of pdf-lib
   const generatePrescriptionPDF = async (prescription) => {
     try {
-      console.log(prescription);
+      // console.log(prescription);
       setActionLoading(true);
 
       // Create a new jsPDF instance
@@ -558,8 +558,9 @@ const Prescriptions = () => {
                   </h4>
                   <p>
                     <i className="fas fa-hospital"></i>
-                    {selectedPrescription.doctor?.specialist ||
-                      "General Practitioner"}
+                    {selectedPrescription.doctor?.specializations
+                      ?.map((s) => s.name)
+                      .join(", ") || "General Practitioner"}
                   </p>
                 </div>
                 <div className="patient-prescription-status-large">

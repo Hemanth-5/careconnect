@@ -33,7 +33,7 @@ export const requestPasswordReset = async (req, res) => {
     user.resetPasswordExpires = tokenExpiry;
     await user.save();
 
-    console.log(user);
+    // console.log(user);
 
     // Send password reset email
     const resetUrl = `${process.env.CLIENT_URL}/reset-password/${resetToken}`;

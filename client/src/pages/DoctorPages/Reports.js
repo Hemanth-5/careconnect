@@ -80,6 +80,20 @@ const Reports = () => {
     fetchPatients();
   }, []);
 
+  // Create a handleRefresh function
+  const handleRefresh = async () => {
+    try {
+      setLoading(true);
+      await fetchReports();
+      showPopup("success", "Reports refreshed successfully");
+    } catch (error) {
+      console.error("Error refreshing reports:", error);
+      showPopup("error", "Failed to refresh reports. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const fetchReports = async () => {
     try {
       setLoading(true);
@@ -271,14 +285,21 @@ const Reports = () => {
   };
 
   const downloadReport = (url, filename) => {
+    console.log(url);
     if (!url) return;
 
+    // Open the report in a new tab instead of downloading
+    window.open(url, "_blank");
+
+    // Keep the download functionality as an option in the comments
+    /*
     const link = document.createElement("a");
     link.href = url;
     link.download = filename || "medical-report.pdf";
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+    */
   };
 
   // Format date for display
@@ -557,9 +578,19 @@ const Reports = () => {
     <div className="doctor-reports">
       <div className="reports-header">
         <h1 className="page-title">Medical Reports</h1>
-        <Button variant="outline-primary" onClick={openGenerateModal}>
-          <i className="fas fa-plus"></i> Generate New Report
-        </Button>
+        <div className="page-actions">
+          <Button
+            variant="secondary"
+            onClick={handleRefresh}
+            disabled={loading}
+            className="refresh-button"
+          >
+            <i className="fas fa-sync-alt"></i> Refresh
+          </Button>
+          <Button variant="outline-primary" onClick={openGenerateModal}>
+            <i className="fas fa-plus"></i> Generate New Report
+          </Button>
+        </div>
       </div>
 
       {loading && !reports.length ? (
@@ -1229,7 +1260,7 @@ const Reports = () => {
               </div>
             </div>
 
-            {showDebug && (
+            {/* {showDebug && (
               <div className="debug-info modal-debug">
                 <h4>Item Selection Debug</h4>
                 <div>Selected Patient ID: {formData.associatedPatient}</div>
@@ -1238,7 +1269,7 @@ const Reports = () => {
                 <div>Records found: {patientRecords.length}</div>
                 <div>Active Tab: {activeTab}</div>
               </div>
-            )}
+            )} */}
 
             <div className="modal-actions">
               <Button
@@ -2283,7 +2314,7 @@ const Reports = () => {
       />
 
       {/* Add a button somewhere for developers to toggle debug */}
-      <Button
+      {/* <Button
         variant="text"
         size="sm"
         onClick={() => setShowDebug(!showDebug)}
@@ -2295,9 +2326,9 @@ const Reports = () => {
         }}
       >
         {showDebug ? "Hide Debug" : "Debug"}
-      </Button>
+      </Button> */}
 
-      {showDebug && (
+      {/* {showDebug && (
         <div className="debug-info">
           <h4>Debug Information</h4>
           <div>
@@ -2321,7 +2352,7 @@ const Reports = () => {
             <div>Records: {selectedReport?.patientRecords?.length || 0}</div>
           </div>
         </div>
-      )}
+      )} */}
 
       {/* Popup */}
       <Popup

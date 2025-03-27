@@ -419,9 +419,9 @@ const Appointments = () => {
                     </span>
                   </div>
                   <div className="patient-doctor-specialty">
-                    {console.log(appointment)}
+                    {/* {console.log(appointment)} */}
                     {appointment.doctor?.specializations
-                      ?.map((s) => s)
+                      ?.map((s) => s.name)
                       .join(", ") || "General Practitioner"}
                   </div>
                   <div className="patient-appointment-info">
