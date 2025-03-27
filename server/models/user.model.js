@@ -58,8 +58,8 @@ const userSchema = new mongoose.Schema(
     contact: contactSchema,
     isActive: { type: Boolean, default: true },
     lastLogin: { type: Date },
-    passwordResetToken: { type: String },
-    passwordResetExpires: { type: Date },
+    resetPasswordToken: { type: String },
+    resetPasswordExpires: { type: Date },
   },
   { timestamps: true }
 );

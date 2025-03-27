@@ -17,8 +17,9 @@ export const API = {
     ME: `${BASE_URL}/users/me`,
     UPDATE_PROFILE: `${BASE_URL}/users/profile`,
     CHANGE_PASSWORD: `${BASE_URL}/users/change-password`,
-    REQUEST_PASSWORD_RESET: `${BASE_URL}/users/forgot-password`,
-    RESET_PASSWORD: `${BASE_URL}/users/reset-password`,
+    REQUEST_PASSWORD_RESET: `${BASE_URL}/password-reset/request`,
+    VERIFY_RESET_TOKEN: (token) => `${BASE_URL}/password-reset/verify/${token}`,
+    RESET_PASSWORD: `${BASE_URL}/password-reset/reset`,
     UPLOAD_PROFILE_IMAGE: `${BASE_URL}/users/profile/upload-image`,
   },
   ADMIN: {
