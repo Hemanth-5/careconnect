@@ -386,7 +386,7 @@ const Profile = () => {
     return (
       <div className="error-container">
         <div className="alert alert-danger">{error}</div>
-        <Button variant="primary" onClick={fetchProfile}>
+        <Button variant="outline-primary" onClick={fetchProfile}>
           Retry
         </Button>
       </div>
@@ -832,7 +832,7 @@ const Profile = () => {
                 Cancel
               </Button>
               <Button
-                variant="primary"
+                variant="outline-primary"
                 onClick={handleSaveSpecializations}
                 loading={saving}
                 disabled={saving}

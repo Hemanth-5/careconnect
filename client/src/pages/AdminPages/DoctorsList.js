@@ -210,7 +210,7 @@ const DoctorsList = () => {
               <p>No doctors found matching your criteria.</p>
               {doctors.length === 0 && !error && (
                 <Button
-                  variant="primary"
+                  variant="outline-primary"
                   onClick={fetchData}
                   style={{ marginTop: "10px" }}
                 >

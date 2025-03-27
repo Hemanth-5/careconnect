@@ -194,7 +194,7 @@ const PatientsList = () => {
                       <div>
                         <p>No patients found in the system.</p>
                         <Button
-                          variant="primary"
+                          variant="outline-primary"
                           onClick={fetchPatients}
                           style={{ marginTop: "10px" }}
                         >
