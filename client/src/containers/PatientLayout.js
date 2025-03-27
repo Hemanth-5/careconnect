@@ -219,7 +219,7 @@ const PatientLayout = () => {
                 <span className="sidebar-text">Medical Records</span>
               </Link>
             </li>
-            {/* <li
+            <li
               className={
                 location.pathname === "/patient/messages" ? "active" : ""
               }
@@ -228,8 +228,8 @@ const PatientLayout = () => {
                 <i className="fas fa-comment-medical"></i>
                 <span className="sidebar-text">Messages</span>
               </Link>
-            </li> */}
-            {/* <li
+            </li>
+            <li
               className={
                 location.pathname === "/patient/billing" ? "active" : ""
               }
@@ -238,7 +238,7 @@ const PatientLayout = () => {
                 <i className="fas fa-file-invoice-dollar"></i>
                 <span className="sidebar-text">Billing</span>
               </Link>
-            </li> */}
+            </li>
             <li
               className={
                 location.pathname === "/patient/notifications" ? "active" : ""

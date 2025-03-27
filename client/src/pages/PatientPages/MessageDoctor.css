@@ -1,0 +1,222 @@
+.patient-message-doctor {
+  animation: fadeIn 0.3s ease;
+}
+
+.notifications-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: var(--spacing-6);
+  gap: var(--spacing-4);
+}
+
+.unread-badge {
+  background-color: var(--patient-primary);
+  color: var(--white);
+  padding: var(--spacing-1) var(--spacing-3);
+  border-radius: var(--border-radius-full);
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+}
+
+.notifications-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--spacing-6);
+  background-color: var(--white);
+  padding: var(--spacing-4);
+  border-radius: var(--border-radius-lg);
+  box-shadow: var(--shadow-sm);
+  flex-wrap: wrap;
+  gap: var(--spacing-3);
+}
+
+.search-box {
+  position: relative;
+  flex: 1;
+  min-width: 200px;
+}
+
+.search-box input {
+  width: 100%;
+  padding: var(--spacing-3) var(--spacing-3) var(--spacing-3) var(--spacing-8);
+  /* border: 1px solid var(--gray-300); */
+  border-radius: var(--border-radius);
+  font-size: var(--font-size-md);
+}
+
+.search-box i {
+  position: absolute;
+  left: var(--spacing-3);
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--gray-500);
+}
+
+.notifications-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-3);
+}
+
+.filter-tabs {
+  display: flex;
+  border-radius: var(--border-radius);
+  overflow: hidden;
+}
+
+.filter-tab {
+  padding: var(--spacing-2) var(--spacing-4);
+  background-color: var(--gray-100);
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.2s, color 0.2s;
+  font-weight: 500;
+  color: var(--gray-600);
+}
+
+.filter-tab:first-child {
+  border-radius: var(--border-radius) 0 0 var(--border-radius);
+}
+
+.filter-tab:last-child {
+  border-radius: 0 var(--border-radius) var(--border-radius) 0;
+}
+
+.filter-tab.active {
+  background-color: var(--patient-primary);
+  color: var(--white);
+}
+
+/* Notifications List */
+.notifications-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-3);
+}
+
+.notification-item {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--spacing-4);
+  background-color: var(--white);
+  padding: var(--spacing-4);
+  border-radius: var(--border-radius-lg);
+  box-shadow: var(--shadow-sm);
+  position: relative;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.notification-item:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.notification-item.unread {
+  border-left: 4px solid var(--patient-primary);
+  background-color: var(--patient-bg-light);
+}
+
+.notification-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: rgba(var(--patient-primary-rgb), 0.1);
+  color: var(--patient-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.notification-content {
+  flex: 1;
+}
+
+.notification-message {
+  margin-bottom: var(--spacing-1);
+  color: var(--gray-800);
+  line-height: 1.5;
+}
+
+.notification-item.unread .notification-message {
+  font-weight: 500;
+}
+
+.notification-time {
+  color: var(--gray-500);
+  font-size: var(--font-size-sm);
+}
+
+.mark-read-button {
+  background-color: var(--white);
+  color: var(--patient-primary);
+  border: 1px solid var(--patient-primary);
+  border-radius: 50%;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background-color 0.2s, color 0.2s;
+  flex-shrink: 0;
+}
+
+.mark-read-button:hover {
+  background-color: var(--patient-primary);
+  color: var(--white);
+}
+
+/* Empty State */
+.empty-state {
+  text-align: center;
+  padding: var(--spacing-8);
+  background-color: var(--white);
+  border-radius: var(--border-radius-lg);
+  box-shadow: var(--shadow-sm);
+}
+
+.empty-icon {
+  font-size: 4rem;
+  color: var(--gray-300);
+  margin-bottom: var(--spacing-4);
+}
+
+.empty-state h2 {
+  font-size: var(--font-size-xl);
+  margin-bottom: var(--spacing-2);
+  color: var(--gray-700);
+}
+
+.empty-state p {
+  color: var(--gray-600);
+  margin-bottom: var(--spacing-4);
+}
+
+/* Responsive styles */
+@media (max-width: 768px) {
+  .notifications-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .notifications-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .notification-item {
+    flex-direction: column;
+  }
+
+  .notification-icon {
+    margin-bottom: var(--spacing-2);
+  }
+
+  .mark-read-button {
+    position: absolute;
+    top: var(--spacing-3);
+    right: var(--spacing-3);
+  }
+}

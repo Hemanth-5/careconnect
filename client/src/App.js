@@ -39,7 +39,7 @@ import PatientPrescriptions from "./pages/PatientPages/Prescriptions";
 import PatientMedicalRecords from "./pages/PatientPages/MedicalRecords";
 import PatientProfile from "./pages/PatientPages/Profile";
 import PatientNotifications from "./pages/PatientPages/Notifications";
-// import PatientMessages from "./pages/PatientPages/Messages"; // To be implemented
+import PatientMessages from "./pages/PatientPages/MessageDoctor"; // To be implemented
 
 // Import the ResetPassword component
 import ResetPassword from "./pages/ResetPassword";
@@ -49,6 +49,7 @@ import "./assets/styles/global.css";
 
 // Import the AuthProvider
 import { AuthProvider } from "./contexts/AuthContext";
+import Billing from "./pages/PatientPages/Billing";
 
 // Wrapper for the AuthCheck functionality
 const AuthCheckWrapper = ({ redirectTo, children }) => {
@@ -261,7 +262,8 @@ const App = () => {
             <Route path="medical-records" element={<PatientMedicalRecords />} />
             <Route path="profile" element={<PatientProfile />} />
             <Route path="notifications" element={<PatientNotifications />} />
-            {/* <Route path="messages" element={<PatientMessages />} /> */}{" "}
+            <Route path="messages" element={<PatientMessages />} />
+            <Route path="billing" element={<Billing />} />
             {/* To be implemented */}
           </Route>
 

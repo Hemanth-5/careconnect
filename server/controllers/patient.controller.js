@@ -309,13 +309,23 @@ export const getPatientPrescriptions = async (req, res) => {
     // Find prescriptions for the patient
     const prescriptions = await Prescription.find({
       patient: patientId,
-    }).populate({
-      path: "doctor",
-      populate: [
-        { path: "user", select: "fullname email profilePicture username" },
-        { path: "specializations" },
-      ],
-    }); // Populate doctor details
+    })
+      .populate({
+        path: "patient",
+        populate: [
+          {
+            path: "user",
+            select: "fullname email profilePicture username",
+          },
+        ],
+      })
+      .populate({
+        path: "doctor",
+        populate: [
+          { path: "user", select: "fullname email profilePicture username" },
+          { path: "specializations" },
+        ],
+      });
 
     res.json({ success: true, prescriptions });
   } catch (error) {
@@ -494,13 +504,23 @@ export const getPrescriptionById = async (req, res) => {
     }
 
     // Find the prescription
-    const prescription = await Prescription.findById(prescriptionId).populate({
-      path: "doctor",
-      populate: {
-        path: "user",
-        select: "fullname email profilePicture",
-      },
-    });
+    const prescription = await Prescription.findById(prescriptionId)
+      .populate({
+        path: "doctor",
+        populate: {
+          path: "user",
+          select: "fullname email profilePicture",
+        },
+      })
+      .populate({
+        path: "patient",
+        populate: [
+          {
+            path: "user",
+            select: "fullname email profilePicture",
+          },
+        ],
+      });
 
     if (!prescription) {
       return res.status(404).json({ message: "Prescription not found." });

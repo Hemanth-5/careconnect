@@ -4,6 +4,8 @@ import Button from "../../components/common/Button";
 import Spinner from "../../components/common/Spinner";
 import Modal from "../../components/common/Modal";
 import Popup from "../../components/common/Popup";
+import jsPDF from "jspdf";
+import { saveAs } from "file-saver";
 import "./Prescriptions.css";
 
 const Prescriptions = () => {
@@ -13,6 +15,7 @@ const Prescriptions = () => {
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [filter, setFilter] = useState("active");
   const [searchTerm, setSearchTerm] = useState("");
+  const [actionLoading, setActionLoading] = useState(false);
 
   // Popup notification state
   const [popup, setPopup] = useState({
@@ -142,6 +145,135 @@ const Prescriptions = () => {
           )
         );
       });
+  };
+
+  // Generate a PDF prescription with jsPDF instead of pdf-lib
+  const generatePrescriptionPDF = async (prescription) => {
+    try {
+      console.log(prescription);
+      setActionLoading(true);
+
+      // Create a new jsPDF instance
+      const doc = new jsPDF();
+
+      // Define variables for positioning
+      const margin = 20;
+      let y = 20;
+      const lineHeight = 10;
+
+      // Add title
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(18);
+      doc.setTextColor(0, 102, 102); // Teal color
+      doc.text("CARE CONNECT", margin, y);
+      y += lineHeight * 2;
+
+      // Add prescription header
+      doc.setFontSize(16);
+      doc.setTextColor(0, 0, 0);
+      doc.text("PRESCRIPTION", margin, y);
+      y += lineHeight * 1.5;
+
+      // Patient information
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(12);
+      doc.text(
+        `Patient: ${
+          prescription.patient?.user?.fullname ||
+          prescription.patient?.user?.username ||
+          "Unknown Patient"
+        }`,
+        margin,
+        y
+      );
+      y += lineHeight;
+
+      // Date information
+      doc.text(`Date: ${formatDate(prescription.startDate)}`, margin, y);
+      y += lineHeight;
+
+      if (prescription.endDate) {
+        doc.text(`End Date: ${formatDate(prescription.endDate)}`, margin, y);
+        y += lineHeight;
+      }
+
+      y += lineHeight;
+
+      // Medications header
+      doc.setFont("helvetica", "bold");
+      doc.text("MEDICATIONS", margin, y);
+      y += lineHeight;
+
+      // List all medications
+      doc.setFont("helvetica", "normal");
+      prescription.medications?.forEach((med, index) => {
+        doc.text(`${index + 1}. ${med.name} - ${med.dosage}`, margin, y);
+        y += lineHeight;
+
+        if (med.frequency) {
+          doc.text(`   Frequency: ${med.frequency}`, margin, y);
+          y += lineHeight;
+        }
+
+        if (med.duration) {
+          doc.text(`   Duration: ${med.duration}`, margin, y);
+          y += lineHeight;
+        }
+
+        if (med.instructions) {
+          doc.text(`   Instructions: ${med.instructions}`, margin, y);
+          y += lineHeight;
+        }
+
+        y += lineHeight / 2; // Add space between medications
+
+        // Check if we need a new page
+        if (y > 270) {
+          doc.addPage();
+          y = 20;
+        }
+      });
+
+      // Add notes if any
+      if (prescription.notes) {
+        doc.setFont("helvetica", "bold");
+        doc.text("Notes:", margin, y);
+        y += lineHeight;
+
+        doc.setFont("helvetica", "normal");
+        // Split notes by newlines to properly display them
+        const notes = prescription.notes.split("\n");
+        notes.forEach((line) => {
+          doc.text(line, margin, y);
+          y += lineHeight;
+
+          // Check if we need a new page
+          if (y > 270) {
+            doc.addPage();
+            y = 20;
+          }
+        });
+      }
+
+      // Doctor signature
+      y += lineHeight;
+      doc.text("Dr. Signature: ______________________", margin, y);
+
+      // Save the PDF
+      const patientName = prescription.patient?.user?.fullname || "patient";
+      const date = formatDate(prescription.startDate)
+        .replace(/,/g, "")
+        .replace(/ /g, "-");
+
+      const pdfBlob = doc.output("blob");
+      saveAs(pdfBlob, `prescription_${patientName}_${date}.pdf`);
+    } catch (error) {
+      console.error("Error generating PDF:", error);
+      // setError("Failed to generate PDF. Please try again.");
+      showPopup("error", "Failed to generate PDF. Please try again.");
+    } finally {
+      setActionLoading(false);
+    }
   };
 
   const filteredPrescriptions = getFilteredPrescriptions();
@@ -361,7 +493,11 @@ const Prescriptions = () => {
                     >
                       <i className="fas fa-eye"></i> View Details
                     </button>
-                    <button className="patient-action-btn patient-download-btn">
+                    <button
+                      className="patient-action-btn patient-download-btn"
+                      onClick={() => generatePrescriptionPDF(prescription)}
+                      disabled={actionLoading}
+                    >
                       <i className="fas fa-download"></i> Download
                     </button>
                   </div>

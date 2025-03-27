@@ -397,7 +397,10 @@ const Dashboard = () => {
           <h2>Quick Actions</h2>
         </div>
         <div className="quick-access-grid">
-          <Link to="/patient/appointments/new" className="quick-access-card">
+          <Link
+            to="/patient/appointments?new=true"
+            className="quick-access-card"
+          >
             <div className="quick-access-icon">
               <i className="fas fa-calendar-plus"></i>
             </div>

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useLocation } from "react-router-dom";
 import patientAPI from "../../api/patient";
 import Button from "../../components/common/Button";
 import Spinner from "../../components/common/Spinner";
@@ -7,6 +8,7 @@ import Popup from "../../components/common/Popup";
 import "./Appointments.css";
 
 const Appointments = () => {
+  const location = useLocation();
   const [loading, setLoading] = useState(true);
   const [appointments, setAppointments] = useState([]);
   const [doctors, setDoctors] = useState([]);
@@ -17,6 +19,16 @@ const Appointments = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [specializations, setSpecializations] = useState([]);
   const [selectedSpecialization, setSelectedSpecialization] = useState("");
+
+  // Read new=true from query
+  const urlParams = new URLSearchParams(location.search);
+  const isNew = urlParams.get("new") === "true"; // Convert to boolean
+
+  useEffect(() => {
+    if (isNew) {
+      setShowBookingModal(true);
+    }
+  }, [isNew]); // Run only when `isNew` changes
 
   // Popup notification state
   const [popup, setPopup] = useState({
@@ -407,8 +419,9 @@ const Appointments = () => {
                     </span>
                   </div>
                   <div className="patient-doctor-specialty">
+                    {console.log(appointment)}
                     {appointment.doctor?.specializations
-                      ?.map((s) => s.name)
+                      ?.map((s) => s)
                       .join(", ") || "General Practitioner"}
                   </div>
                   <div className="patient-appointment-info">
