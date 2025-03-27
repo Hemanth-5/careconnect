@@ -279,6 +279,39 @@ export const createAppointment = async (req, res) => {
       return res.status(404).json({ message: "Doctor not found" });
     }
 
+    // Check if the appointment date is within the availability of doctors
+    // Example of appointment date (2025-03-28T03:30:00.000Z)
+    // const appointmentDateObj = new Date(appointmentDate);
+    // const dayOfWeek = appointmentDateObj.getDay(); // 0 is Sunday, 1 is Monday, etc.
+    // const hours = appointmentDateObj.getHours();
+    // const minutes = appointmentDateObj.getMinutes();
+
+    // Check if doctor has availability for this day and time
+    // const isDoctorAvailable = doctor.availability.some((schedule) => {
+    //   // Check if the day matches
+    //   if (schedule.day !== dayOfWeek) return false;
+
+    //   // Convert schedule times to minutes for easier comparison
+    //   const startTime = schedule.startTime.split(":");
+    //   const endTime = schedule.endTime.split(":");
+
+    //   const startMinutes = parseInt(startTime[0]) * 60 + parseInt(startTime[1]);
+    //   const endMinutes = parseInt(endTime[0]) * 60 + parseInt(endTime[1]);
+    //   const appointmentMinutes = hours * 60 + minutes;
+
+    //   // Check if time is within the available range
+    //   return (
+    //     appointmentMinutes >= startMinutes && appointmentMinutes <= endMinutes
+    //   );
+    // });
+
+    // if (!isDoctorAvailable) {
+    //   return res.status(400).json({
+    //     message:
+    //       "The requested appointment time is not within the doctor's availability schedule.",
+    //   });
+    // }
+
     const newAppointment = await AppointmentService.createAppointment({
       patient,
       doctor: doctor._id,

@@ -22,7 +22,7 @@ const __dirname = path.dirname(__filename);
 // Middleware
 app.use(
   cors({
-    origin: ["https://careconnect-support.vercel.app"], // Allow only frontend
+    origin: [process.env.CLIENT_URL.toString(), "http://localhost:3000"], // Allow only frontend
     methods: ["GET", "POST", "PUT", "DELETE"],
     allowedHeaders: ["Content-Type", "Authorization"],
     credentials: true,
